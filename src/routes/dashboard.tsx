@@ -43,7 +43,7 @@ function Dashboard() {
         </div>
 
         <div className="relative mt-5 overflow-hidden rounded-3xl bg-gradient-primary p-6 text-primary-foreground shadow-soft">
-          <img src={coins} alt="" width={1024} height={768} className="absolute -right-4 -top-2 w-40 sm:w-56" />
+          <img src={coins} alt="" width={1024} height={768} className="absolute -right-6 -top-6 w-28 opacity-90 sm:w-48" />
           <p className="flex items-center gap-2 text-sm opacity-90">Total Crypto Balance <button onClick={() => setHide(!hide)} aria-label="Toggle balance">{hide ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></p>
           <p className="mt-1 text-4xl font-extrabold">{hide ? "••••••" : "$12,480.21"}</p>
           <p className="mt-1 font-semibold text-success">▲ +4.32% (24h)</p>

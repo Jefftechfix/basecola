@@ -76,7 +76,7 @@ function Index() {
       </header>
 
       <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute -right-40 top-40 h-[600px] w-[900px] -rotate-12 rounded-[50%] bg-gradient-wave" />
+        <div className="pointer-events-none absolute -right-60 top-[520px] md:top-40 h-[600px] w-[900px] -rotate-12 rounded-[50%] bg-gradient-wave" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 pb-16 pt-4 md:grid-cols-2">
           <div className="text-center md:text-left">
             <span className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold"><ShieldCheck className="h-4 w-4 text-primary" />Trusted Crypto Platform</span>

@@ -4,7 +4,7 @@ import { MailOpen, Mail, CheckCircle2, X } from "lucide-react";
 import { AuthShell } from "@/components/brand";
 
 export const Route = createFileRoute("/verify")({
-  validateSearch: (s: Record<string, unknown>) => ({ email: typeof s.email === "string" ? s.email : "" }),
+  validateSearch: (s: Record<string, unknown>) => ({ email: typeof s["email"] === "string" ? (s["email"] as string) : "" }),
   head: () => ({
     meta: [
       { title: "Verify your email — Basecola" },

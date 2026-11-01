@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Account pages share AccountShell and AccountNav so all bottom navigation links and active states remain consistent.
+- Demo account holdings and transactions live in one browser-safe data module; keep preview data distinct from real financial activity.

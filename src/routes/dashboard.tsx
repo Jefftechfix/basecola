@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Bell, Eye, EyeOff, PlusCircle, Download, ArrowUp, ArrowRight, Bitcoin, RefreshCw, BarChart3, Home, Layers, History, User } from "lucide-react";
 import { Logo, COINS, CoinIcon, Change } from "@/components/brand";
 import coins from "@/assets/coins.png";
+import { AccountNav } from "@/components/account-shell";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -77,13 +78,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 border-t bg-card">
-        <div className="mx-auto flex max-w-3xl justify-around p-2 text-xs">
-          {[[Home, "Home"], [Layers, "Assets"], [History, "Transactions"], [User, "Profile"]].map(([I, l]: any, i) => (
-            <button key={l} className={`flex flex-col items-center gap-1 rounded-2xl px-5 py-2 ${i === 0 ? "bg-accent text-primary" : "text-muted-foreground"}`}><I className="h-6 w-6" />{l}</button>
-          ))}
-        </div>
-      </nav>
+      <AccountNav active="/dashboard" />
     </div>
   );
 }

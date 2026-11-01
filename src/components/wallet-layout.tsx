@@ -28,7 +28,7 @@ export function WalletLayout({ title, active, children }: { title: string; activ
 
 export function WalletCoinSelect({ symbol, onChange }: { symbol: string; onChange: (symbol: string) => void }) {
   const asset = WALLET_ASSETS.find(item => item.sym === symbol);
-  return <div className="space-y-2"><Label htmlFor="wallet-asset">Asset</Label><Select value={symbol} onValueChange={onChange}><SelectTrigger id="wallet-asset" className="h-12 w-full bg-card"><SelectValue /></SelectTrigger><SelectContent>{WALLET_ASSETS.map(coin => <SelectItem key={coin.sym} value={coin.sym}><span className="flex items-center gap-2"><CoinIcon coin={coin} size="h-6 w-6" />{coin.name} ({coin.sym})</span></SelectItem>)}</SelectContent></Select>
+  return <div className="space-y-2"><Label htmlFor="wallet-asset">Asset</Label><Select value={symbol} onValueChange={onChange}><SelectTrigger id="wallet-asset" className="h-12 w-full bg-card"><SelectValue>{asset && <span className="flex items-center gap-2"><CoinIcon coin={asset} size="h-6 w-6" />{asset.name} ({asset.sym})</span>}</SelectValue></SelectTrigger><SelectContent>{WALLET_ASSETS.map(coin => <SelectItem key={coin.sym} value={coin.sym}><span className="flex items-center gap-2"><CoinIcon coin={coin} size="h-6 w-6" />{coin.name} ({coin.sym})</span></SelectItem>)}</SelectContent></Select>
     {asset && <p className="text-xs text-muted-foreground">Network: {asset.network}</p>}
   </div>;
 }

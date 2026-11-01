@@ -5,5 +5,5 @@
 - [x] Connect bottom navigation and verify all three pages.
 - [x] Create individual transaction details pages and receipt sharing.
 - [x] Verify details navigation and sharing on desktop and small screens.
-- [ ] Create Fund Wallet, Receive, and Send demo pages.
-- [ ] Connect dashboard wallet actions and verify all three flows.
+- [x] Create Fund Wallet, Receive, and Send demo pages.
+- [x] Connect dashboard wallet actions and verify all three flows.

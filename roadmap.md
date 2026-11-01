@@ -7,5 +7,5 @@
 - [x] Verify details navigation and sharing on desktop and small screens.
 - [x] Create Fund Wallet, Receive, and Send demo pages.
 - [x] Connect dashboard wallet actions and verify all three flows.
-- [ ] Add individual crypto details pages linked from Assets.
-- [ ] Verify asset navigation, balances, recent activity, and unknown coins.
+- [x] Add individual crypto details pages linked from Assets.
+- [x] Verify asset navigation, balances, recent activity, and unknown coins.

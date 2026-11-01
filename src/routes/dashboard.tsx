@@ -1,9 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Bell, Eye, EyeOff, PlusCircle, Download, ArrowUp, ArrowRight, Bitcoin, RefreshCw, BarChart3, Home, Layers, History, User } from "lucide-react";
 import { Logo, COINS, CoinIcon, Change } from "@/components/brand";
 import coins from "@/assets/coins.png";
 import { AccountNav } from "@/components/account-shell";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -49,9 +50,9 @@ function Dashboard() {
           <p className="mt-1 text-4xl font-extrabold">{hide ? "••••••" : "$12,480.21"}</p>
           <p className="mt-1 font-semibold text-success">▲ +4.32% (24h)</p>
           <div className="relative mt-5 grid grid-cols-3 gap-2 text-sm font-semibold">
-            <button className="flex items-center justify-center gap-1.5 rounded-2xl bg-card py-3 text-foreground"><PlusCircle className="h-4 w-4 text-primary" />Fund</button>
-            <button className="flex items-center justify-center gap-1.5 rounded-2xl bg-primary-foreground/25 py-3"><Download className="h-4 w-4" />Receive</button>
-            <button className="flex items-center justify-center gap-1.5 rounded-2xl bg-primary-foreground/25 py-3"><ArrowUp className="h-4 w-4" />Send</button>
+            <Button asChild variant="secondary" className="h-12 gap-1.5 rounded-lg bg-card px-2 text-foreground"><Link to="/fund-wallet"><PlusCircle className="text-primary" />Fund</Link></Button>
+            <Button asChild variant="ghost" className="h-12 gap-1.5 rounded-lg bg-primary-foreground/25 px-2 text-primary-foreground hover:bg-primary-foreground/35 hover:text-primary-foreground"><Link to="/receive"><Download />Receive</Link></Button>
+            <Button asChild variant="ghost" className="h-12 gap-1.5 rounded-lg bg-primary-foreground/25 px-2 text-primary-foreground hover:bg-primary-foreground/35 hover:text-primary-foreground"><Link to="/send"><ArrowUp />Send</Link></Button>
           </div>
         </div>
 

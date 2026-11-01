@@ -12,3 +12,4 @@
 - Account pages share AccountShell and AccountNav so all bottom navigation links and active states remain consistent.
 - Demo account holdings and transactions live in one browser-safe data module; keep preview data distinct from real financial activity.
 - Transaction details use an un-nested dynamic route so direct receipt links render without the transaction list; sharing uses the native share sheet with clipboard and manual-copy fallbacks.
+- Wallet action pages share WalletLayout and browser-safe wallet-demo helpers; funding and transfers are simulation-only and receive QR codes encode non-wallet identifiers to prevent accidental deposits.

@@ -12,7 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssetsRouteImport } from './routes/assets'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as FundWalletRouteImport } from './routes/fund-wallet'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ReceiveRouteImport } from './routes/receive'
+import { Route as SendRouteImport } from './routes/send'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as VerifyRouteImport } from './routes/verify'
@@ -34,9 +37,24 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FundWalletRoute = FundWalletRouteImport.update({
+  id: '/fund-wallet',
+  path: '/fund-wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReceiveRoute = ReceiveRouteImport.update({
+  id: '/receive',
+  path: '/receive',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SendRoute = SendRouteImport.update({
+  id: '/send',
+  path: '/send',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -70,7 +88,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/assets': typeof AssetsRoute
   '/dashboard': typeof DashboardRoute
+  '/fund-wallet': typeof FundWalletRoute
   '/profile': typeof ProfileRoute
+  '/receive': typeof ReceiveRoute
+  '/send': typeof SendRoute
   '/signup': typeof SignupRoute
   '/transactions': typeof TransactionsRoute
   '/verify': typeof VerifyRoute
@@ -81,7 +102,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/assets': typeof AssetsRoute
   '/dashboard': typeof DashboardRoute
+  '/fund-wallet': typeof FundWalletRoute
   '/profile': typeof ProfileRoute
+  '/receive': typeof ReceiveRoute
+  '/send': typeof SendRoute
   '/signup': typeof SignupRoute
   '/transactions': typeof TransactionsRoute
   '/verify': typeof VerifyRoute
@@ -93,7 +117,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/assets': typeof AssetsRoute
   '/dashboard': typeof DashboardRoute
+  '/fund-wallet': typeof FundWalletRoute
   '/profile': typeof ProfileRoute
+  '/receive': typeof ReceiveRoute
+  '/send': typeof SendRoute
   '/signup': typeof SignupRoute
   '/transactions': typeof TransactionsRoute
   '/verify': typeof VerifyRoute
@@ -106,7 +133,10 @@ export interface FileRouteTypes {
     | '/'
     | '/assets'
     | '/dashboard'
+    | '/fund-wallet'
     | '/profile'
+    | '/receive'
+    | '/send'
     | '/signup'
     | '/transactions'
     | '/verify'
@@ -117,7 +147,10 @@ export interface FileRouteTypes {
     | '/'
     | '/assets'
     | '/dashboard'
+    | '/fund-wallet'
     | '/profile'
+    | '/receive'
+    | '/send'
     | '/signup'
     | '/transactions'
     | '/verify'
@@ -128,7 +161,10 @@ export interface FileRouteTypes {
     | '/'
     | '/assets'
     | '/dashboard'
+    | '/fund-wallet'
     | '/profile'
+    | '/receive'
+    | '/send'
     | '/signup'
     | '/transactions'
     | '/verify'
@@ -140,7 +176,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AssetsRoute: typeof AssetsRoute
   DashboardRoute: typeof DashboardRoute
+  FundWalletRoute: typeof FundWalletRoute
   ProfileRoute: typeof ProfileRoute
+  ReceiveRoute: typeof ReceiveRoute
+  SendRoute: typeof SendRoute
   SignupRoute: typeof SignupRoute
   TransactionsRoute: typeof TransactionsRoute
   VerifyRoute: typeof VerifyRoute
@@ -171,11 +210,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fund-wallet': {
+      id: '/fund-wallet'
+      path: '/fund-wallet'
+      fullPath: '/fund-wallet'
+      preLoaderRoute: typeof FundWalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/receive': {
+      id: '/receive'
+      path: '/receive'
+      fullPath: '/receive'
+      preLoaderRoute: typeof ReceiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/send': {
+      id: '/send'
+      path: '/send'
+      fullPath: '/send'
+      preLoaderRoute: typeof SendRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -220,7 +280,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssetsRoute: AssetsRoute,
   DashboardRoute: DashboardRoute,
+  FundWalletRoute: FundWalletRoute,
   ProfileRoute: ProfileRoute,
+  ReceiveRoute: ReceiveRoute,
+  SendRoute: SendRoute,
   SignupRoute: SignupRoute,
   TransactionsRoute: TransactionsRoute,
   VerifyRoute: VerifyRoute,

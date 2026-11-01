@@ -36,7 +36,7 @@ function AssetsPage() {
     <div className="mb-4 mt-8 flex items-center justify-between"><h2 className="text-xl font-bold">Your holdings</h2><span className="text-sm text-muted-foreground">{HOLDINGS.length} assets</span></div>
     <div className="relative mb-3"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="h-10 bg-card pl-9" aria-label="Search assets" placeholder="Search coins" value={query} onChange={e => setQuery(e.target.value)} /></div>
     <div className="divide-y border-y">
-      {filtered.map(asset => <Button key={asset.sym} asChild variant="ghost" className="h-auto min-h-24 w-full justify-start gap-3 rounded-none px-0 py-4 hover:bg-accent/40"><Link to="/assets/$symbol" params={{ symbol: asset.sym.toLowerCase() }} search={{ hide: hidden || undefined }} aria-label={`View ${asset.name} details`}>
+      {filtered.map(asset => <Button key={asset.sym} asChild variant="ghost" className="h-auto min-h-24 w-full justify-start gap-3 rounded-none px-0 py-4 hover:bg-accent/40"><Link to="/assets/$symbol" params={{ symbol: asset.sym.toLowerCase() }} search={hidden ? { hide: true } : {}} aria-label={`View ${asset.name} details`}>
         <CoinIcon coin={asset} size="h-11 w-11 text-xl" />
         <div className="min-w-0 flex-1 text-left"><p className="font-bold">{asset.name}</p><p className="mt-1 text-xs text-muted-foreground">{hidden ? "••••" : asset.quantity} {asset.sym}</p></div>
         <div className="text-right"><p className="font-bold">{hidden ? "••••" : money(asset.value)}</p><p className={`mt-1 rounded-md px-2 py-0.5 text-xs ${asset.change > 0 ? "bg-green-soft" : "bg-destructive/10"}`}><Change v={asset.change} /></p></div><ChevronRight className="text-muted-foreground" />

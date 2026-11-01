@@ -16,7 +16,7 @@ const descriptions: Record<string, string> = {
 };
 
 export const Route = createFileRoute("/assets_/$symbol")({
-  validateSearch: (search: Record<string, unknown>): { hide?: boolean } => ({ hide: search.hide === true || search.hide === "true" ? true : undefined }),
+  validateSearch: (search: Record<string, unknown>): { hide?: boolean } => search["hide"] === true || search["hide"] === "true" ? { hide: true } : {},
   head: ({ params }) => {
     const asset = HOLDINGS.find(item => item.sym === params.symbol.toUpperCase());
     const title = asset ? `${asset.name} (${asset.sym}) — Basecola` : "Asset unavailable — Basecola";

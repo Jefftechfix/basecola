@@ -20,6 +20,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as AssetsSymbolRouteImport } from './routes/assets_.$symbol'
 import { Route as TransactionsTransactionIdRouteImport } from './routes/transactions_.$transactionId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -77,6 +78,11 @@ const WalletRoute = WalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AssetsSymbolRoute = AssetsSymbolRouteImport.update({
+  id: '/assets_/$symbol',
+  path: '/assets/$symbol',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TransactionsTransactionIdRoute =
   TransactionsTransactionIdRouteImport.update({
     id: '/transactions_/$transactionId',
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/transactions': typeof TransactionsRoute
   '/verify': typeof VerifyRoute
   '/wallet': typeof WalletRoute
+  '/assets/$symbol': typeof AssetsSymbolRoute
   '/transactions/$transactionId': typeof TransactionsTransactionIdRoute
 }
 export interface FileRoutesByTo {
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/transactions': typeof TransactionsRoute
   '/verify': typeof VerifyRoute
   '/wallet': typeof WalletRoute
+  '/assets/$symbol': typeof AssetsSymbolRoute
   '/transactions/$transactionId': typeof TransactionsTransactionIdRoute
 }
 export interface FileRoutesById {
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/transactions': typeof TransactionsRoute
   '/verify': typeof VerifyRoute
   '/wallet': typeof WalletRoute
+  '/assets_/$symbol': typeof AssetsSymbolRoute
   '/transactions_/$transactionId': typeof TransactionsTransactionIdRoute
 }
 export interface FileRouteTypes {
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/verify'
     | '/wallet'
+    | '/assets/$symbol'
     | '/transactions/$transactionId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/verify'
     | '/wallet'
+    | '/assets/$symbol'
     | '/transactions/$transactionId'
   id:
     | '__root__'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/verify'
     | '/wallet'
+    | '/assets_/$symbol'
     | '/transactions_/$transactionId'
   fileRoutesById: FileRoutesById
 }
@@ -184,6 +196,7 @@ export interface RootRouteChildren {
   TransactionsRoute: typeof TransactionsRoute
   VerifyRoute: typeof VerifyRoute
   WalletRoute: typeof WalletRoute
+  AssetsSymbolRoute: typeof AssetsSymbolRoute
   TransactionsTransactionIdRoute: typeof TransactionsTransactionIdRoute
 }
 
@@ -266,6 +279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WalletRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/assets_/$symbol': {
+      id: '/assets_/$symbol'
+      path: '/assets/$symbol'
+      fullPath: '/assets/$symbol'
+      preLoaderRoute: typeof AssetsSymbolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/transactions_/$transactionId': {
       id: '/transactions_/$transactionId'
       path: '/transactions/$transactionId'
@@ -288,6 +308,7 @@ const rootRouteChildren: RootRouteChildren = {
   TransactionsRoute: TransactionsRoute,
   VerifyRoute: VerifyRoute,
   WalletRoute: WalletRoute,
+  AssetsSymbolRoute: AssetsSymbolRoute,
   TransactionsTransactionIdRoute: TransactionsTransactionIdRoute,
 }
 export const routeTree = rootRouteImport

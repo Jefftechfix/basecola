@@ -7,6 +7,13 @@ import { routeTree } from "@/routeTree.gen";
 // Match routes without running loaders or rendering: loaders may need a server or
 // network the test run lacks, and jsdom never loads the stylesheets React waits on.
 describe("App routing", () => {
+  it.each(["btc", "eth", "usdt", "sol", "xrp"])("matches a standalone crypto detail page for %s", (symbol) => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+    const matches = router.matchRoutes(`/assets/${symbol}`);
+    expect(matches.at(-1)?.routeId).toBe("/assets_/$symbol");
+    expect(matches.at(-1)?.params).toMatchObject({ symbol });
+    expect(matches.some(match => match.routeId === "/assets")).toBe(false);
+  });
   it("matches a standalone transaction details page", () => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
     const matches = router.matchRoutes("/transactions/BC-1027-001");

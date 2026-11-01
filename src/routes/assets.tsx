@@ -1,11 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronRight, Eye, EyeOff, Search, Wallet } from "lucide-react";
 import { AccountShell } from "@/components/account-shell";
 import { CoinIcon, Change } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { HOLDINGS, money } from "@/lib/account-demo";
 import coins from "@/assets/coins.png";
 
@@ -22,7 +21,6 @@ export const Route = createFileRoute("/assets")({
 function AssetsPage() {
   const [hidden, setHidden] = useState(false);
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<typeof HOLDINGS[number] | null>(null);
   const total = HOLDINGS.reduce((sum, asset) => sum + asset.value, 0);
   const filtered = HOLDINGS.filter(asset => `${asset.name} ${asset.sym}`.toLowerCase().includes(query.toLowerCase()));
   return <AccountShell active="/assets" title="My Assets">
@@ -38,16 +36,12 @@ function AssetsPage() {
     <div className="mb-4 mt-8 flex items-center justify-between"><h2 className="text-xl font-bold">Your holdings</h2><span className="text-sm text-muted-foreground">{HOLDINGS.length} assets</span></div>
     <div className="relative mb-3"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="h-10 bg-card pl-9" aria-label="Search assets" placeholder="Search coins" value={query} onChange={e => setQuery(e.target.value)} /></div>
     <div className="divide-y border-y">
-      {filtered.map(asset => <Button key={asset.sym} variant="ghost" onClick={() => setSelected(asset)} className="h-auto min-h-24 w-full justify-start gap-3 rounded-none px-0 py-4 hover:bg-accent/40">
+      {filtered.map(asset => <Button key={asset.sym} asChild variant="ghost" className="h-auto min-h-24 w-full justify-start gap-3 rounded-none px-0 py-4 hover:bg-accent/40"><Link to="/assets/$symbol" params={{ symbol: asset.sym.toLowerCase() }} search={{ hide: hidden || undefined }} aria-label={`View ${asset.name} details`}>
         <CoinIcon coin={asset} size="h-11 w-11 text-xl" />
         <div className="min-w-0 flex-1 text-left"><p className="font-bold">{asset.name}</p><p className="mt-1 text-xs text-muted-foreground">{hidden ? "••••" : asset.quantity} {asset.sym}</p></div>
         <div className="text-right"><p className="font-bold">{hidden ? "••••" : money(asset.value)}</p><p className={`mt-1 rounded-md px-2 py-0.5 text-xs ${asset.change > 0 ? "bg-green-soft" : "bg-destructive/10"}`}><Change v={asset.change} /></p></div><ChevronRight className="text-muted-foreground" />
-      </Button>)}
+      </Link></Button>)}
       {filtered.length === 0 && <div className="py-12 text-center"><Wallet className="mx-auto mb-3 h-8 w-8 text-muted-foreground" /><p className="font-semibold">No assets found</p><Button variant="link" onClick={() => setQuery("")}>Clear search</Button></div>}
     </div>
-    <Dialog open={selected !== null} onOpenChange={open => { if (!open) setSelected(null); }}><DialogContent className="w-[calc(100%-2rem)] rounded-lg">
-      <DialogTitle>{selected?.name} balance</DialogTitle><DialogDescription>Demo portfolio holding</DialogDescription>
-      {selected && <><div className="flex items-center gap-3"><CoinIcon coin={selected} size="h-12 w-12 text-2xl" /><p className="text-2xl font-bold">{hidden ? "••••" : money(selected.value)}</p></div><dl className="space-y-4 text-sm"><div className="flex justify-between"><dt className="text-muted-foreground">Quantity</dt><dd>{hidden ? "••••" : selected.quantity} {selected.sym}</dd></div><div className="flex justify-between"><dt className="text-muted-foreground">Price per coin</dt><dd>{selected.price}</dd></div><div className="flex justify-between"><dt className="text-muted-foreground">24-hour change</dt><dd><Change v={selected.change} /></dd></div><div className="flex justify-between"><dt className="text-muted-foreground">Portfolio share</dt><dd>{(selected.value / total * 100).toFixed(1)}%</dd></div></dl></>}
-    </DialogContent></Dialog>
   </AccountShell>;
 }

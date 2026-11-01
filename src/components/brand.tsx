@@ -1,6 +1,11 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
+import bitcoinLogo from "@/assets/crypto/btc.svg.asset.json";
+import ethereumLogo from "@/assets/crypto/eth.svg.asset.json";
+import tetherLogo from "@/assets/crypto/usdt.svg.asset.json";
+import solanaLogo from "@/assets/crypto/sol.svg.asset.json";
+import xrpLogo from "@/assets/crypto/xrp.svg.asset.json";
 
 export function Logo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   const box = size === "lg" ? "h-12 w-12 text-3xl" : size === "sm" ? "h-7 w-7 text-lg" : "h-9 w-9 text-2xl";
@@ -22,12 +27,18 @@ export const COINS: Coin[] = [
   { name: "XRP", sym: "XRP", price: "$0.62", change: 2.48, color: "bg-foreground" },
 ];
 
-const glyph: Record<string, string> = { BTC: "₿", ETH: "Ξ", USDT: "₮", SOL: "◎", XRP: "✕" };
+const coinLogos: Record<string, string> = {
+  BTC: bitcoinLogo.url,
+  ETH: ethereumLogo.url,
+  USDT: tetherLogo.url,
+  SOL: solanaLogo.url,
+  XRP: xrpLogo.url,
+};
 
 export function CoinIcon({ coin, size = "h-9 w-9" }: { coin: Coin; size?: string }) {
   return (
-    <span className={`${size} ${coin.color} grid shrink-0 place-items-center rounded-full font-bold text-primary-foreground`}>
-      {glyph[coin.sym]}
+    <span className={`${size} grid shrink-0 place-items-center overflow-hidden rounded-full`}>
+      <img src={coinLogos[coin.sym]} alt={`${coin.name} logo`} width={32} height={32} className="h-full w-full object-contain" />
     </span>
   );
 }

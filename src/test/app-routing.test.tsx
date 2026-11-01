@@ -11,7 +11,7 @@ describe("App routing", () => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
     const matches = router.matchRoutes("/transactions/BC-1027-001");
     expect(matches.at(-1)?.routeId).toBe("/transactions_/$transactionId");
-    expect(matches.at(-1)?.params.transactionId).toBe("BC-1027-001");
+    expect(matches.at(-1)?.params).toMatchObject({ transactionId: "BC-1027-001" });
     expect(matches.some(match => match.routeId === "/transactions")).toBe(false);
   });
 

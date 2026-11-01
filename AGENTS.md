@@ -13,3 +13,4 @@
 - Demo account holdings and transactions live in one browser-safe data module; keep preview data distinct from real financial activity.
 - Transaction details use an un-nested dynamic route so direct receipt links render without the transaction list; sharing uses the native share sheet with clipboard and manual-copy fallbacks.
 - Wallet action pages share WalletLayout and browser-safe wallet-demo helpers; funding and transfers are simulation-only and receive QR codes encode non-wallet identifiers to prevent accidental deposits.
+- Crypto details use an un-nested asset-symbol route backed by the shared demo holdings and transactions so direct links show the selected coin without nesting inside Assets.

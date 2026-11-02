@@ -6,6 +6,9 @@ import { WalletLayout } from "@/components/wallet-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { WalletRecords } from "@/components/wallet-records";
+import { useQueryClient } from "@tanstack/react-query";
+import { saveFunding } from "@/lib/wallet-records";
 import { money } from "@/lib/account-demo";
 import { amountError, bankAccountError, cardNumberError, cvvError, expiryError, holderNameError, lastDigits, routingNumberError, type ConnectedStripeBank } from "@/lib/wallet-demo";
 
@@ -40,6 +43,8 @@ function FundWalletPage() {
   const [error, setError] = useState("");
   const [ending, setEnding] = useState("");
   const [summary, setSummary] = useState("");
+  const [saving, setSaving] = useState(false);
+  const qc = useQueryClient();
   const stripeBank = method === "bank" ? connected : null;
   const previewEnding = stripeBank ? stripeBank.last4 : lastDigits(method === "card" ? card : account);
 
@@ -64,9 +69,16 @@ function FundWalletPage() {
     if (!message) setStep("review");
   }
 
-  function confirm() {
-    setEnding(stripeBank ? stripeBank.last4 : lastDigits(method === "card" ? card : account));
-    setSummary(method === "card" ? "Debit or credit card" : stripeBank ? `Stripe demo · ${stripeBank.bankName} · ${stripeBank.accountType}` : `US bank · ${accountType}`);
+  async function confirm() {
+    const end = stripeBank ? stripeBank.last4 : lastDigits(method === "card" ? card : account);
+    const label = method === "card" ? "Debit or credit card" : stripeBank ? `Stripe demo · ${stripeBank.bankName} · ${stripeBank.accountType}` : `US bank · ${accountType}`;
+    setSaving(true); setError("");
+    try { await saveFunding({ amount: Number(amount), payment_method: label, reference: `Ending ${end}` }); }
+    catch (e) { setError((e as Error).message); setSaving(false); return; }
+    setSaving(false);
+    qc.invalidateQueries({ queryKey: ["wallet-records", "fundings"] });
+    setEnding(end);
+    setSummary(label);
     setCard("");
     setCvv("");
     setRouting("");
@@ -93,7 +105,8 @@ function FundWalletPage() {
         {method === "bank" && <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Account type</dt><dd className="font-semibold">{stripeBank ? stripeBank.accountType : accountType}</dd></div>}
       </dl>
       <p className="text-sm leading-relaxed text-muted-foreground">Confirming this preview does not send card or bank details and does not move money.</p>
-      <Button className="h-12 w-full" type="button" onClick={confirm}>Confirm preview</Button>
+      <Button className="h-12 w-full" type="button" onClick={confirm} disabled={saving}>{saving ? "Saving…" : "Confirm & save"}</Button>
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <Button variant="outline" className="w-full" type="button" onClick={() => setStep("form")}>Edit details</Button>
     </section> : <>
       <div role="group" aria-label="Funding method" className="mb-5 grid grid-cols-2 gap-3">
@@ -133,5 +146,6 @@ function FundWalletPage() {
       </form>
       <StripeBankDemo open={stripeOpen} onOpenChange={setStripeOpen} onConnect={bank => { setConnected(bank); setError(""); }} />
     </>}
+  <WalletRecords kind="fundings" />
   </WalletLayout>;
 }

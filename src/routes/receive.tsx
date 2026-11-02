@@ -6,6 +6,9 @@ import { WalletLayout, WalletCoinSelect } from "@/components/wallet-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { WalletRecords } from "@/components/wallet-records";
+import { useQueryClient } from "@tanstack/react-query";
+import { saveReceive } from "@/lib/wallet-records";
 import { demoReceiveCode, WALLET_ASSETS } from "@/lib/wallet-demo";
 
 export const Route = createFileRoute("/receive")({
@@ -19,11 +22,21 @@ export const Route = createFileRoute("/receive")({
 function ReceivePage() {
   const [symbol, setSymbol] = useState("BTC");
   const [copyState, setCopyState] = useState("");
+  const [amount, setAmount] = useState("");
+  const [saveMsg, setSaveMsg] = useState("");
+  const qc = useQueryClient();
   const code = demoReceiveCode(symbol);
   const asset = WALLET_ASSETS.find(item => item.sym === symbol);
   async function copy() {
     try { await navigator.clipboard.writeText(code); setCopyState("Copied demo code"); }
     catch { setCopyState("Copy unavailable. Select the demo code below to copy it manually."); }
+  }
+  async function save() {
+    setSaveMsg("");
+    const n = amount.trim() ? Number(amount) : null;
+    if (n !== null && !(n > 0)) { setSaveMsg("Enter a valid amount."); return; }
+    try { await saveReceive({ coin: symbol, network: asset?.network ?? "", wallet_address: code, amount: n }); setAmount(""); setSaveMsg("Receive request saved."); qc.invalidateQueries({ queryKey: ["wallet-records", "receives"] }); }
+    catch (e) { setSaveMsg((e as Error).message); }
   }
   return <WalletLayout title="Receive Crypto">
     <WalletCoinSelect symbol={symbol} onChange={value => { setSymbol(value); setCopyState(""); }} />
@@ -32,5 +45,9 @@ function ReceivePage() {
     <div className="space-y-2"><Label htmlFor="receive-code">Demo receive identifier</Label><Input id="receive-code" value={code} readOnly className="h-12 bg-card font-mono text-xs" onFocus={e => e.target.select()} /></div>
     <Button className="mt-4 h-12 w-full" onClick={copy}>{copyState === "Copied demo code" ? <Check /> : <Copy />}Copy demo code</Button>
     {copyState && <p role="status" className="mt-3 text-center text-sm text-muted-foreground">{copyState}</p>}
+    <div className="mt-6 space-y-2"><Label htmlFor="receive-amount">Expected amount (optional)</Label><Input id="receive-amount" inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} className="h-12 bg-card" placeholder={`0.00 ${symbol}`} /></div>
+    <Button variant="outline" className="mt-3 h-12 w-full" onClick={save}>Save receive request</Button>
+    {saveMsg && <p role="status" className="mt-3 text-center text-sm text-muted-foreground">{saveMsg}</p>}
+    <WalletRecords kind="receives" />
   </WalletLayout>;
 }

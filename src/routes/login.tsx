@@ -4,6 +4,7 @@ import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 import { AuthShell } from "@/components/brand";
 import { Checkbox } from "@/components/ui/checkbox";
 import { loginError, REMEMBERED_EMAIL_KEY } from "@/lib/login-demo";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [
@@ -29,10 +30,16 @@ function LoginPage() {
   const [remember, setRemember] = useState(Boolean(rememberedEmail()));
   const [error, setError] = useState("");
 
-  function submit(event: FormEvent) {
+  const [busy, setBusy] = useState(false);
+
+  async function submit(event: FormEvent) {
     event.preventDefault();
     const problem = loginError(email, password);
     if (problem) { setError(problem); return; }
+    setBusy(true);
+    const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    setBusy(false);
+    if (authError) { setError(authError.message); return; }
     if (remember) sessionStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim());
     else sessionStorage.removeItem(REMEMBERED_EMAIL_KEY);
     nav({ to: "/dashboard" });

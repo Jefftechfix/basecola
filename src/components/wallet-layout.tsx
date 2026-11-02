@@ -8,11 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { WALLET_ASSETS } from "@/lib/wallet-demo";
 
-export function WalletLayout({ title, children }: { title: string; children: ReactNode }) {
+export function WalletLayout({ title, children, notice = "Demo only. No money is charged, received, or sent. Balances and prices are samples." }: { title: string; children: ReactNode; notice?: string }) {
   return <AccountShell title={title} active="/dashboard">
     <Button asChild variant="link" className="mb-4 h-auto px-0"><Link to="/dashboard"><ArrowLeft />Back to wallet</Link></Button>
     <div className="mx-auto max-w-lg">{children}
-      <p className="mt-7 flex items-start gap-2 border-t pt-4 text-xs leading-relaxed text-muted-foreground"><ShieldCheck className="h-4 w-4 shrink-0" />Demo only. No money is charged, received, or sent. Balances and prices are samples.</p>
+      <p className="mt-7 flex items-start gap-2 border-t pt-4 text-xs leading-relaxed text-muted-foreground"><ShieldCheck className="h-4 w-4 shrink-0" />{notice}</p>
     </div>
   </AccountShell>;
 }

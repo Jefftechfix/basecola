@@ -1,1 +1,4 @@
 project_id = "xxbjvscwtvfversxccyl"
+
+[functions.stripe-fund-wallet]
+verify_jwt = true

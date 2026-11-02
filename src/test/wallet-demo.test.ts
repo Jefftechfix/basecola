@@ -6,6 +6,7 @@ import { HELP_EMAIL, HELP_PHONE, helpMessageError, matchingFaqs } from "@/lib/he
 import { applyPassword, applyPin, getSecuritySession, passwordChangeError, pinChangeError, resetSecuritySession, signupPinError, twoFactorCodeError } from "@/lib/security-demo";
 import { loginError, resetPasswordError } from "@/lib/login-demo";
 import { adminLoginError } from "@/lib/admin-demo";
+import { stripeFundingAmountError, stripeFundingCents } from "@/lib/stripe-funding";
 import { amountError, bankAccountError, cardNumberError, cvvError, demoReceiveCode, expiryError, formatAssetAmount, matchingStripeDemoBanks, quoteTradeFee, recipientError, routingNumberError, sampleUnitPrice, sendNetworkFee, stripeDemoLoginError } from "@/lib/wallet-demo";
 
 describe("Demo wallet safeguards", () => {
@@ -62,6 +63,11 @@ describe("Demo wallet safeguards", () => {
   it("rejects zero, negative and non-numeric funding amounts", () => {
     for (const value of ["", "0", "-1", "no", "Infinity"]) expect(amountError(value)).not.toBe("");
     expect(amountError("50")).toBe("");
+    expect(stripeFundingAmountError("0.50")).toBe("The minimum Stripe funding is $1.00.");
+    expect(stripeFundingAmountError("10.999")).toBe("Enter a USD amount with up to 2 decimal places.");
+    expect(stripeFundingAmountError("10000.01")).toBe("The maximum Stripe funding is $10,000.00.");
+    expect(stripeFundingAmountError("25.50")).toBe("");
+    expect(stripeFundingCents("25.50")).toBe(2550);
   });
   it("does not preview sending more than the demo balance", () => {
     expect(amountError("0.11", 0.1)).not.toBe("");

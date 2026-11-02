@@ -14,6 +14,109 @@ export type Database = {
   }
   public: {
     Tables: {
+      crypto_receives: {
+        Row: {
+          amount: number | null
+          coin: string
+          created_at: string
+          from_address: string | null
+          id: string
+          network: string
+          status: string
+          tx_hash: string | null
+          updated_at: string
+          user_id: string
+          wallet_address: string
+        }
+        Insert: {
+          amount?: number | null
+          coin: string
+          created_at?: string
+          from_address?: string | null
+          id?: string
+          network: string
+          status?: string
+          tx_hash?: string | null
+          updated_at?: string
+          user_id: string
+          wallet_address: string
+        }
+        Update: {
+          amount?: number | null
+          coin?: string
+          created_at?: string
+          from_address?: string | null
+          id?: string
+          network?: string
+          status?: string
+          tx_hash?: string | null
+          updated_at?: string
+          user_id?: string
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crypto_receives_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crypto_sends: {
+        Row: {
+          amount: number
+          coin: string
+          created_at: string
+          fee: number
+          id: string
+          network: string
+          note: string | null
+          status: string
+          to_address: string
+          tx_hash: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          coin: string
+          created_at?: string
+          fee?: number
+          id?: string
+          network: string
+          note?: string | null
+          status?: string
+          to_address: string
+          tx_hash?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          coin?: string
+          created_at?: string
+          fee?: number
+          id?: string
+          network?: string
+          note?: string | null
+          status?: string
+          to_address?: string
+          tx_hash?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crypto_sends_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           country: string | null
@@ -46,6 +149,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      wallet_fundings: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          payment_method: string
+          reference: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_method: string
+          reference?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_method?: string
+          reference?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_fundings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

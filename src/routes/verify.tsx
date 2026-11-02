@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { MailOpen, Mail, CheckCircle2, X } from "lucide-react";
 import { AuthShell } from "@/components/brand";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/verify")({
   validateSearch: (s: Record<string, unknown>) => ({ email: typeof s["email"] === "string" ? (s["email"] as string) : "" }),
@@ -24,6 +25,21 @@ function Verify() {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [secs, setSecs] = useState(58);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function verify() {
+    setBusy(true); setError("");
+    const { error } = await supabase.auth.verifyOtp({ email, token: code.join(""), type: "signup" });
+    setBusy(false);
+    if (error) { setError(error.message); return; }
+    setDone(true);
+  }
+  async function resend() {
+    setError("");
+    const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: window.location.origin } });
+    if (error) { setError(error.message); return; }
+    setSecs(58);
+  }
   const refs = useRef<(HTMLInputElement | null)[]>([]);
   useEffect(() => { if (secs <= 0) return; const t = setTimeout(() => setSecs(secs - 1), 1000); return () => clearTimeout(t); }, [secs]);
 
@@ -50,9 +66,10 @@ function Verify() {
         ))}
       </div>
       <p className="mt-6 text-center text-sm">Didn't receive the code?{" "}
-        <button disabled={secs > 0} onClick={() => setSecs(58)} className="font-bold text-primary disabled:opacity-80">Resend Code{secs > 0 ? ` (${secs}s)` : ""}</button>
+        <button disabled={secs > 0} onClick={resend} className="font-bold text-primary disabled:opacity-80">Resend Code{secs > 0 ? ` (${secs}s)` : ""}</button>
       </p>
-      <button disabled={code.join("").length < 6} onClick={() => setDone(true)} className="mt-6 w-full rounded-2xl bg-primary py-4 text-lg font-bold text-primary-foreground disabled:opacity-60">Verify Email</button>
+      {error && <p role="alert" className="mt-4 text-center text-sm text-destructive">{error}</p>}
+      <button disabled={code.join("").length < 6 || busy || !email} onClick={verify} className="mt-6 w-full rounded-2xl bg-primary py-4 text-lg font-bold text-primary-foreground disabled:opacity-60">{busy ? "Verifying…" : "Verify Email"}</button>
       <div className="mt-6 flex items-center gap-3 rounded-2xl bg-accent p-4 text-sm"><Mail className="h-5 w-5 text-primary" />Check your inbox (and spam folder) for the verification code.</div>
 
       {done && (

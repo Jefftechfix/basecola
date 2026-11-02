@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      crypto_buys: {
+        Row: {
+          coin: string
+          created_at: string
+          crypto_amount: number
+          fee_usd: number
+          id: string
+          network: string
+          price_usd: number
+          status: string
+          total_usd: number
+          tx_hash: string | null
+          updated_at: string
+          usd_amount: number
+          user_id: string
+        }
+        Insert: {
+          coin: string
+          created_at?: string
+          crypto_amount: number
+          fee_usd?: number
+          id?: string
+          network: string
+          price_usd?: number
+          status?: string
+          total_usd?: number
+          tx_hash?: string | null
+          updated_at?: string
+          usd_amount: number
+          user_id: string
+        }
+        Update: {
+          coin?: string
+          created_at?: string
+          crypto_amount?: number
+          fee_usd?: number
+          id?: string
+          network?: string
+          price_usd?: number
+          status?: string
+          total_usd?: number
+          tx_hash?: string | null
+          updated_at?: string
+          usd_amount?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crypto_buys_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crypto_receives: {
         Row: {
           amount: number | null
@@ -57,6 +113,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "crypto_receives_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crypto_sells: {
+        Row: {
+          coin: string
+          created_at: string
+          crypto_amount: number
+          fee_usd: number
+          id: string
+          network: string
+          payout_usd: number
+          price_usd: number
+          status: string
+          tx_hash: string | null
+          updated_at: string
+          usd_amount: number
+          user_id: string
+        }
+        Insert: {
+          coin: string
+          created_at?: string
+          crypto_amount: number
+          fee_usd?: number
+          id?: string
+          network: string
+          payout_usd?: number
+          price_usd?: number
+          status?: string
+          tx_hash?: string | null
+          updated_at?: string
+          usd_amount: number
+          user_id: string
+        }
+        Update: {
+          coin?: string
+          created_at?: string
+          crypto_amount?: number
+          fee_usd?: number
+          id?: string
+          network?: string
+          payout_usd?: number
+          price_usd?: number
+          status?: string
+          tx_hash?: string | null
+          updated_at?: string
+          usd_amount?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crypto_sells_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

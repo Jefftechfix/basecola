@@ -262,6 +262,74 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          coin: string | null
+          counterparty: string | null
+          created_at: string
+          crypto_amount: number | null
+          direction: string
+          fee_usd: number
+          id: string
+          kind: string
+          network: string | null
+          note: string | null
+          price_usd: number
+          reference: string | null
+          status: string
+          tx_hash: string | null
+          updated_at: string
+          usd_amount: number
+          user_id: string
+        }
+        Insert: {
+          coin?: string | null
+          counterparty?: string | null
+          created_at?: string
+          crypto_amount?: number | null
+          direction?: string
+          fee_usd?: number
+          id?: string
+          kind: string
+          network?: string | null
+          note?: string | null
+          price_usd?: number
+          reference?: string | null
+          status?: string
+          tx_hash?: string | null
+          updated_at?: string
+          usd_amount?: number
+          user_id: string
+        }
+        Update: {
+          coin?: string | null
+          counterparty?: string | null
+          created_at?: string
+          crypto_amount?: number | null
+          direction?: string
+          fee_usd?: number
+          id?: string
+          kind?: string
+          network?: string | null
+          note?: string | null
+          price_usd?: number
+          reference?: string | null
+          status?: string
+          tx_hash?: string | null
+          updated_at?: string
+          usd_amount?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wallet_fundings: {
         Row: {
           amount: number

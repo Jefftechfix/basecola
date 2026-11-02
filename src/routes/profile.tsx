@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useSyncExternalStore, type FormEvent } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BadgeCheck, Bell, Check, ChevronRight, CircleHelp, FileText, Info, Lock, LogOut, Mail, ScrollText, ShieldCheck, Trash2, User, Users } from "lucide-react";
 import { Logo } from "@/components/brand";
 import { AccountNav } from "@/components/account-shell";
@@ -7,9 +8,10 @@ import { NotificationBell } from "@/components/notification-bell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { accountInitials, loadAccountProfile, saveAccountProfile, type AccountProfile } from "@/lib/account-profile";
 import { getAccountVerification, subscribeAccountVerification } from "@/lib/account-verify";
 import { COUNTRY_DIALS, countryByIso, countryByName, countryOptionLabel, splitPhone } from "@/lib/countries";
-import { REFERRAL_CODE } from "@/lib/referral-demo";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [
@@ -20,20 +22,15 @@ export const Route = createFileRoute("/profile")({
 });
 
 type Section = "account" | "notifications" | "terms" | "privacy" | "about";
-type AccountProfile = { name: string; email: string; phone: string; country: string; address: string };
 
-const SAMPLE_PROFILE: AccountProfile = { name: "Mustapha Suleiman", email: "mustapha@gmail.com", phone: "+1 (971) 555-2389", country: "United States", address: "1200 Demo Street, Portland, OR 97201" };
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "BC";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}
+const EMPTY_PROFILE: AccountProfile = { name: "", email: "", phone: "", country: "", address: "", referralCode: "" };
 
 function ProfilePage() {
+  const nav = useNavigate();
+  const qc = useQueryClient();
+  const { data: profile = EMPTY_PROFILE, isPending, error } = useQuery({ queryKey: ["account-profile"], queryFn: loadAccountProfile, select: value => value ?? EMPTY_PROFILE });
+  const signedIn = Boolean(profile.email || profile.name);
   const [section, setSection] = useState<Section | null>(null);
-  const [profile, setProfile] = useState(SAMPLE_PROFILE);
   const [draft, setDraft] = useState(profile);
   const [saved, setSaved] = useState("");
   const [activity, setActivity] = useState(true);
@@ -46,6 +43,12 @@ function ProfilePage() {
     setDraft(profile);
     setSaved("");
     setSection("account");
+  }
+
+  async function logOut() {
+    await supabase.auth.signOut();
+    qc.clear();
+    nav({ to: "/" });
   }
 
   return <div className="min-h-screen bg-background pb-28">
@@ -61,18 +64,18 @@ function ProfilePage() {
 
     <div className="relative z-10 mx-auto -mt-10 max-w-3xl space-y-3 px-5">
       <section className="flex items-center gap-3 rounded-3xl bg-card p-4 shadow-soft">
-        <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-accent text-xl font-bold text-primary">{initials(profile.name)}</span>
-        <button type="button" onClick={openAccount} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+        <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-accent text-xl font-bold text-primary">{signedIn ? accountInitials(profile) : "BC"}</span>
+        {signedIn ? <button type="button" onClick={openAccount} className="flex min-w-0 flex-1 items-center gap-3 text-left">
           <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1">
-            <span className="text-base font-bold leading-tight">{profile.name}</span>
+            <span className="text-base font-bold leading-tight">{profile.name || profile.email}</span>
             <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${pending ? "bg-warning-soft text-warning" : "bg-muted text-muted-foreground"}`}>{pending ? "Pending" : "Unverified"}</span>
             <span className="col-start-1 flex items-center gap-1.5 text-xs text-muted-foreground"><Mail className="h-3.5 w-3.5 shrink-0" /><span className="break-all">{profile.email}</span></span>
           </span>
           <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-        </button>
+        </button> : <div className="min-w-0 flex-1"><p className="font-bold">{isPending ? "Loading your account" : "Log in to see your account"}</p>{error ? <p role="alert" className="text-xs text-destructive">{error.message}</p> : !isPending && <Link to="/login" className="text-xs font-semibold text-primary">Log in</Link>}</div>}
       </section>
 
-      {section ? <ProfileSection section={section} onBack={() => setSection(null)} profile={profile} draft={draft} setDraft={setDraft} onSave={next => { setProfile(next); setDraft(next); setSaved("Profile updated for this preview."); }} saved={saved} activity={activity} setActivity={setActivity} market={market} setMarket={setMarket} emailAlerts={emailAlerts} setEmailAlerts={setEmailAlerts} /> : <>
+      {section ? <ProfileSection section={section} onBack={() => setSection(null)} profile={profile} draft={draft} setDraft={setDraft} onSave={async next => { const message = await saveAccountProfile({ ...next, referralCode: profile.referralCode }); setDraft(next); setSaved(message); await qc.invalidateQueries({ queryKey: ["account-profile"] }); }} saved={saved} activity={activity} setActivity={setActivity} market={market} setMarket={setMarket} emailAlerts={emailAlerts} setEmailAlerts={setEmailAlerts} /> : <>
         <MenuButton icon={User} tint="bg-accent text-primary" title="Account Information" detail="Update your personal details" onClick={openAccount} />
         <Link to="/verify-account" className="flex w-full items-center gap-3 rounded-2xl bg-card px-3 py-3 text-left shadow-soft">
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-primary"><BadgeCheck className="h-5 w-5" /></span>
@@ -87,7 +90,7 @@ function ProfilePage() {
         <Link to="/referral" className="flex w-full items-center gap-3 rounded-2xl bg-card px-3 py-3 text-left shadow-soft">
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-green-soft text-success"><Users className="h-5 w-5" /></span>
           <span className="min-w-0 flex-1"><span className="block font-bold">Referral Program</span><span className="block text-xs text-muted-foreground">Earn $10 for each person you refer</span></span>
-          <span className="text-xs font-semibold text-primary">Ref: {REFERRAL_CODE}</span>
+          <span className="text-xs font-semibold text-primary">Ref: {profile.referralCode || "Not set"}</span>
           <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
         </Link>
         <Link to="/statements" className="flex w-full items-center gap-3 rounded-2xl bg-card px-3 py-3 text-left shadow-soft">
@@ -109,7 +112,7 @@ function ProfilePage() {
           <span className="min-w-0 flex-1"><span className="block font-bold">Delete account</span><span className="block text-xs text-muted-foreground">Close this preview account</span></span>
           <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
         </Link>
-        <Link to="/" className="mt-2 flex h-14 items-center justify-center gap-2 rounded-2xl bg-pink-soft text-base font-bold text-pink"><LogOut className="h-5 w-5" />Log Out</Link>
+        <button type="button" onClick={logOut} className="mt-2 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-pink-soft text-base font-bold text-pink"><LogOut className="h-5 w-5" />Log Out</button>
       </>}
     </div>
     <AccountNav active="/profile" />
@@ -125,31 +128,38 @@ function MenuButton({ icon: Icon, tint, title, detail, extra, onClick }: { icon:
   </button>;
 }
 
-function AccountForm(props: { draft: AccountProfile; setDraft: (value: AccountProfile) => void; onSave: (next: AccountProfile) => void; saved: string }) {
+function AccountForm(props: { draft: AccountProfile; setDraft: (value: AccountProfile) => void; onSave: (next: AccountProfile) => Promise<void>; saved: string }) {
   const initial = splitPhone(props.draft.phone, countryByName(props.draft.country)?.iso ?? "US");
   const [phoneIso, setPhoneIso] = useState(initial.iso);
   const [national, setNational] = useState(initial.national);
+  const [saveError, setSaveError] = useState("");
 
-  function save(event: FormEvent) {
+  async function save(event: FormEvent) {
     event.preventDefault();
+    setSaveError("");
     const dial = countryByIso(phoneIso)?.dial ?? "";
-    props.onSave({ ...props.draft, phone: `${dial} ${national}`.trim() });
+    try {
+      await props.onSave({ ...props.draft, phone: national.trim() ? `${dial} ${national}`.trim() : "" });
+    } catch (reason) {
+      setSaveError(reason instanceof Error ? reason.message : "Profile could not be saved.");
+    }
   }
 
   return <form className="mt-5 space-y-4" onSubmit={save}>
     <label className="block space-y-2 text-sm font-medium"><span>Full name</span><Input required maxLength={60} value={props.draft.name} onChange={event => props.setDraft({ ...props.draft, name: event.target.value })} /></label>
     <label className="block space-y-2 text-sm font-medium"><span>Email address</span><Input required type="email" value={props.draft.email} onChange={event => props.setDraft({ ...props.draft, email: event.target.value })} /></label>
-    <label className="block space-y-2 text-sm font-medium"><span>Phone</span><span className="flex gap-2"><select aria-label="Country code" value={phoneIso} onChange={event => setPhoneIso(event.target.value)} className="h-9 max-w-[46%] shrink-0 rounded-md border border-input bg-transparent px-2 text-sm">{COUNTRY_DIALS.map(item => <option key={item.iso} value={item.iso}>{countryOptionLabel(item)}</option>)}</select><Input required id="profile-phone" value={national} onChange={event => setNational(event.target.value)} inputMode="tel" autoComplete="tel-national" /></span></label>
+    <label className="block space-y-2 text-sm font-medium"><span>Phone</span><span className="flex gap-2"><select aria-label="Country code" value={phoneIso} onChange={event => setPhoneIso(event.target.value)} className="h-9 max-w-[46%] shrink-0 rounded-md border border-input bg-transparent px-2 text-sm">{COUNTRY_DIALS.map(item => <option key={item.iso} value={item.iso}>{countryOptionLabel(item)}</option>)}</select><Input id="profile-phone" value={national} onChange={event => setNational(event.target.value)} inputMode="tel" autoComplete="tel-national" /></span></label>
     <label className="block space-y-2 text-sm font-medium"><span>Country</span>
-      <select required aria-label="Country" value={props.draft.country} onChange={event => { const country = event.target.value; props.setDraft({ ...props.draft, country }); const match = countryByName(country); if (match) setPhoneIso(match.iso); }} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+      <select aria-label="Country" value={props.draft.country} onChange={event => { const country = event.target.value; props.setDraft({ ...props.draft, country }); const match = countryByName(country); if (match) setPhoneIso(match.iso); }} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
         <option value="">Select a country</option>
         {COUNTRY_DIALS.map(item => <option key={item.iso} value={item.name}>{item.name}</option>)}
       </select>
     </label>
-    <label className="block space-y-2 text-sm font-medium"><span>Address</span><Input required maxLength={120} autoComplete="street-address" value={props.draft.address} onChange={event => props.setDraft({ ...props.draft, address: event.target.value })} /></label>
-    <Button type="submit" className="w-full" disabled={!props.draft.name.trim() || !props.draft.country || !props.draft.address.trim() || national.trim().length < 7}><Check />Save changes</Button>
+    <label className="block space-y-2 text-sm font-medium"><span>Address</span><Input maxLength={120} autoComplete="street-address" value={props.draft.address} onChange={event => props.setDraft({ ...props.draft, address: event.target.value })} /></label>
+    <Button type="submit" className="w-full" disabled={!props.draft.name.trim() || !props.draft.email.trim()}><Check />Save changes</Button>
+    {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
     {props.saved && <p role="status" className="text-sm text-success">{props.saved}</p>}
-    <p className="text-xs text-muted-foreground">Changes stay in this preview. Account verification is a separate sample step and does not upload a document.</p>
+    <p className="text-xs text-muted-foreground">Name, email, phone, country, and address are saved to your account. Account verification is a separate step and does not upload a document.</p>
   </form>;
 }
 
@@ -158,7 +168,7 @@ function ProfileSection(props: {
   profile: AccountProfile;
   draft: AccountProfile;
   setDraft: (value: AccountProfile) => void;
-  onSave: (next: AccountProfile) => void; saved: string;
+  onSave: (next: AccountProfile) => Promise<void>; saved: string;
   activity: boolean; setActivity: (value: boolean) => void; market: boolean; setMarket: (value: boolean) => void;
   emailAlerts: boolean; setEmailAlerts: (value: boolean) => void;
 }) {
@@ -181,7 +191,7 @@ function ProfileSection(props: {
     </div>}
     {props.section === "privacy" && <div className="mt-5 space-y-4 text-sm leading-6 text-muted-foreground">
       <p>This privacy note explains the Basecola demo. It is sample text and does not describe a live account.</p>
-      <p><span className="font-semibold text-foreground">Information on this device.</span> Name, email, phone, country, address, and PIN stay in this browser session. They are not sent to a Basecola server.</p>
+      <p><span className="font-semibold text-foreground">Your account.</span> Name, email, phone, country, and address are saved to your Basecola account. The sample balances and prices are not part of that account.</p>
       <p><span className="font-semibold text-foreground">What we do not collect.</span> This preview does not create a customer profile, track you across sites, or sell personal information.</p>
       <p><span className="font-semibold text-foreground">Notifications.</span> Transaction, market, and email switches only change what you see in this preview. No email is sent.</p>
     </div>}

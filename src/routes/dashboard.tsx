@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Eye, EyeOff, PlusCircle, Download, ArrowUp, ArrowRight, Bitcoin, RefreshCw, BarChart3, Home, Layers, History, User } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Eye, EyeOff, PlusCircle, Download, ArrowUp, ArrowRight, Bitcoin, RefreshCw, BarChart3 } from "lucide-react";
 import { Logo, COINS, CoinIcon, Change } from "@/components/brand";
 import { NotificationBell } from "@/components/notification-bell";
 import coins from "@/assets/coins.png";
 import { AccountNav } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
+import { accountFirstName, accountInitials, loadAccountProfile } from "@/lib/account-profile";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -31,6 +33,9 @@ function Spark({ up, seed }: { up: boolean; seed: number }) {
 
 function Dashboard() {
   const [hide, setHide] = useState(false);
+  const { data: profile, isPending } = useQuery({ queryKey: ["account-profile"], queryFn: loadAccountProfile });
+  const greeting = profile ? accountFirstName(profile) : "";
+  const initials = profile ? accountInitials(profile) : "BC";
   const actions = [
     { i: Bitcoin, t: "Buy", d: "Buy crypto instantly", bg: "bg-accent", c: "text-primary", to: "/buy" },
     { i: RefreshCw, t: "Sell", d: "Sell crypto to cash", bg: "bg-pink-soft", c: "text-pink", to: "/sell" },
@@ -41,13 +46,16 @@ function Dashboard() {
       <div className="mx-auto max-w-3xl px-5 pt-5">
         <div className="flex items-center justify-between"><Logo /><NotificationBell /></div>
         <div className="mt-5 flex items-center gap-3">
-          <span className="grid h-12 w-12 place-items-center rounded-full bg-accent font-bold text-primary">MS</span>
-          <div><p className="text-xl font-bold">Hello, Mustapha 👋</p><p className="text-sm text-muted-foreground">Welcome to Basecola</p></div>
+          <span className="grid h-12 w-12 place-items-center rounded-full bg-accent font-bold text-primary">{initials}</span>
+          <div>
+            <p className="text-xl font-bold">{isPending ? "Hello" : profile ? `Hello, ${greeting}` : "Hello"}</p>
+            <p className="text-sm text-muted-foreground">{profile?.email || (isPending ? "Loading your account" : <Link to="/login" className="font-semibold text-primary">Log in</Link>)}</p>
+          </div>
         </div>
 
         <div className="relative mt-5 overflow-hidden rounded-3xl bg-gradient-primary p-6 text-primary-foreground shadow-soft">
           <img src={coins} alt="" width={1024} height={768} className="absolute -right-6 -top-6 w-28 opacity-90 sm:w-48" />
-          <p className="flex items-center gap-2 text-sm opacity-90">Total Crypto Balance <button onClick={() => setHide(!hide)} aria-label="Toggle balance">{hide ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></p>
+          <p className="flex items-center gap-2 text-sm opacity-90">Sample balance <button onClick={() => setHide(!hide)} aria-label="Toggle balance">{hide ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></p>
           <p className="mt-1 text-4xl font-extrabold">{hide ? "••••••" : "$12,480.21"}</p>
           <p className="mt-1 font-semibold text-success">▲ +4.32% (24h)</p>
           <div className="relative mt-5 grid grid-cols-3 gap-2 text-sm font-semibold">

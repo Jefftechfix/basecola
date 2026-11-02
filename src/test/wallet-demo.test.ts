@@ -6,6 +6,7 @@ import { HELP_EMAIL, HELP_PHONE, helpMessageError, matchingFaqs } from "@/lib/he
 import { applyPassword, applyPin, getSecuritySession, passwordChangeError, pinChangeError, resetSecuritySession, signupPinError, twoFactorCodeError } from "@/lib/security-demo";
 import { loginError, resetPasswordError } from "@/lib/login-demo";
 import { adminLoginError } from "@/lib/admin-demo";
+import { accountFirstName, accountInitials } from "@/lib/account-profile";
 import { stripeFundingAmountError, stripeFundingCents } from "@/lib/stripe-funding";
 import { amountError, bankAccountError, cardNumberError, cvvError, demoReceiveCode, expiryError, formatAssetAmount, matchingStripeDemoBanks, quoteTradeFee, recipientError, routingNumberError, sampleUnitPrice, sendNetworkFee, stripeDemoLoginError } from "@/lib/wallet-demo";
 
@@ -68,6 +69,10 @@ describe("Demo wallet safeguards", () => {
     expect(stripeFundingAmountError("10000.01")).toBe("The maximum Stripe funding is $10,000.00.");
     expect(stripeFundingAmountError("25.50")).toBe("");
     expect(stripeFundingCents("25.50")).toBe(2550);
+    expect(accountFirstName({ name: "Ada Lovelace", email: "ada@example.com" })).toBe("Ada");
+    expect(accountFirstName({ name: "", email: "ada@example.com" })).toBe("ada");
+    expect(accountInitials({ name: "", email: "ada@example.com" })).toBe("AD");
+    expect(accountInitials({ name: "Ada Lovelace", email: "ada@example.com" })).toBe("AL");
   });
   it("does not preview sending more than the demo balance", () => {
     expect(amountError("0.11", 0.1)).not.toBe("");

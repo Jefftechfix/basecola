@@ -330,24 +330,6 @@ export type Database = {
           },
         ]
       }
-      user_roles: {
-        Row: {
-          created_at: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          role: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          role?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       wallet_fundings: {
         Row: {
           amount: number
@@ -397,10 +379,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

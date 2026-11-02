@@ -94,6 +94,15 @@
   h1, h2, h3 { letter-spacing: -0.03em; }
 }
 
+@media (width >= 64rem) {
+  .verify-board { grid-template-columns: 280px minmax(0, 1fr); }
+  .verify-board > :nth-child(3) { grid-column: 1 / -1; }
+}
+@media (width >= 80rem) {
+  .verify-board { grid-template-columns: 280px minmax(0, 1fr) 280px; }
+  .verify-board > :nth-child(3) { grid-column: auto; }
+}
+
 @utility bg-gradient-primary { background-image: var(--gradient-primary); }
 @utility bg-gradient-wave { background-image: var(--gradient-wave); }
 @utility shadow-soft { box-shadow: var(--shadow-soft); }

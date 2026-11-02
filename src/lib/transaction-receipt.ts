@@ -5,6 +5,7 @@ export function transactionReceipt(transaction: DemoTransaction) {
     "Basecola — Demo transaction receipt",
     `${transaction.type}: ${transaction.quantity}`,
     `Value: ${money(transaction.value)}`,
+    `Fee: ${money(transaction.fee)}`,
     `Status: ${transaction.status}`,
     `Date: ${transaction.date}`,
     `Reference: ${transaction.id}`,

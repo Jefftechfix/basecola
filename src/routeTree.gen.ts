@@ -10,15 +10,32 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AssetsRouteImport } from './routes/assets'
+import { Route as BuyRouteImport } from './routes/buy'
+import { Route as ChangePasswordRouteImport } from './routes/change-password'
+import { Route as ChangePinRouteImport } from './routes/change-pin'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DeleteAccountRouteImport } from './routes/delete-account'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FundWalletRouteImport } from './routes/fund-wallet'
+import { Route as HelpRouteImport } from './routes/help'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ReceiveRouteImport } from './routes/receive'
+import { Route as ReferralRouteImport } from './routes/referral'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ResetPasswordSuccessRouteImport } from './routes/reset-password-success'
+import { Route as SecurityRouteImport } from './routes/security'
+import { Route as SellRouteImport } from './routes/sell'
 import { Route as SendRouteImport } from './routes/send'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as StatementsRouteImport } from './routes/statements'
 import { Route as TransactionsRouteImport } from './routes/transactions'
+import { Route as TwoFactorRouteImport } from './routes/two-factor'
 import { Route as VerifyRouteImport } from './routes/verify'
+import { Route as VerifyAccountRouteImport } from './routes/verify-account'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as AssetsSymbolRouteImport } from './routes/assets_.$symbol'
 import { Route as TransactionsTransactionIdRouteImport } from './routes/transactions_.$transactionId'
@@ -28,9 +45,34 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin-login',
+  path: '/admin-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AssetsRoute = AssetsRouteImport.update({
   id: '/assets',
   path: '/assets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BuyRoute = BuyRouteImport.update({
+  id: '/buy',
+  path: '/buy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangePasswordRoute = ChangePasswordRouteImport.update({
+  id: '/change-password',
+  path: '/change-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangePinRoute = ChangePinRouteImport.update({
+  id: '/change-pin',
+  path: '/change-pin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -38,9 +80,29 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DeleteAccountRoute = DeleteAccountRouteImport.update({
+  id: '/delete-account',
+  path: '/delete-account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FundWalletRoute = FundWalletRouteImport.update({
   id: '/fund-wallet',
   path: '/fund-wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -53,6 +115,31 @@ const ReceiveRoute = ReceiveRouteImport.update({
   path: '/receive',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReferralRoute = ReferralRouteImport.update({
+  id: '/referral',
+  path: '/referral',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordSuccessRoute = ResetPasswordSuccessRouteImport.update({
+  id: '/reset-password-success',
+  path: '/reset-password-success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SecurityRoute = SecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellRoute = SellRouteImport.update({
+  id: '/sell',
+  path: '/sell',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SendRoute = SendRouteImport.update({
   id: '/send',
   path: '/send',
@@ -63,14 +150,29 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StatementsRoute = StatementsRouteImport.update({
+  id: '/statements',
+  path: '/statements',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TransactionsRoute = TransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TwoFactorRoute = TwoFactorRouteImport.update({
+  id: '/two-factor',
+  path: '/two-factor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VerifyRoute = VerifyRouteImport.update({
   id: '/verify',
   path: '/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyAccountRoute = VerifyAccountRouteImport.update({
+  id: '/verify-account',
+  path: '/verify-account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WalletRoute = WalletRouteImport.update({
@@ -92,30 +194,64 @@ const TransactionsTransactionIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/admin-login': typeof AdminLoginRoute
   '/assets': typeof AssetsRoute
+  '/buy': typeof BuyRoute
+  '/change-password': typeof ChangePasswordRoute
+  '/change-pin': typeof ChangePinRoute
   '/dashboard': typeof DashboardRoute
+  '/delete-account': typeof DeleteAccountRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/fund-wallet': typeof FundWalletRoute
+  '/help': typeof HelpRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/receive': typeof ReceiveRoute
+  '/referral': typeof ReferralRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/reset-password-success': typeof ResetPasswordSuccessRoute
+  '/security': typeof SecurityRoute
+  '/sell': typeof SellRoute
   '/send': typeof SendRoute
   '/signup': typeof SignupRoute
+  '/statements': typeof StatementsRoute
   '/transactions': typeof TransactionsRoute
+  '/two-factor': typeof TwoFactorRoute
   '/verify': typeof VerifyRoute
+  '/verify-account': typeof VerifyAccountRoute
   '/wallet': typeof WalletRoute
   '/assets/$symbol': typeof AssetsSymbolRoute
   '/transactions/$transactionId': typeof TransactionsTransactionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/admin-login': typeof AdminLoginRoute
   '/assets': typeof AssetsRoute
+  '/buy': typeof BuyRoute
+  '/change-password': typeof ChangePasswordRoute
+  '/change-pin': typeof ChangePinRoute
   '/dashboard': typeof DashboardRoute
+  '/delete-account': typeof DeleteAccountRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/fund-wallet': typeof FundWalletRoute
+  '/help': typeof HelpRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/receive': typeof ReceiveRoute
+  '/referral': typeof ReferralRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/reset-password-success': typeof ResetPasswordSuccessRoute
+  '/security': typeof SecurityRoute
+  '/sell': typeof SellRoute
   '/send': typeof SendRoute
   '/signup': typeof SignupRoute
+  '/statements': typeof StatementsRoute
   '/transactions': typeof TransactionsRoute
+  '/two-factor': typeof TwoFactorRoute
   '/verify': typeof VerifyRoute
+  '/verify-account': typeof VerifyAccountRoute
   '/wallet': typeof WalletRoute
   '/assets/$symbol': typeof AssetsSymbolRoute
   '/transactions/$transactionId': typeof TransactionsTransactionIdRoute
@@ -123,15 +259,32 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/admin-login': typeof AdminLoginRoute
   '/assets': typeof AssetsRoute
+  '/buy': typeof BuyRoute
+  '/change-password': typeof ChangePasswordRoute
+  '/change-pin': typeof ChangePinRoute
   '/dashboard': typeof DashboardRoute
+  '/delete-account': typeof DeleteAccountRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/fund-wallet': typeof FundWalletRoute
+  '/help': typeof HelpRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/receive': typeof ReceiveRoute
+  '/referral': typeof ReferralRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/reset-password-success': typeof ResetPasswordSuccessRoute
+  '/security': typeof SecurityRoute
+  '/sell': typeof SellRoute
   '/send': typeof SendRoute
   '/signup': typeof SignupRoute
+  '/statements': typeof StatementsRoute
   '/transactions': typeof TransactionsRoute
+  '/two-factor': typeof TwoFactorRoute
   '/verify': typeof VerifyRoute
+  '/verify-account': typeof VerifyAccountRoute
   '/wallet': typeof WalletRoute
   '/assets_/$symbol': typeof AssetsSymbolRoute
   '/transactions_/$transactionId': typeof TransactionsTransactionIdRoute
@@ -140,45 +293,96 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
+    | '/admin-login'
     | '/assets'
+    | '/buy'
+    | '/change-password'
+    | '/change-pin'
     | '/dashboard'
+    | '/delete-account'
+    | '/forgot-password'
     | '/fund-wallet'
+    | '/help'
+    | '/login'
     | '/profile'
     | '/receive'
+    | '/referral'
+    | '/reset-password'
+    | '/reset-password-success'
+    | '/security'
+    | '/sell'
     | '/send'
     | '/signup'
+    | '/statements'
     | '/transactions'
+    | '/two-factor'
     | '/verify'
+    | '/verify-account'
     | '/wallet'
     | '/assets/$symbol'
     | '/transactions/$transactionId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
+    | '/admin-login'
     | '/assets'
+    | '/buy'
+    | '/change-password'
+    | '/change-pin'
     | '/dashboard'
+    | '/delete-account'
+    | '/forgot-password'
     | '/fund-wallet'
+    | '/help'
+    | '/login'
     | '/profile'
     | '/receive'
+    | '/referral'
+    | '/reset-password'
+    | '/reset-password-success'
+    | '/security'
+    | '/sell'
     | '/send'
     | '/signup'
+    | '/statements'
     | '/transactions'
+    | '/two-factor'
     | '/verify'
+    | '/verify-account'
     | '/wallet'
     | '/assets/$symbol'
     | '/transactions/$transactionId'
   id:
     | '__root__'
     | '/'
+    | '/admin'
+    | '/admin-login'
     | '/assets'
+    | '/buy'
+    | '/change-password'
+    | '/change-pin'
     | '/dashboard'
+    | '/delete-account'
+    | '/forgot-password'
     | '/fund-wallet'
+    | '/help'
+    | '/login'
     | '/profile'
     | '/receive'
+    | '/referral'
+    | '/reset-password'
+    | '/reset-password-success'
+    | '/security'
+    | '/sell'
     | '/send'
     | '/signup'
+    | '/statements'
     | '/transactions'
+    | '/two-factor'
     | '/verify'
+    | '/verify-account'
     | '/wallet'
     | '/assets_/$symbol'
     | '/transactions_/$transactionId'
@@ -186,15 +390,32 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  AdminLoginRoute: typeof AdminLoginRoute
   AssetsRoute: typeof AssetsRoute
+  BuyRoute: typeof BuyRoute
+  ChangePasswordRoute: typeof ChangePasswordRoute
+  ChangePinRoute: typeof ChangePinRoute
   DashboardRoute: typeof DashboardRoute
+  DeleteAccountRoute: typeof DeleteAccountRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   FundWalletRoute: typeof FundWalletRoute
+  HelpRoute: typeof HelpRoute
+  LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
   ReceiveRoute: typeof ReceiveRoute
+  ReferralRoute: typeof ReferralRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  ResetPasswordSuccessRoute: typeof ResetPasswordSuccessRoute
+  SecurityRoute: typeof SecurityRoute
+  SellRoute: typeof SellRoute
   SendRoute: typeof SendRoute
   SignupRoute: typeof SignupRoute
+  StatementsRoute: typeof StatementsRoute
   TransactionsRoute: typeof TransactionsRoute
+  TwoFactorRoute: typeof TwoFactorRoute
   VerifyRoute: typeof VerifyRoute
+  VerifyAccountRoute: typeof VerifyAccountRoute
   WalletRoute: typeof WalletRoute
   AssetsSymbolRoute: typeof AssetsSymbolRoute
   TransactionsTransactionIdRoute: typeof TransactionsTransactionIdRoute
@@ -209,11 +430,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-login': {
+      id: '/admin-login'
+      path: '/admin-login'
+      fullPath: '/admin-login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/assets': {
       id: '/assets'
       path: '/assets'
       fullPath: '/assets'
       preLoaderRoute: typeof AssetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/buy': {
+      id: '/buy'
+      path: '/buy'
+      fullPath: '/buy'
+      preLoaderRoute: typeof BuyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/change-password': {
+      id: '/change-password'
+      path: '/change-password'
+      fullPath: '/change-password'
+      preLoaderRoute: typeof ChangePasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/change-pin': {
+      id: '/change-pin'
+      path: '/change-pin'
+      fullPath: '/change-pin'
+      preLoaderRoute: typeof ChangePinRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -223,11 +479,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/delete-account': {
+      id: '/delete-account'
+      path: '/delete-account'
+      fullPath: '/delete-account'
+      preLoaderRoute: typeof DeleteAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fund-wallet': {
       id: '/fund-wallet'
       path: '/fund-wallet'
       fullPath: '/fund-wallet'
       preLoaderRoute: typeof FundWalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -244,6 +528,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReceiveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/referral': {
+      id: '/referral'
+      path: '/referral'
+      fullPath: '/referral'
+      preLoaderRoute: typeof ReferralRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password-success': {
+      id: '/reset-password-success'
+      path: '/reset-password-success'
+      fullPath: '/reset-password-success'
+      preLoaderRoute: typeof ResetPasswordSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/security': {
+      id: '/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sell': {
+      id: '/sell'
+      path: '/sell'
+      fullPath: '/sell'
+      preLoaderRoute: typeof SellRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/send': {
       id: '/send'
       path: '/send'
@@ -258,6 +577,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/statements': {
+      id: '/statements'
+      path: '/statements'
+      fullPath: '/statements'
+      preLoaderRoute: typeof StatementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/transactions': {
       id: '/transactions'
       path: '/transactions'
@@ -265,11 +591,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TransactionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/two-factor': {
+      id: '/two-factor'
+      path: '/two-factor'
+      fullPath: '/two-factor'
+      preLoaderRoute: typeof TwoFactorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/verify': {
       id: '/verify'
       path: '/verify'
       fullPath: '/verify'
       preLoaderRoute: typeof VerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-account': {
+      id: '/verify-account'
+      path: '/verify-account'
+      fullPath: '/verify-account'
+      preLoaderRoute: typeof VerifyAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/wallet': {
@@ -298,15 +638,32 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
+  AdminLoginRoute: AdminLoginRoute,
   AssetsRoute: AssetsRoute,
+  BuyRoute: BuyRoute,
+  ChangePasswordRoute: ChangePasswordRoute,
+  ChangePinRoute: ChangePinRoute,
   DashboardRoute: DashboardRoute,
+  DeleteAccountRoute: DeleteAccountRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   FundWalletRoute: FundWalletRoute,
+  HelpRoute: HelpRoute,
+  LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
   ReceiveRoute: ReceiveRoute,
+  ReferralRoute: ReferralRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  ResetPasswordSuccessRoute: ResetPasswordSuccessRoute,
+  SecurityRoute: SecurityRoute,
+  SellRoute: SellRoute,
   SendRoute: SendRoute,
   SignupRoute: SignupRoute,
+  StatementsRoute: StatementsRoute,
   TransactionsRoute: TransactionsRoute,
+  TwoFactorRoute: TwoFactorRoute,
   VerifyRoute: VerifyRoute,
+  VerifyAccountRoute: VerifyAccountRoute,
   WalletRoute: WalletRoute,
   AssetsSymbolRoute: AssetsSymbolRoute,
   TransactionsTransactionIdRoute: TransactionsTransactionIdRoute,

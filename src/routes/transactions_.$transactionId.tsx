@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Share2, Check, Copy, Clock3, CircleCheck, CircleX, ReceiptText } from "lucide-react";
+import { ArrowLeft, Share2, Check, Copy, Clock3, CircleCheck, CircleX, ReceiptText } from "lucide-react";
 import { AccountShell } from "@/components/account-shell";
+import { TransactionCoin } from "@/components/transaction-coin";
 import { TransactionStatus } from "@/components/transaction-status";
 import { Button } from "@/components/ui/button";
 import { TRANSACTIONS, money } from "@/lib/account-demo";
@@ -71,14 +72,13 @@ function TransactionDetailsPage() {
   </AccountShell>;
 
   const incoming = transaction.type === "Buy" || transaction.type === "Receive";
-  const Direction = incoming ? ArrowDownLeft : ArrowUpRight;
   const StatusIcon = transaction.status === "Completed" ? CircleCheck : transaction.status === "Pending" ? Clock3 : CircleX;
   const statusText = transaction.status === "Completed" ? "This demo transaction is complete." : transaction.status === "Pending" ? "This demo transaction is awaiting confirmation." : "This demo transaction was not completed.";
 
   return <AccountShell active="/transactions" title="Transaction details">
     <Button asChild variant="ghost" className="mb-4 -ml-3 text-muted-foreground"><Link to="/transactions"><ArrowLeft />Transactions</Link></Button>
     <section aria-label="Transaction summary" className="border-b pb-7 text-center">
-      <span className={`mx-auto grid h-16 w-16 place-items-center rounded-full ${incoming ? "bg-green-soft text-success" : "bg-pink-soft text-pink"}`}><Direction className="h-8 w-8" /></span>
+      <span className="mx-auto grid w-fit"><TransactionCoin symbol={transaction.sym} incoming={incoming} size="h-16 w-16" /></span>
       <p className="mt-4 text-sm font-medium text-muted-foreground">{transaction.type} {transaction.sym}</p>
       <h2 className="mt-2 text-3xl font-extrabold">{transaction.quantity}</h2>
       <p className="mb-4 mt-2 text-lg text-muted-foreground">{money(transaction.value)}</p>
@@ -86,7 +86,7 @@ function TransactionDetailsPage() {
     </section>
     <section className="py-6"><h2 className="mb-2 text-lg font-bold">Receipt details</h2>
       <dl className="divide-y text-sm">
-        {[["Transaction type", transaction.type], ["Asset", transaction.sym], ["Amount", transaction.quantity], ["USD value", money(transaction.value)], ["Date & time", transaction.date]].map(([label, value]) => <div key={label} className="flex flex-wrap justify-between gap-x-4 gap-y-2 py-4"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium">{value}</dd></div>)}
+        {[["Transaction type", transaction.type], ["Asset", transaction.sym], ["Amount", transaction.quantity], ["USD value", money(transaction.value)], ["Fee", money(transaction.fee)], ["Date & time", transaction.date]].map(([label, value]) => <div key={label} className="flex flex-wrap justify-between gap-x-4 gap-y-2 py-4"><dt className="text-muted-foreground">{label}</dt><dd className="font-medium">{value}</dd></div>)}
         <div className="flex flex-wrap items-center justify-between gap-2 py-3"><dt className="text-muted-foreground">Reference</dt><dd className="flex items-center gap-2 font-medium">{transaction.id}<Button variant="ghost" size="icon" aria-label="Copy transaction reference" title="Copy reference" onClick={copyReference}><Copy /></Button></dd></div>
       </dl>
     </section>

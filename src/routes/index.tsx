@@ -67,9 +67,10 @@ function Index() {
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
         <Logo />
         <nav className="hidden gap-8 text-sm font-medium text-muted-foreground md:flex">
-          <a href="#markets">Markets</a><a href="#why">Why Basecola</a><Link to="/dashboard">Dashboard</Link>
+          <a href="#markets">Markets</a><a href="#why">Why Basecola</a>
         </nav>
         <div className="flex items-center gap-4">
+          <Link to="/login" className="hidden text-sm font-semibold text-primary md:block">Log In</Link>
           <Link to="/signup" className="hidden rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground md:block">Sign Up</Link>
           <Bell className="h-6 w-6 md:hidden" /><Menu className="h-6 w-6 md:hidden" />
         </div>
@@ -128,7 +129,7 @@ function Index() {
 
       <footer className="bg-navy text-navy-foreground">
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 md:grid-cols-4">
-          <div><p className="text-2xl font-extrabold">Basecola</p><p className="mt-3 text-sm opacity-70">A secure and easy way to buy, sell, trade, and store cryptocurrency worldwide.</p></div>
+          <div><Logo tone="light" /><p className="mt-3 text-sm opacity-70">A secure and easy way to buy, sell, trade, and store cryptocurrency worldwide.</p></div>
           {[["Company", ["About Us", "Careers", "Blog", "Press", "Contact"]], ["Products", ["Buy & Sell", "Trade", "Assets", "Earn", "Security"]], ["Support", ["Help Center", "FAQs", "Fees", "Status", "Report an Issue"]]].map(([h, ls]: any) => (
             <div key={h}><p className="font-bold">{h}</p><ul className="mt-3 space-y-2 text-sm opacity-70">{ls.map((l: string) => <li key={l}>{l}</li>)}</ul></div>
           ))}

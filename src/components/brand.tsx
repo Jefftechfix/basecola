@@ -7,13 +7,11 @@ import tetherLogo from "@/assets/crypto/usdt.svg.asset.json";
 import solanaLogo from "@/assets/crypto/sol.svg.asset.json";
 import xrpLogo from "@/assets/crypto/xrp.svg.asset.json";
 
-export function Logo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
-  const box = size === "lg" ? "h-12 w-12 text-3xl" : size === "sm" ? "h-7 w-7 text-lg" : "h-9 w-9 text-2xl";
-  const txt = size === "lg" ? "text-4xl" : size === "sm" ? "text-lg" : "text-2xl";
+export function Logo({ size = "md", tone = "default" }: { size?: "sm" | "md" | "lg"; tone?: "default" | "light" }) {
+  const height = size === "lg" ? "h-24" : size === "sm" ? "h-14" : "h-16";
   return (
-    <Link to="/" className="flex items-center gap-2">
-      <span className={`${box} grid place-items-center rounded-xl bg-gradient-primary font-extrabold text-primary-foreground`}>B</span>
-      <span className={`${txt} font-extrabold tracking-tight text-foreground`}>Basecola</span>
+    <Link to="/" className="inline-flex items-center">
+      <img src="/logo.png" alt="Basecola" className={`${height} w-auto rounded-xl object-contain ${tone === "light" ? "bg-white" : ""}`} />
     </Link>
   );
 }
@@ -52,7 +50,7 @@ export function Change({ v }: { v: number }) {
   );
 }
 
-export function AuthShell({ children }: { children: ReactNode }) {
+export function AuthShell({ children, back = true }: { children: ReactNode; back?: boolean }) {
   const router = useRouter();
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -60,10 +58,8 @@ export function AuthShell({ children }: { children: ReactNode }) {
       <div className="pointer-events-none absolute -bottom-32 -left-20 h-64 w-[140%] rounded-[50%] bg-accent" />
       <div className="relative mx-auto max-w-md px-5 pb-10 pt-6">
         <div className="mb-6 flex items-center">
-          <button onClick={() => router.history.back()} aria-label="Back" className="p-1 text-foreground">
-            <ArrowLeft className="h-6 w-6" />
-          </button>
-          <div className="mx-auto -translate-x-4"><Logo /></div>
+          {back ? <button onClick={() => router.history.back()} aria-label="Back" className="p-1 text-foreground"><ArrowLeft className="h-6 w-6" /></button> : <span className="w-8" />}
+          <div className={`mx-auto ${back ? "-translate-x-4" : ""}`}><Logo /></div>
         </div>
         {children}
       </div>

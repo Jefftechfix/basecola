@@ -1,7 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { User, Mail, Phone, Globe, UserPlus, Lock, Eye, EyeOff, CheckCircle2, ShieldCheck } from "lucide-react";
 import { AuthShell } from "@/components/brand";
+import { COUNTRY_DIALS, countryByName, countryOptionLabel } from "@/lib/countries";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -25,6 +26,8 @@ function Signup() {
   const [pw, setPw] = useState("");
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
+  const [country, setCountry] = useState("");
+  const [phoneIso, setPhoneIso] = useState("US");
   const rules = [[pw.length >= 8, "At least 8 characters"], [/[A-Z]/.test(pw), "One uppercase letter"], [/\d/.test(pw), "One number"]] as const;
   const ok = rules.every(([v]) => v);
 
@@ -38,8 +41,8 @@ function Signup() {
       >
         <L t="Full Name"><div className={field}><User className="h-5 w-5" /><input required className={input} placeholder="Enter your full name" /></div></L>
         <L t="Email Address"><div className={field}><Mail className="h-5 w-5" /><input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={input} placeholder="Enter your email address" /></div></L>
-        <L t="Phone Number"><div className={field}><Phone className="h-5 w-5" /><span className="border-r pr-3 font-semibold">🇺🇸 +1</span><input type="tel" className={input} placeholder="Enter your phone number" /></div></L>
-        <L t="Country"><div className={field}><Globe className="h-5 w-5" /><select required defaultValue="" className={input}><option value="" disabled>Select your country</option>{["Nigeria", "United States", "United Kingdom", "Ghana", "Kenya", "Canada"].map((c) => <option key={c}>{c}</option>)}</select></div></L>
+        <L t="Phone Number"><div className={field}><Phone className="h-5 w-5 shrink-0" /><select aria-label="Country code" value={phoneIso} onChange={event => setPhoneIso(event.target.value)} className="max-w-[46%] shrink-0 bg-transparent text-sm font-semibold outline-none">{COUNTRY_DIALS.map(item => <option key={item.iso} value={item.iso}>{countryOptionLabel(item)}</option>)}</select><input type="tel" className={input} placeholder="Enter your phone number" /></div></L>
+        <L t="Country"><div className={field}><Globe className="h-5 w-5 shrink-0" /><select required aria-label="Country" value={country} onChange={event => { const next = event.target.value; setCountry(next); const match = countryByName(next); if (match) setPhoneIso(match.iso); }} className={input}><option value="" disabled>Select your country</option>{COUNTRY_DIALS.map(item => <option key={item.iso} value={item.name}>{item.name}</option>)}</select></div></L>
         <L t={<>Referral Code <span className="font-normal">(Optional)</span></>}><div className={field}><UserPlus className="h-5 w-5" /><input className={input} placeholder="Enter referral code" /></div></L>
         <L t="Password">
           <div className={field}><Lock className="h-5 w-5" /><input type={show ? "text" : "password"} value={pw} onChange={(e) => setPw(e.target.value)} className={input} placeholder="Create a strong password" />
@@ -50,7 +53,7 @@ function Signup() {
         </L>
         <button disabled={!ok} className="w-full rounded-2xl bg-primary py-4 text-lg font-bold text-primary-foreground shadow-soft disabled:opacity-60">Sign Up</button>
       </form>
-      <p className="mt-6 text-center">Already have an account? <a href="/dashboard" className="font-bold text-primary">Log In</a></p>
+      <p className="mt-6 text-center">Already have an account? <Link to="/login" className="font-bold text-primary">Log In</Link></p>
       <div className="mt-6 flex items-center justify-center gap-2 rounded-2xl bg-accent py-4 text-sm"><ShieldCheck className="h-5 w-5 text-primary" />Your information is secure and encrypted</div>
     </AuthShell>
   );

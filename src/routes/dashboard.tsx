@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Bell, Eye, EyeOff, PlusCircle, Download, ArrowUp, ArrowRight, Bitcoin, RefreshCw, BarChart3, Home, Layers, History, User } from "lucide-react";
+import { Eye, EyeOff, PlusCircle, Download, ArrowUp, ArrowRight, Bitcoin, RefreshCw, BarChart3, Home, Layers, History, User } from "lucide-react";
 import { Logo, COINS, CoinIcon, Change } from "@/components/brand";
+import { NotificationBell } from "@/components/notification-bell";
 import coins from "@/assets/coins.png";
 import { AccountNav } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
@@ -31,14 +32,14 @@ function Spark({ up, seed }: { up: boolean; seed: number }) {
 function Dashboard() {
   const [hide, setHide] = useState(false);
   const actions = [
-    { i: Bitcoin, t: "Buy", d: "Buy crypto instantly", bg: "bg-accent", c: "text-primary" },
-    { i: RefreshCw, t: "Sell", d: "Sell crypto to cash", bg: "bg-pink-soft", c: "text-pink" },
+    { i: Bitcoin, t: "Buy", d: "Buy crypto instantly", bg: "bg-accent", c: "text-primary", to: "/buy" },
+    { i: RefreshCw, t: "Sell", d: "Sell crypto to cash", bg: "bg-pink-soft", c: "text-pink", to: "/sell" },
     { i: BarChart3, t: "Invest", d: "Grow your crypto", bg: "bg-green-soft", c: "text-success" },
-  ];
+  ] as const;
   return (
     <div className="min-h-screen pb-28">
       <div className="mx-auto max-w-3xl px-5 pt-5">
-        <div className="flex items-center justify-between"><Logo /><span className="relative"><Bell className="h-7 w-7" /><span className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full bg-destructive" /></span></div>
+        <div className="flex items-center justify-between"><Logo /><NotificationBell /></div>
         <div className="mt-5 flex items-center gap-3">
           <span className="grid h-12 w-12 place-items-center rounded-full bg-accent font-bold text-primary">MS</span>
           <div><p className="text-xl font-bold">Hello, Mustapha 👋</p><p className="text-sm text-muted-foreground">Welcome to Basecola</p></div>
@@ -58,12 +59,10 @@ function Dashboard() {
 
         <Head t="Quick Actions" l="View All" />
         <div className="grid grid-cols-3 gap-3">
-          {actions.map(({ i: I, t, d, bg, c }) => (
-            <button key={t} className={`${bg} rounded-2xl p-3 text-left`}>
-              <span className="flex items-center gap-2"><span className="grid h-9 w-9 place-items-center rounded-full bg-card"><I className={`h-5 w-5 ${c}`} /></span><b>{t}</b></span>
-              <p className="mt-2 text-xs text-muted-foreground">{d}</p>
-            </button>
-          ))}
+          {actions.map(action => {
+            const body = <><span className="flex items-center gap-2"><span className="grid h-9 w-9 place-items-center rounded-full bg-card"><action.i className={`h-5 w-5 ${action.c}`} /></span><b>{action.t}</b></span><p className="mt-2 text-xs text-muted-foreground">{action.d}</p></>;
+            return "to" in action ? <Link key={action.t} to={action.to} className={`${action.bg} rounded-2xl p-3 text-left`}>{body}</Link> : <button key={action.t} className={`${action.bg} rounded-2xl p-3 text-left`}>{body}</button>;
+          })}
         </div>
 
         <Head t="Market" l="See All" />

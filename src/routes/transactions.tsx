@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, Search, ChevronRight, History } from "lucide-react";
+import { Search, ChevronRight, History } from "lucide-react";
 import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TransactionCoin } from "@/components/transaction-coin";
 import { TransactionStatus } from "@/components/transaction-status";
-import { TRANSACTIONS } from "@/lib/account-demo";
+import { TRANSACTIONS, money } from "@/lib/account-demo";
 
 export const Route = createFileRoute("/transactions")({
   head: () => ({ meta: [
@@ -25,11 +26,10 @@ function TransactionsPage() {
     <div className="mb-3 flex justify-between text-sm"><h2 className="font-bold">Recent activity</h2><span className="text-muted-foreground">{filtered.length} transactions</span></div>
     <div className="divide-y border-y">{filtered.map(item => {
       const incoming = item.type === "Receive" || item.type === "Buy";
-      const Icon = incoming ? ArrowDownLeft : ArrowUpRight;
       return <Button key={item.id} asChild variant="ghost" className="h-auto min-h-24 w-full justify-start gap-3 rounded-none px-0 py-4 hover:bg-accent/40"><Link to="/transactions/$transactionId" params={{ transactionId: item.id }}>
-        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${incoming ? "bg-green-soft text-success" : "bg-pink-soft text-pink"}`}><Icon className="!h-5 !w-5" /></span>
+        <TransactionCoin symbol={item.sym} incoming={incoming} />
         <div className="min-w-0 flex-1 text-left"><p className="font-bold">{item.type} {item.sym}</p><p className="mt-1 text-xs text-muted-foreground">{item.date.split(" · ")[0]}</p></div>
-        <div className="text-right"><p className="mb-2 font-semibold">{item.quantity}</p><TransactionStatus status={item.status} /></div><ChevronRight className="text-muted-foreground" />
+        <div className="text-right"><p className="font-semibold">{item.quantity}</p><p className="my-1 text-xs text-muted-foreground">Fee {money(item.fee)}</p><TransactionStatus status={item.status} /></div><ChevronRight className="text-muted-foreground" />
       </Link></Button>;
     })}</div>
     {filtered.length === 0 && <div className="py-16 text-center"><History className="mx-auto mb-3 h-8 w-8 text-muted-foreground" /><p className="font-semibold">No matching transactions</p><Button variant="link" onClick={() => { setQuery(""); setFilter("All"); }}>Reset filters</Button></div>}

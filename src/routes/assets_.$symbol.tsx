@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, ArrowDownLeft, ArrowUpRight, ChevronRight, Eye, EyeOff, Wallet, History } from "lucide-react";
+import { ArrowLeft, ChevronRight, Eye, EyeOff, Wallet, History } from "lucide-react";
 import { AccountShell } from "@/components/account-shell";
 import { CoinIcon, Change } from "@/components/brand";
+import { TransactionCoin } from "@/components/transaction-coin";
 import { TransactionStatus } from "@/components/transaction-status";
 import { Button } from "@/components/ui/button";
 import { HOLDINGS, TRANSACTIONS, money } from "@/lib/account-demo";
@@ -49,8 +50,7 @@ function CryptoDetailsPage() {
     <section className="py-6"><div className="mb-3 flex items-center justify-between gap-3"><h2 className="text-lg font-bold">Recent activity</h2><Button asChild variant="link" className="h-auto px-0"><Link to="/transactions">View all<ChevronRight /></Link></Button></div>
       <div className="divide-y">{activity.map(transaction => {
         const incoming = transaction.type === "Receive" || transaction.type === "Buy";
-        const Icon = incoming ? ArrowDownLeft : ArrowUpRight;
-        return <Button key={transaction.id} asChild variant="ghost" className="h-auto w-full justify-start gap-3 rounded-none px-0 py-4"><Link to="/transactions/$transactionId" params={{ transactionId: transaction.id }} aria-label={`${transaction.type} ${asset.sym} ${transaction.id}`}><span className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg ${incoming ? "bg-green-soft text-success" : "bg-pink-soft text-pink"}`}><Icon /></span><div className="min-w-0 flex-1 text-left"><p className="font-semibold">{transaction.type} {asset.sym}</p><p className="mt-1 whitespace-normal text-xs text-muted-foreground">{transaction.date}</p></div><div className="text-right"><p className="mb-1 text-sm font-semibold">{hidden ? "••••" : transaction.quantity}</p><TransactionStatus status={transaction.status} /></div><ChevronRight className="shrink-0 text-muted-foreground" /></Link></Button>;
+        return <Button key={transaction.id} asChild variant="ghost" className="h-auto w-full justify-start gap-3 rounded-none px-0 py-4"><Link to="/transactions/$transactionId" params={{ transactionId: transaction.id }} aria-label={`${transaction.type} ${asset.sym} ${transaction.id}`}><TransactionCoin symbol={asset.sym} incoming={incoming} /><div className="min-w-0 flex-1 text-left"><p className="font-semibold">{transaction.type} {asset.sym}</p><p className="mt-1 whitespace-normal text-xs text-muted-foreground">{transaction.date}</p></div><div className="text-right"><p className="text-sm font-semibold">{hidden ? "••••" : transaction.quantity}</p><p className="my-1 text-xs text-muted-foreground">Fee {hidden ? "••••" : money(transaction.fee)}</p><TransactionStatus status={transaction.status} /></div><ChevronRight className="shrink-0 text-muted-foreground" /></Link></Button>;
       })}</div>
       {activity.length === 0 && <div className="py-7 text-center"><History className="mx-auto mb-3 h-7 w-7 text-muted-foreground" /><p className="text-sm text-muted-foreground">No {asset.sym} activity yet</p></div>}
     </section>

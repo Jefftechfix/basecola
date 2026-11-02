@@ -61,7 +61,7 @@ function Verify() {
             <button onClick={() => setDone(false)} aria-label="Close" className="absolute right-4 top-4 rounded-full bg-muted p-1"><X className="h-4 w-4" /></button>
             <CheckCircle2 className="mx-auto h-20 w-20 text-success" />
             <h2 className="mt-3 text-2xl font-extrabold">Email Verified Successfully!</h2>
-            <p className="mt-2 text-muted-foreground">Your email has been verified. You can now create your wallet on Basecola.</p>
+            <p className="mt-2 text-muted-foreground">Your email has been verified. Create a 4-digit PIN to continue.</p>
             <button onClick={() => nav({ to: "/wallet" })} className="mt-6 w-full rounded-2xl bg-primary py-4 font-bold text-primary-foreground">Continue</button>
           </div>
         </div>

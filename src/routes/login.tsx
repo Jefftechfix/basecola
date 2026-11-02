@@ -4,6 +4,7 @@ import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 import { AuthShell } from "@/components/brand";
 import { Checkbox } from "@/components/ui/checkbox";
 import { loginError, REMEMBERED_EMAIL_KEY } from "@/lib/login-demo";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [

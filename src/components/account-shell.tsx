@@ -25,7 +25,7 @@ export function AccountShell({ active, title, children }: { active: typeof desti
   return <div className="min-h-screen pb-28">
     <div className="mx-auto max-w-3xl px-5 pt-5">
       <header className="flex items-center justify-between"><Logo /><Button asChild variant="ghost" size="icon" className="rounded-full bg-accent text-primary"><Link to="/profile" aria-label="Your profile"><User /></Link></Button></header>
-      <div className="mb-6 mt-7 flex items-center justify-between gap-3"><h1 className="text-3xl font-extrabold">{title}</h1><span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">Demo account</span></div>
+      <h1 className="mb-6 mt-7 text-3xl font-extrabold">{title}</h1>
       {children}
     </div>
     <AccountNav active={active} />

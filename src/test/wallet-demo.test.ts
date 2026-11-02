@@ -7,6 +7,7 @@ import { applyPassword, applyPin, getSecuritySession, passwordChangeError, pinCh
 import { loginError, resetPasswordError } from "@/lib/login-demo";
 import { adminLoginError } from "@/lib/admin-demo";
 import { accountFirstName, accountInitials } from "@/lib/account-profile";
+import { walletUsdBalance } from "@/lib/wallet-balance";
 import { stripeFundingAmountError, stripeFundingCents } from "@/lib/stripe-funding";
 import { amountError, bankAccountError, cardNumberError, cvvError, demoReceiveCode, expiryError, formatAssetAmount, matchingStripeDemoBanks, quoteTradeFee, recipientError, routingNumberError, sampleUnitPrice, sendNetworkFee, stripeDemoLoginError } from "@/lib/wallet-demo";
 
@@ -73,6 +74,23 @@ describe("Demo wallet safeguards", () => {
     expect(accountFirstName({ name: "", email: "ada@example.com" })).toBe("ada");
     expect(accountInitials({ name: "", email: "ada@example.com" })).toBe("AD");
     expect(accountInitials({ name: "Ada Lovelace", email: "ada@example.com" })).toBe("AL");
+    const now = Date.parse("2026-11-02T18:00:00.000Z");
+    const balance = walletUsdBalance(
+      [
+        { amount: 50, status: "pending", reference: "cs_live_123", payment_method: "Stripe · visa ending 4242", created_at: "2026-11-02T17:00:00.000Z" },
+        { amount: 20, status: "pending", reference: "Ending 6789", payment_method: "Debit or credit card", created_at: "2026-11-02T17:00:00.000Z" },
+        { amount: 10, status: "completed", reference: null, payment_method: "Admin credit", created_at: "2026-11-01T12:00:00.000Z" },
+        { amount: 80, status: "rejected", reference: "cs_live_rejected", payment_method: "Stripe", created_at: "2026-11-02T17:00:00.000Z" },
+      ],
+      [
+        { usd_amount: 15, fee_usd: 1, direction: "debit", status: "completed", kind: "buy", created_at: "2026-11-02T16:00:00.000Z" },
+        { usd_amount: 5, fee_usd: 0, direction: "debit", status: "pending", kind: "send", created_at: "2026-11-02T16:00:00.000Z" },
+        { usd_amount: 50, fee_usd: 0, direction: "credit", status: "completed", kind: "funding", created_at: "2026-11-02T17:00:00.000Z" },
+      ],
+      now,
+    );
+    expect(balance.total).toBe(44);
+    expect(balance.dayChange).toBe(34);
   });
   it("does not preview sending more than the demo balance", () => {
     expect(amountError("0.11", 0.1)).not.toBe("");

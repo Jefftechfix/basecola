@@ -32,7 +32,7 @@ export function sendNetworkFee(symbol: string) {
 export function amountError(value: string, balance?: number) {
   const amount = Number(value);
   if (!value.trim() || !Number.isFinite(amount) || amount <= 0) return "Enter an amount greater than zero.";
-  if (balance !== undefined && amount > balance) return "Amount exceeds your demo balance.";
+  if (balance !== undefined && amount > balance) return "Amount exceeds your available balance.";
   return "";
 }
 

@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Eye, EyeOff, PlusCircle, Download, ArrowUp, ArrowRight, Bitcoin, RefreshCw, BarChart3 } from "lucide-react";
 import { Logo, COINS, CoinIcon, Change } from "@/components/brand";
@@ -7,9 +7,20 @@ import { NotificationBell } from "@/components/notification-bell";
 import coins from "@/assets/coins.png";
 import { AccountNav } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import { accountFirstName, accountInitials, loadAccountProfile } from "@/lib/account-profile";
+import { money } from "@/lib/account-demo";
+import { loadWalletBalance } from "@/lib/wallet-balance";
 
 export const Route = createFileRoute("/dashboard")({
+  ssr: false,
+  beforeLoad: async () => {
+    if (typeof document === "undefined") return;
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) throw redirect({ to: "/login", replace: true });
+  },
+  pendingComponent: CheckingAccount,
+  pendingMs: 0,
   head: () => ({
     meta: [
       { title: "Dashboard — Basecola" },
@@ -23,6 +34,10 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
+function CheckingAccount() {
+  return <p className="grid min-h-screen place-items-center text-sm text-muted-foreground">Checking your account</p>;
+}
+
 function Spark({ up, seed }: { up: boolean; seed: number }) {
   const pts = Array.from({ length: 12 }, (_, i) => {
     const y = 20 + Math.sin(i * 1.3 + seed) * 6 + (up ? -i * 1.4 : i * 0.6);
@@ -32,10 +47,24 @@ function Spark({ up, seed }: { up: boolean; seed: number }) {
 }
 
 function Dashboard() {
+  const nav = useNavigate();
   const [hide, setHide] = useState(false);
-  const { data: profile, isPending } = useQuery({ queryKey: ["account-profile"], queryFn: loadAccountProfile });
-  const greeting = profile ? accountFirstName(profile) : "";
-  const initials = profile ? accountInitials(profile) : "BC";
+  const { data: profile, isPending, isError, error: profileError } = useQuery({ queryKey: ["account-profile"], queryFn: loadAccountProfile });
+  const { data: balance, isPending: balancePending, error: balanceError } = useQuery({ queryKey: ["wallet-balance"], queryFn: loadWalletBalance });
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") nav({ to: "/login", replace: true });
+    });
+    return () => subscription.unsubscribe();
+  }, [nav]);
+  useEffect(() => {
+    if (!isPending && !isError && !profile) nav({ to: "/login", replace: true });
+  }, [isError, isPending, nav, profile]);
+  if (isError) return <p role="alert" className="grid min-h-screen place-items-center px-6 text-center text-sm text-destructive">{profileError.message}</p>;
+  if (isPending || !profile) return <CheckingAccount />;
+  const greeting = accountFirstName(profile);
+  const initials = accountInitials(profile);
+  const dayChange = balance?.dayChange ?? 0;
   const actions = [
     { i: Bitcoin, t: "Buy", d: "Buy crypto instantly", bg: "bg-accent", c: "text-primary", to: "/buy" },
     { i: RefreshCw, t: "Sell", d: "Sell crypto to cash", bg: "bg-pink-soft", c: "text-pink", to: "/sell" },
@@ -48,16 +77,16 @@ function Dashboard() {
         <div className="mt-5 flex items-center gap-3">
           <span className="grid h-12 w-12 place-items-center rounded-full bg-accent font-bold text-primary">{initials}</span>
           <div>
-            <p className="text-xl font-bold">{isPending ? "Hello" : profile ? `Hello, ${greeting}` : "Hello"}</p>
-            <p className="text-sm text-muted-foreground">{profile?.email || (isPending ? "Loading your account" : <Link to="/login" className="font-semibold text-primary">Log in</Link>)}</p>
+            <p className="text-xl font-bold">Hello, {greeting}</p>
+            <p className="text-sm text-muted-foreground">{profile.email}</p>
           </div>
         </div>
 
         <div className="relative mt-5 overflow-hidden rounded-3xl bg-gradient-primary p-6 text-primary-foreground shadow-soft">
           <img src={coins} alt="" width={1024} height={768} className="absolute -right-6 -top-6 w-28 opacity-90 sm:w-48" />
-          <p className="flex items-center gap-2 text-sm opacity-90">Sample balance <button onClick={() => setHide(!hide)} aria-label="Toggle balance">{hide ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></p>
-          <p className="mt-1 text-4xl font-extrabold">{hide ? "••••••" : "$12,480.21"}</p>
-          <p className="mt-1 font-semibold text-success">▲ +4.32% (24h)</p>
+          <p className="flex items-center gap-2 text-sm opacity-90">Wallet balance <button onClick={() => setHide(!hide)} aria-label="Toggle balance">{hide ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></p>
+          <p className="mt-1 text-4xl font-extrabold">{hide ? "••••••" : balancePending ? "…" : money(balance?.total ?? 0)}</p>
+          <p className={`mt-1 font-semibold ${dayChange < 0 ? "text-destructive" : "text-success"}`}>{balanceError ? balanceError.message : balancePending || balance == null ? "Loading balance" : `${dayChange > 0 ? "▲" : dayChange < 0 ? "▼" : ""} ${money(Math.abs(dayChange))} (24h)`}</p>
           <div className="relative mt-5 grid grid-cols-3 gap-2 text-sm font-semibold">
             <Button asChild variant="secondary" className="h-12 gap-1.5 rounded-lg bg-card px-2 text-foreground"><Link to="/fund-wallet"><PlusCircle className="text-primary" />Fund</Link></Button>
             <Button asChild variant="ghost" className="h-12 gap-1.5 rounded-lg bg-primary-foreground/25 px-2 text-primary-foreground hover:bg-primary-foreground/35 hover:text-primary-foreground"><Link to="/receive"><Download />Receive</Link></Button>

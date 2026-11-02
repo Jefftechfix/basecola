@@ -1,15 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Download } from "lucide-react";
 import { AccountShell } from "@/components/account-shell";
-import { TransactionCoin } from "@/components/transaction-coin";
-import { TransactionStatus } from "@/components/transaction-status";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { accountStatement, inStatementRange, money, portfolioBalance, statementPeriod, STATEMENT_HOLDER, TRANSACTIONS, type DemoTransaction } from "@/lib/account-demo";
-
-const filters = ["All", "Completed", "Pending", "Failed"] as const;
+import { money, statementPeriod } from "@/lib/account-demo";
+import { loadAccountProfile } from "@/lib/account-profile";
+import { loadWalletBalance } from "@/lib/wallet-balance";
 
 export const Route = createFileRoute("/statements")({
   head: () => ({ meta: [
@@ -20,34 +19,45 @@ export const Route = createFileRoute("/statements")({
 });
 
 function StatementsPage() {
-  const [filter, setFilter] = useState<(typeof filters)[number]>("All");
-  const [from, setFrom] = useState("2026-10-24");
-  const [to, setTo] = useState("2026-10-28");
+  const { data: profile } = useQuery({ queryKey: ["account-profile"], queryFn: loadAccountProfile });
+  const { data: balance } = useQuery({ queryKey: ["wallet-balance"], queryFn: loadWalletBalance });
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [notice, setNotice] = useState("");
   const period = statementPeriod(from, to);
-  const rangeError = !period ? "Choose a start date and an end date." : from > to ? "Choose an end date on or after the start date." : "";
-  const activity = TRANSACTIONS.filter(item => (filter === "All" || item.status === filter) && !rangeError && inStatementRange(item.date, from, to));
+  const rangeError = from || to ? !period ? "Choose a start date and an end date." : from > to ? "Choose an end date on or after the start date." : "" : "";
+  const holder = profile?.name || "Your account";
+  const email = profile?.email || "";
+  const total = balance?.total ?? 0;
 
   function download() {
     if (rangeError) return;
-    const file = new Blob([accountStatement(activity, period)], { type: "text/plain" });
+    const file = new Blob([[
+      "Basecola statement of account",
+      `Account holder: ${holder}`,
+      `Email: ${email || "Not signed in"}`,
+      `Period: ${period || "All activity"}`,
+      `Wallet balance: ${money(total)}`,
+      "",
+      "No activity in this account.",
+    ].join("\n")], { type: "text/plain" });
     const url = URL.createObjectURL(file);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `basecola-statement-${from}-to-${to}.txt`;
+    link.download = `basecola-statement-${from || "all"}-to-${to || "all"}.txt`;
     link.click();
     URL.revokeObjectURL(url);
-    setNotice(`Statement downloaded for ${period}. It lists sample activity only.`);
+    setNotice(`Statement downloaded${period ? ` for ${period}` : ""}.`);
   }
 
   return <AccountShell active="/profile" title="Statements">
     <Button asChild variant="link" className="mb-4 h-auto px-0"><Link to="/profile"><ArrowLeft />Back to profile</Link></Button>
     <section className="rounded-3xl bg-gradient-primary p-6 text-primary-foreground shadow-soft">
       <p className="text-sm text-primary-foreground/80">Statement of account</p>
-      <p className="mt-2 text-2xl font-extrabold">{STATEMENT_HOLDER.name}</p>
-      <p className="mt-1 text-sm text-primary-foreground/80">{STATEMENT_HOLDER.email}</p>
-      <p className="mt-4 text-sm text-primary-foreground/80">Sample portfolio balance</p>
-      <p className="text-3xl font-extrabold">{money(portfolioBalance())}</p>
+      <p className="mt-2 text-2xl font-extrabold">{holder}</p>
+      <p className="mt-1 text-sm text-primary-foreground/80">{email || "Sign in to see this account"}</p>
+      <p className="mt-4 text-sm text-primary-foreground/80">Wallet balance</p>
+      <p className="text-3xl font-extrabold">{money(total)}</p>
       <p className="mt-2 text-sm text-primary-foreground/80">{period || "Choose a date range"}</p>
     </section>
     <section className="mt-4 rounded-3xl bg-card p-5 shadow-soft">
@@ -64,24 +74,12 @@ function StatementsPage() {
       </div>
       {rangeError && <p role="alert" className="mt-3 text-sm text-destructive">{rangeError}</p>}
     </section>
-    <div role="group" aria-label="Statement status" className="mt-4 flex flex-wrap gap-2">
-      {filters.map(item => <Button key={item} size="sm" variant={filter === item ? "default" : "outline"} aria-pressed={filter === item} onClick={() => { setFilter(item); setNotice(""); }}>{item}</Button>)}
-    </div>
     <section className="mt-4 rounded-3xl bg-card p-5 shadow-soft">
-      <div className="flex items-center justify-between gap-3"><h2 className="font-bold">Activity</h2><span className="text-sm text-muted-foreground">{activity.length} {activity.length === 1 ? "item" : "items"}</span></div>
-      {activity.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">{rangeError ? "Choose a valid date range to see activity." : "No activity between these dates."}</p> : <ul className="mt-2 divide-y">{activity.map(item => <StatementRow key={item.id} item={item} />)}</ul>}
+      <div className="flex items-center justify-between gap-3"><h2 className="font-bold">Activity</h2><span className="text-sm text-muted-foreground">0 items</span></div>
+      <p className="py-8 text-center text-sm text-muted-foreground">{rangeError ? "Choose a valid date range to see activity." : "No activity in this account."}</p>
       <Button type="button" className="mt-4 h-12 w-full" onClick={download} disabled={!!rangeError}><Download />Download statement</Button>
       {notice && <p role="status" className="mt-3 text-sm text-muted-foreground">{notice}</p>}
-      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">The file is a sample statement of account. It is not a bank or brokerage record.</p>
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">This statement lists activity saved to the signed-in account.</p>
     </section>
   </AccountShell>;
-}
-
-function StatementRow({ item }: { item: DemoTransaction }) {
-  const incoming = item.type === "Receive" || item.type === "Buy";
-  return <li className="flex items-center gap-3 py-3">
-    <TransactionCoin symbol={item.sym} incoming={incoming} size="h-10 w-10" />
-    <div className="min-w-0 flex-1"><p className="font-semibold">{item.type} {item.sym}</p><p className="mt-1 text-xs text-muted-foreground">{item.date} · {item.id}</p></div>
-    <div className="text-right"><p className="text-sm font-semibold">{money(item.value)}</p><p className="mt-1 text-xs text-muted-foreground">{item.quantity}</p><p className="mt-1 text-xs text-muted-foreground">Fee {money(item.fee)}</p><span className="mt-1 inline-block"><TransactionStatus status={item.status} /></span></div>
-  </li>;
 }

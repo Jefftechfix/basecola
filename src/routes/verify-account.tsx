@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Camera, Check, ChevronRight, CloudUpload, CreditCard, Globe, Lock, Mail, MapPin, Phone, ShieldCheck, User } from "lucide-react";
 import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatSsn, getAccountVerification, ID_DOCUMENTS, submitAccountVerification, subscribeAccountVerification, VERIFY_COUNTRIES, verifyDetailsError, verifyDocumentError } from "@/lib/account-verify";
-import { COUNTRY_DIALS, countryByIso, countryByName, countryOptionLabel } from "@/lib/countries";
+import { loadAccountProfile } from "@/lib/account-profile";
+import { COUNTRY_DIALS, countryByIso, countryByName, countryOptionLabel, splitPhone } from "@/lib/countries";
 
 export const Route = createFileRoute("/verify-account")({
   head: () => ({ meta: [
@@ -28,19 +30,33 @@ function VerifyAccountPage() {
   const nav = useNavigate();
   const { status } = useSyncExternalStore(subscribeAccountVerification, getAccountVerification, getAccountVerification);
   const [step, setStep] = useState(0);
-  const [name, setName] = useState("Mustapha Suleiman");
-  const [phoneIso, setPhoneIso] = useState("NG");
-  const [phone, setPhone] = useState("803 456 7890");
-  const [email, setEmail] = useState("mustapha@basecola.com");
-  const [country, setCountry] = useState("Nigeria");
+  const { data: profile } = useQuery({ queryKey: ["account-profile"], queryFn: loadAccountProfile });
+  const seeded = useRef(false);
+  const [name, setName] = useState("");
+  const [phoneIso, setPhoneIso] = useState("US");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [country, setCountry] = useState("");
   const [ssn, setSsn] = useState("");
-  const [address, setAddress] = useState("No. 12, Lokoja Road, Anyigba, Kogi State, Nigeria");
+  const [address, setAddress] = useState("");
   const [idType, setIdType] = useState("");
   const [idName, setIdName] = useState("");
   const [selfieUrl, setSelfieUrl] = useState("");
   const [selfieLabel, setSelfieLabel] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!profile || seeded.current) return;
+    seeded.current = true;
+    const parsed = splitPhone(profile.phone, countryByName(profile.country)?.iso ?? "US");
+    setName(profile.name);
+    setEmail(profile.email);
+    setCountry(profile.country);
+    setAddress(profile.address);
+    setPhoneIso(parsed.iso);
+    setPhone(parsed.national);
+  }, [profile]);
 
   useEffect(() => () => { if (selfieUrl) URL.revokeObjectURL(selfieUrl); }, [selfieUrl]);
 

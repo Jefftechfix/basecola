@@ -191,7 +191,7 @@ function ProfileSection(props: {
     </div>}
     {props.section === "privacy" && <div className="mt-5 space-y-4 text-sm leading-6 text-muted-foreground">
       <p>This privacy note explains the Basecola demo. It is sample text and does not describe a live account.</p>
-      <p><span className="font-semibold text-foreground">Your account.</span> Name, email, phone, country, and address are saved to your Basecola account. The sample balances and prices are not part of that account.</p>
+      <p><span className="font-semibold text-foreground">Your account.</span> Name, email, phone, country, and address are saved to your Basecola account. Your wallet balance comes from your payments and completed activity. Market prices are samples.</p>
       <p><span className="font-semibold text-foreground">What we do not collect.</span> This preview does not create a customer profile, track you across sites, or sell personal information.</p>
       <p><span className="font-semibold text-foreground">Notifications.</span> Transaction, market, and email switches only change what you see in this preview. No email is sent.</p>
     </div>}

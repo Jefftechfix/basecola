@@ -45,6 +45,7 @@ function FundWalletPage() {
         if (!active) return;
         setReceipt(next);
         qc.invalidateQueries({ queryKey: ["wallet-records", "fundings"] });
+        qc.invalidateQueries({ queryKey: ["wallet-balance"] });
       })
       .catch(reason => {
         if (active) setError(reason instanceof Error ? reason.message : "Stripe did not confirm this payment.");
@@ -70,7 +71,7 @@ function FundWalletPage() {
     }
   }
 
-  const notice = "Stripe charges the card on its own page. A paid funding stays pending until an admin completes it. The sample dashboard balance does not change here.";
+  const notice = "Stripe charges the card on its own page. A confirmed payment is added to your wallet balance and stays pending until an admin completes the record.";
 
   return <WalletLayout title="Fund Wallet" notice={notice}>
     {confirming ? <p className="text-sm text-muted-foreground">Confirming the Stripe payment…</p> : receipt ? <section className="space-y-5 text-center">
@@ -78,7 +79,7 @@ function FundWalletPage() {
       <h2 className="text-2xl font-bold">Payment received</h2>
       <p className="text-4xl font-extrabold">{money(receipt.amount)}</p>
       <p className="text-sm text-muted-foreground">{receipt.paymentMethod}</p>
-      <p className="text-sm leading-relaxed text-muted-foreground">Stripe confirmed this charge. The funding record is {receipt.status} until an admin completes it, and the sample dashboard balance is unchanged.</p>
+      <p className="text-sm leading-relaxed text-muted-foreground">Stripe confirmed this charge. It is included in your wallet balance, and the funding record stays {receipt.status} until an admin completes it.</p>
       <Button asChild variant="outline" className="w-full"><Link to="/fund-wallet">Fund again</Link></Button>
     </section> : <>
       <div className="mb-6 flex items-center gap-3">

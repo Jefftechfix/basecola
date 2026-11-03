@@ -15,8 +15,9 @@ export const emailReceipt = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const q = supabase.from(TABLE[data.kind]).select("*").eq("user_id", userId);
-    const { data: row } = await ("id" in data && data.id ? q.eq("id", data.id) : q.eq("reference", (data as { reference: string }).reference)).maybeSingle();
+    const ref = "id" in data && data.id ? { col: "id", val: data.id } : { col: "reference", val: (data as { reference: string }).reference };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: row } = await (supabase.from(TABLE[data.kind]) as any).select("*").eq("user_id", userId).eq(ref.col, ref.val).maybeSingle();
     if (!row) throw new Error("Record not found.");
     if (data.kind === "funding" && (row as { status?: string }).status !== "completed") return { sent: false };
     if ((data.kind === "buy" || data.kind === "sell") && (row as { kind?: string }).kind !== data.kind) throw new Error("Record not found.");

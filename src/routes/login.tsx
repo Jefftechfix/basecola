@@ -94,7 +94,7 @@ function LoginPage() {
         <Link to="/forgot-password" className="font-bold text-primary">Forgot Password?</Link>
       </div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      <button className="w-full rounded-2xl bg-primary py-4 text-lg font-bold text-primary-foreground shadow-soft">Log In</button>
+      <button disabled={busy} className="w-full rounded-2xl bg-primary py-4 text-lg font-bold text-primary-foreground shadow-soft disabled:opacity-60">{busy ? "Logging in…" : "Log In"}</button>
     </form>
     <p className="mt-6 text-center text-sm">Don't have an account? <Link to="/signup" className="font-bold text-primary">Sign Up</Link></p>
   </AuthShell>;

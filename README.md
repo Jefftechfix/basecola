@@ -24,3 +24,17 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+### Supabase server configuration
+
+The admin user-management functions require a server-only Supabase key in addition to the public URL and publishable key. For local development, create or use `.env.local` (not the tracked `.env`) and set:
+
+```dotenv
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+SUPABASE_SECRET_KEY=YOUR_SERVER_SECRET_KEY
+```
+
+`SUPABASE_SECRET_KEY` is the current Supabase secret-key format. `SUPABASE_SERVICE_ROLE_KEY` is also accepted for projects still using the legacy service-role key. Set the same values as server environment variables in the deployment platform. Restart the dev server after changing environment variables.
+
+Never prefix the secret/service-role key with `VITE_`, place it in browser code, or commit it. The admin key bypasses row-level security and must remain server-side.

@@ -85,25 +85,81 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
+  * {
+    border-color: var(--color-border);
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
   }
-  h1, h2, h3 { letter-spacing: -0.03em; }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.03em;
+  }
 }
 
 @media (width >= 64rem) {
-  .verify-board { grid-template-columns: 280px minmax(0, 1fr); }
-  .verify-board > :nth-child(3) { grid-column: 1 / -1; }
+  .verify-board {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+  .verify-board > :nth-child(3) {
+    grid-column: 1 / -1;
+  }
 }
 @media (width >= 80rem) {
-  .verify-board { grid-template-columns: 280px minmax(0, 1fr) 280px; }
-  .verify-board > :nth-child(3) { grid-column: auto; }
+  .verify-board {
+    grid-template-columns: 280px minmax(0, 1fr) 280px;
+  }
+  .verify-board > :nth-child(3) {
+    grid-column: auto;
+  }
 }
 
-@utility bg-gradient-primary { background-image: var(--gradient-primary); }
-@utility bg-gradient-wave { background-image: var(--gradient-wave); }
-@utility shadow-soft { box-shadow: var(--shadow-soft); }
-@utility shadow-phone { box-shadow: var(--shadow-phone); }
+@media print {
+  .statement-page {
+    min-height: 0 !important;
+    padding-bottom: 0 !important;
+    background: white !important;
+  }
+  .statement-page nav[aria-label="Account navigation"],
+  .statement-page .statement-controls,
+  .statement-page > div:first-child > header,
+  .statement-page > div:first-child > h1 {
+    display: none !important;
+  }
+  .statement-page > div:first-child {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  .statement-preview {
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  .statement-preview table {
+    page-break-inside: auto;
+  }
+  .statement-preview tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+}
+
+@utility bg-gradient-primary {
+  background-image: var(--gradient-primary);
+}
+@utility bg-gradient-wave {
+  background-image: var(--gradient-wave);
+}
+@utility shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+@utility shadow-phone {
+  box-shadow: var(--shadow-phone);
+}

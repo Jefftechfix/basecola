@@ -1,10 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, ChevronRight, KeyRound, Lock, ShieldCheck } from "lucide-react";
 import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
-import { getSecuritySession, subscribeSecurity } from "@/lib/security-demo";
 
 export const Route = createFileRoute("/security")({
   head: () => ({ meta: [
@@ -15,7 +14,6 @@ export const Route = createFileRoute("/security")({
 });
 
 function SecurityPage() {
-  const session = useSyncExternalStore(subscribeSecurity, getSecuritySession, getSecuritySession);
   const [hasPin, setHasPin] = useState<boolean | null>(null);
   useEffect(() => { void supabase.rpc("has_login_pin").then(({ data }) => setHasPin(!!data)); }, []);
   const [twoFactor, setTwoFactor] = useState<boolean | null>(null);

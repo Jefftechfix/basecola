@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Building2, CheckCircle2, CreditCard } from "lucide-react";
 import { WalletLayout } from "@/components/wallet-layout";
 import { WalletRecords } from "@/components/wallet-records";
+import { BankVerification } from "@/components/bank-verification";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,7 +81,7 @@ function FundWalletPage() {
       <h2 className="text-2xl font-bold">{receipt.bankPending ? "Bank payment started" : "Payment received"}</h2>
       <p className="text-4xl font-extrabold">{money(receipt.amount)}</p>
       <p className="text-sm text-muted-foreground">{receipt.paymentMethod}</p>
-      {receipt.bankPending ? <p className="text-sm leading-relaxed text-muted-foreground">{receipt.awaitingVerification ? "Stripe will send 2 small deposits to your bank account in 1–2 business days. Stripe then emails you a link to enter the two amounts (or a descriptor code) to verify the account." : "Your bank account is verified. The bank transfer is processing and usually settles in a few business days."} This funding is not added to your balance until the payment clears.</p> : <p className="text-sm leading-relaxed text-muted-foreground">Stripe confirmed this charge. It has been added to your wallet balance.</p>}
+      {receipt.bankPending ? <p className="text-sm leading-relaxed text-muted-foreground">{receipt.awaitingVerification ? "Stripe will send 2 small deposits to your bank account in 1–2 business days. When they arrive, enter the two amounts right here on this page under "Verify your bank" (ignore the Stripe email link if you prefer)." : "Your bank account is verified. The bank transfer is processing and usually settles in a few business days."} This funding is not added to your balance until the payment clears.</p> : <p className="text-sm leading-relaxed text-muted-foreground">Stripe confirmed this charge. It has been added to your wallet balance.</p>}
       <Button asChild variant="outline" className="w-full"><Link to="/fund-wallet">Fund again</Link></Button>
     </section> : <>
       <div className="mb-6 flex items-center gap-3">
@@ -104,6 +105,7 @@ function FundWalletPage() {
         <Button className="h-12 w-full" type="submit" disabled={saving}>{saving ? "Opening Stripe…" : "Pay with Stripe"}<ArrowRight /></Button>
       </form>
     </>}
+    <BankVerification />
     <WalletRecords kind="fundings" />
   </WalletLayout>;
 }

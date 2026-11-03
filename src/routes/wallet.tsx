@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { Lock } from "lucide-react";
 import { AuthShell } from "@/components/brand";
 import { applyPin, signupPinError } from "@/lib/security-demo";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/wallet")({
   head: () => ({
@@ -28,10 +29,16 @@ function CreatePinPage() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
 
-  function save(event: FormEvent) {
+  const [busy, setBusy] = useState(false);
+
+  async function save(event: FormEvent) {
     event.preventDefault();
     const problem = signupPinError(pin, confirm);
     if (problem) { setError(problem); return; }
+    setBusy(true);
+    const { error: rpcError } = await supabase.rpc("set_login_pin", { _pin: pin });
+    setBusy(false);
+    if (rpcError) { setError(rpcError.message === "Not signed in" ? "Please log in first to create your PIN." : rpcError.message); return; }
     applyPin(pin);
     setPin("");
     setConfirm("");
@@ -41,7 +48,7 @@ function CreatePinPage() {
   return (
     <AuthShell>
       <h1 className="text-center text-3xl font-extrabold">Create Your PIN</h1>
-      <p className="mt-2 text-center text-muted-foreground">Choose a 4-digit PIN and enter it again. It stays on this device and is not sent.</p>
+      <p className="mt-2 text-center text-muted-foreground">Choose a 4-digit PIN and enter it again. You'll use it every time you log in.</p>
       <form className="mt-6 space-y-4" onSubmit={save}>
         <label className="block">
           <span className="mb-1.5 block font-bold">Create PIN</span>

@@ -31,19 +31,53 @@ function LoginPage() {
   const [error, setError] = useState("");
 
   const [busy, setBusy] = useState(false);
+  const [pinStep, setPinStep] = useState(false);
+  const [pin, setPin] = useState("");
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (busy) return;
     const problem = loginError(email, password);
     if (problem) { setError(problem); return; }
     setBusy(true);
     const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    setBusy(false);
-    if (authError) { setError(authError.message); return; }
+    if (authError) { setBusy(false); setError(authError.message); return; }
     if (remember) sessionStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim());
     else sessionStorage.removeItem(REMEMBERED_EMAIL_KEY);
+    const { data: hasPin } = await supabase.rpc("has_login_pin");
+    setBusy(false);
+    if (!hasPin) { nav({ to: "/wallet" }); return; }
+    setPassword("");
+    setPinStep(true);
+  }
+
+  async function submitPin(event: FormEvent) {
+    event.preventDefault();
+    if (busy || pin.length !== 4) return;
+    setBusy(true); setError("");
+    const { data: ok, error: pinError } = await supabase.rpc("verify_login_pin", { _pin: pin });
+    setBusy(false);
+    if (pinError) { setError(pinError.message); setPin(""); return; }
+    if (!ok) { setError("Incorrect PIN. After 5 wrong tries PIN entry locks for 15 minutes."); setPin(""); return; }
     nav({ to: "/dashboard" });
   }
+
+  async function cancelPin() {
+    await supabase.auth.signOut();
+    setPinStep(false); setPin(""); setError("");
+  }
+
+  if (pinStep) return <AuthShell back={false}>
+    <div className="mx-auto mb-6 grid h-24 w-24 place-items-center rounded-[1.75rem] bg-gradient-primary text-primary-foreground shadow-soft"><Lock className="h-12 w-12" /></div>
+    <h1 className="text-center text-3xl font-extrabold">Enter Your PIN</h1>
+    <p className="mt-2 text-center text-muted-foreground">Enter your 4-digit PIN to access your account</p>
+    <form className="mt-6 space-y-4" onSubmit={submitPin}>
+      <input autoFocus inputMode="numeric" autoComplete="off" type="password" maxLength={4} value={pin} onChange={e => { setPin(e.target.value.replace(/\D/g, "").slice(0, 4)); setError(""); }} aria-label="4-digit PIN" placeholder="••••" className="w-full rounded-xl border border-input bg-card px-4 py-4 text-center text-3xl font-bold tracking-[0.6em] outline-none focus:ring-2 focus:ring-ring" />
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      <button disabled={busy || pin.length !== 4} className="w-full rounded-2xl bg-primary py-4 text-lg font-bold text-primary-foreground shadow-soft disabled:opacity-60">{busy ? "Checking…" : "Unlock"}</button>
+    </form>
+    <button type="button" onClick={cancelPin} className="mt-6 w-full text-center text-sm font-bold text-primary">Use a different account</button>
+  </AuthShell>;
 
   return <AuthShell back={false}>
     <div className="relative mx-auto mb-6 h-24 w-24">
@@ -60,7 +94,7 @@ function LoginPage() {
         <Link to="/forgot-password" className="font-bold text-primary">Forgot Password?</Link>
       </div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      <button className="w-full rounded-2xl bg-primary py-4 text-lg font-bold text-primary-foreground shadow-soft">Log In</button>
+      <button disabled={busy} className="w-full rounded-2xl bg-primary py-4 text-lg font-bold text-primary-foreground shadow-soft disabled:opacity-60">{busy ? "Logging in…" : "Log In"}</button>
     </form>
     <p className="mt-6 text-center text-sm">Don't have an account? <Link to="/signup" className="font-bold text-primary">Sign Up</Link></p>
   </AuthShell>;

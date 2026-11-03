@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { money } from "@/lib/account-demo";
+import { useServerFn } from "@tanstack/react-start";
+import { emailReceipt } from "@/lib/receipt.functions";
 import { confirmStripeFunding, syncStripeFundings, startStripeFunding, stripeFundingAmountError, type StripeFundingMethod, type StripeFundingReceipt } from "@/lib/stripe-funding";
 
 type FundSearch = { session_id?: string; checkout?: "cancel" };
@@ -38,6 +40,7 @@ function FundWalletPage() {
   const [receipt, setReceipt] = useState<StripeFundingReceipt | null>(null);
   const [confirming, setConfirming] = useState(Boolean(sessionId));
   const qc = useQueryClient();
+  const sendReceiptEmail = useServerFn(emailReceipt);
 
   useEffect(() => {
     if (sessionId) return;
@@ -57,6 +60,7 @@ function FundWalletPage() {
       .then(next => {
         if (!active) return;
         setReceipt(next);
+        if (next.status === "completed") void sendReceiptEmail({ data: { kind: "funding", reference: sessionId } }).catch(() => {});
         qc.invalidateQueries({ queryKey: ["wallet-records", "fundings"] });
         qc.invalidateQueries({ queryKey: ["wallet-balance"] });
       })

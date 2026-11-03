@@ -1,3 +1,5 @@
+import { useServerFn } from "@tanstack/react-start";
+import { emailReceipt } from "@/lib/receipt.functions";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
@@ -25,6 +27,7 @@ function ReceivePage() {
   const [amount, setAmount] = useState("");
   const [saveMsg, setSaveMsg] = useState("");
   const qc = useQueryClient();
+  const sendReceiptEmail = useServerFn(emailReceipt);
   const code = demoReceiveCode(symbol);
   const asset = WALLET_ASSETS.find(item => item.sym === symbol);
   async function copy() {
@@ -35,7 +38,7 @@ function ReceivePage() {
     setSaveMsg("");
     const n = amount.trim() ? Number(amount) : null;
     if (n !== null && !(n > 0)) { setSaveMsg("Enter a valid amount."); return; }
-    try { await saveReceive({ coin: symbol, network: asset?.network ?? "", wallet_address: code, amount: n }); setAmount(""); setSaveMsg("Receive request saved."); qc.invalidateQueries({ queryKey: ["wallet-records", "receives"] }); }
+    try { const recordId = await saveReceive({ coin: symbol, network: asset?.network ?? "", wallet_address: code, amount: n }); void sendReceiptEmail({ data: { kind: "receive", id: recordId } }).catch(() => {}); setAmount(""); setSaveMsg("Receive request saved."); qc.invalidateQueries({ queryKey: ["wallet-records", "receives"] }); }
     catch (e) { setSaveMsg((e as Error).message); }
   }
   return <WalletLayout title="Receive Crypto">

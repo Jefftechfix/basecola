@@ -1,3 +1,5 @@
+import { useServerFn } from "@tanstack/react-start";
+import { emailReceipt } from "@/lib/receipt.functions";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowRight, Bitcoin } from "lucide-react";
@@ -29,6 +31,7 @@ function BuyPage() {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ reference: string; balance: number } | null>(null);
   const qc = useQueryClient();
+  const sendReceiptEmail = useServerFn(emailReceipt);
   const { data: balance, isPending: balanceLoading } = useQuery({ queryKey: ["wallet-balance"], queryFn: loadWalletBalance });
   const asset = WALLET_ASSETS.find(item => item.sym === symbol);
   if (!asset) return null;
@@ -45,7 +48,8 @@ function BuyPage() {
     const { data, error: rpcError } = await supabase.rpc("buy_crypto_with_balance", { _coin: symbol, _network: asset.network, _usd_amount: usd, _price_usd: unit });
     setBusy(false);
     if (rpcError) { setError(rpcError.message); setStep("form"); return; }
-    const out = data as { reference: string; balance: number };
+    const out = data as { reference: string; balance: number; transaction_id: string };
+    void sendReceiptEmail({ data: { kind: "buy", id: out.transaction_id } }).catch(() => {});
     setResult(out);
     setStep("success");
     for (const key of [["wallet-balance"], ["transactions"], ["wallet-records"]]) qc.invalidateQueries({ queryKey: key });
@@ -88,7 +92,7 @@ function BuyPage() {
       open={step === "success"}
       title="Purchase complete"
       headline={headline}
-      detail={result ? `Reference ${result.reference}. New wallet balance ${money(result.balance)}.` : ""}
+      detail={result ? `Reference ${result.reference}. New wallet balance ${money(result.balance)}. A receipt was sent to your email.` : ""}
       againLabel="Buy more"
       onAgain={reset}
       onClose={reset}

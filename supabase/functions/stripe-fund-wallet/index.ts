@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
       if (body.method === "bank") {
         form.set("customer_creation", "always");
         form.set("payment_method_types[0]", "us_bank_account");
-        form.set("payment_method_options[us_bank_account][verification_method]", "microdeposits");
+        form.set("payment_method_options[us_bank_account][verification_method]", "automatic");
         form.set("metadata[method]", "bank");
       } else {
         form.set("payment_method_types[0]", "card");

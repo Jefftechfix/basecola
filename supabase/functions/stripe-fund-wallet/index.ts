@@ -128,6 +128,43 @@ Deno.serve(async (req) => {
       return json({ url: session.url });
     }
 
+    if (body.action === "verify") {
+      const extra = body as { amounts?: unknown; descriptorCode?: unknown };
+      if (typeof body.sessionId !== "string" || !/^cs_(live|test)_[A-Za-z0-9]+$/.test(body.sessionId)) {
+        return json({ error: "This bank payment is not valid." }, 400);
+      }
+      const session = await stripeRequest(stripeSecret, `checkout/sessions/${body.sessionId}?expand[]=payment_intent`, "GET");
+      const owner = session.metadata?.user_id || session.client_reference_id;
+      if (owner !== auth.user.id) return json({ error: "This payment belongs to another account." }, 403);
+      const intentId = session.payment_intent?.id;
+      if (typeof intentId !== "string") return json({ error: "Stripe has no bank payment to verify yet." }, 409);
+      const form = new URLSearchParams();
+      if (typeof extra.descriptorCode === "string" && /^SM[A-Z0-9]{4}$/.test(extra.descriptorCode.trim().toUpperCase())) {
+        form.set("descriptor_code", extra.descriptorCode.trim().toUpperCase());
+      } else if (Array.isArray(extra.amounts) && extra.amounts.length === 2 && extra.amounts.every(a => Number.isInteger(a) && a > 0 && a < 100)) {
+        form.set("amounts[0]", String(extra.amounts[0]));
+        form.set("amounts[1]", String(extra.amounts[1]));
+      } else {
+        return json({ error: "Enter both deposit amounts (in cents) or the 6-character code starting with SM." }, 400);
+      }
+      try {
+        await stripeRequest(stripeSecret, `payment_intents/${intentId}/verify_microdeposits`, "POST", form.toString());
+      } catch (error) {
+        return json({ error: error instanceof Error ? error.message : "Stripe could not verify those deposits." }, 400);
+      }
+      if (serviceKey) {
+        const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+        const { data: row } = await admin.from("wallet_fundings").select("id, payment_method")
+          .eq("user_id", auth.user.id).eq("reference", session.id).maybeSingle();
+        if (row) {
+          await admin.from("wallet_fundings")
+            .update({ payment_method: String(row.payment_method).replace(/ · awaiting bank verification$/, "") })
+            .eq("id", row.id);
+        }
+      }
+      return json({ verified: true });
+    }
+
     if (body.action === "confirm") {
       if (typeof body.sessionId !== "string" || !/^cs_(live|test)_[A-Za-z0-9]+$/.test(body.sessionId)) {
         return json({ error: "This Stripe payment link is not valid." }, 400);

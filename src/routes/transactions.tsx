@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { syncStripeFundings } from "@/lib/stripe-funding";
 import { Search, History } from "lucide-react";
 import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,15 @@ function TransactionsPage() {
   const [filter, setFilter] = useState("All");
   const [query, setQuery] = useState("");
   const { data, isPending, error } = useQuery({ queryKey: ["transactions"], queryFn: listTransactions });
+  const qc = useQueryClient();
+  useEffect(() => {
+    syncStripeFundings().then(count => {
+      if (count > 0) {
+        qc.invalidateQueries({ queryKey: ["transactions"] });
+        qc.invalidateQueries({ queryKey: ["wallet-balance"] });
+      }
+    });
+  }, [qc]);
   const rows = data ?? [];
   const filtered = rows.filter(item => (filter === "All" || item.kind.toLowerCase() === filter.toLowerCase()) && `${item.kind} ${item.coin ?? ""} ${item.counterparty ?? ""} ${item.reference ?? ""} ${item.status}`.toLowerCase().includes(query.toLowerCase()));
   return <AccountShell active="/transactions" title="Transactions">

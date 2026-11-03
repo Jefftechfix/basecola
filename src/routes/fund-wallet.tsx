@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { money } from "@/lib/account-demo";
-import { confirmStripeFunding, startStripeFunding, stripeFundingAmountError, type StripeFundingMethod, type StripeFundingReceipt } from "@/lib/stripe-funding";
+import { confirmStripeFunding, syncStripeFundings, startStripeFunding, stripeFundingAmountError, type StripeFundingMethod, type StripeFundingReceipt } from "@/lib/stripe-funding";
 
 type FundSearch = { session_id?: string; checkout?: "cancel" };
 
@@ -38,6 +38,17 @@ function FundWalletPage() {
   const [receipt, setReceipt] = useState<StripeFundingReceipt | null>(null);
   const [confirming, setConfirming] = useState(Boolean(sessionId));
   const qc = useQueryClient();
+
+  useEffect(() => {
+    if (sessionId) return;
+    syncStripeFundings().then(count => {
+      if (count > 0) {
+        qc.invalidateQueries({ queryKey: ["wallet-records", "fundings"] });
+        qc.invalidateQueries({ queryKey: ["wallet-balance"] });
+        qc.invalidateQueries({ queryKey: ["transactions"] });
+      }
+    });
+  }, [sessionId, qc]);
 
   useEffect(() => {
     if (!sessionId) return;

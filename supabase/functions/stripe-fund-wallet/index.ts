@@ -202,15 +202,8 @@ Deno.serve(async (req) => {
       return json({ verified: true });
     }
 
-    if (body.action === "confirm") {
-      if (typeof body.sessionId !== "string" || !/^cs_(live|test)_[A-Za-z0-9]+$/.test(body.sessionId)) {
-        return json({ error: "This Stripe payment link is not valid." }, 400);
-      }
-      const session = await stripeRequest(
-        stripeSecret,
-        `checkout/sessions/${body.sessionId}?expand[]=payment_intent.payment_method`,
-        "GET",
-      );
+    // deno-lint-ignore no-explicit-any
+    const recordSession = async (session: any): Promise<Response> => {
       const owner = session.metadata?.user_id || session.client_reference_id;
       if (owner !== auth.user.id) return json({ error: "This payment belongs to another account." }, 403);
       const isBank = session.metadata?.method === "bank";
@@ -285,6 +278,34 @@ Deno.serve(async (req) => {
         console.error("Stripe funding history row could not be saved:", historyError);
       }
       return json({ amount, paymentMethod, status: paid ? "completed" : "pending", alreadySaved: false, bankPending, awaitingVerification });
+    };
+
+    if (body.action === "sync") {
+      // Records paid checkouts for this member that were never confirmed
+      // (closed tab, returned on another domain, or webhook not set up).
+      const since = Math.floor(Date.now() / 1000) - 30 * 24 * 3600;
+      const list = await stripeRequest(stripeSecret, `checkout/sessions?limit=100&status=complete&created[gte]=${since}`, "GET");
+      // deno-lint-ignore no-explicit-any
+      const mine = (list.data ?? []).filter((s: any) => (s.metadata?.user_id || s.client_reference_id) === auth.user.id);
+      let recorded = 0;
+      for (const s of mine) {
+        const full = await stripeRequest(stripeSecret, `checkout/sessions/${s.id}?expand[]=payment_intent.payment_method`, "GET");
+        const res = await recordSession(full);
+        if (res.ok) recorded++;
+      }
+      return json({ synced: recorded });
+    }
+
+    if (body.action === "confirm") {
+      if (typeof body.sessionId !== "string" || !/^cs_(live|test)_[A-Za-z0-9]+$/.test(body.sessionId)) {
+        return json({ error: "This Stripe payment link is not valid." }, 400);
+      }
+      const session = await stripeRequest(
+        stripeSecret,
+        `checkout/sessions/${body.sessionId}?expand[]=payment_intent.payment_method`,
+        "GET",
+      );
+      return await recordSession(session);
     }
 
     return json({ error: "Choose a funding action." }, 400);

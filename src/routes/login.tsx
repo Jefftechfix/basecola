@@ -33,6 +33,8 @@ function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [pinStep, setPinStep] = useState(false);
   const [pin, setPin] = useState("");
+  const [mfa, setMfa] = useState<{ factorId: string } | null>(null);
+  const [mfaCode, setMfaCode] = useState("");
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -44,11 +46,33 @@ function LoginPage() {
     if (authError) { setBusy(false); setError(authError.message); return; }
     if (remember) sessionStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim());
     else sessionStorage.removeItem(REMEMBERED_EMAIL_KEY);
+    setPassword("");
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal?.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const factor = factors?.totp.find(f => f.status === "verified");
+      if (factor) { setBusy(false); setMfa({ factorId: factor.id }); return; }
+    }
+    await afterSecondStep();
+  }
+
+  async function afterSecondStep() {
     const { data: hasPin } = await supabase.rpc("has_login_pin");
     setBusy(false);
     if (!hasPin) { nav({ to: "/wallet" }); return; }
     setPassword("");
     setPinStep(true);
+  }
+
+  async function submitMfa(event: FormEvent) {
+    event.preventDefault();
+    if (busy || !mfa || mfaCode.length !== 6) return;
+    setBusy(true); setError("");
+    const { error: e } = await supabase.auth.mfa.challengeAndVerify({ factorId: mfa.factorId, code: mfaCode });
+    if (e) { setBusy(false); setError("Incorrect or expired code. Try the latest code from your app."); setMfaCode(""); return; }
+    setMfa(null); setMfaCode("");
+    setBusy(true);
+    await afterSecondStep();
   }
 
   async function submitPin(event: FormEvent) {
@@ -64,8 +88,20 @@ function LoginPage() {
 
   async function cancelPin() {
     await supabase.auth.signOut();
-    setPinStep(false); setPin(""); setError("");
+    setPinStep(false); setPin(""); setError(""); setMfa(null); setMfaCode("");
   }
+
+  if (mfa) return <AuthShell back={false}>
+    <div className="mx-auto mb-6 grid h-24 w-24 place-items-center rounded-[1.75rem] bg-gradient-primary text-primary-foreground shadow-soft"><Lock className="h-12 w-12" /></div>
+    <h1 className="text-center text-3xl font-extrabold">Two-Factor Code</h1>
+    <p className="mt-2 text-center text-muted-foreground">Enter the 6-digit code from your authenticator app</p>
+    <form className="mt-6 space-y-4" onSubmit={submitMfa}>
+      <input autoFocus inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={mfaCode} onChange={e => { setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setError(""); }} aria-label="6-digit authenticator code" placeholder="000000" className="w-full rounded-xl border border-input bg-card px-4 py-4 text-center text-3xl font-bold tracking-[0.4em] outline-none focus:ring-2 focus:ring-ring" />
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      <button disabled={busy || mfaCode.length !== 6} className="w-full rounded-2xl bg-primary py-4 text-lg font-bold text-primary-foreground shadow-soft disabled:opacity-60">{busy ? "Checking…" : "Verify"}</button>
+    </form>
+    <button type="button" onClick={cancelPin} className="mt-6 w-full text-center text-sm font-bold text-primary">Use a different account</button>
+  </AuthShell>;
 
   if (pinStep) return <AuthShell back={false}>
     <div className="mx-auto mb-6 grid h-24 w-24 place-items-center rounded-[1.75rem] bg-gradient-primary text-primary-foreground shadow-soft"><Lock className="h-12 w-12" /></div>

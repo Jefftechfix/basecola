@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, ChevronRight, KeyRound, Lock, ShieldCheck } from "lucide-react";
 import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
@@ -15,10 +16,12 @@ export const Route = createFileRoute("/security")({
 
 function SecurityPage() {
   const session = useSyncExternalStore(subscribeSecurity, getSecuritySession, getSecuritySession);
+  const [twoFactor, setTwoFactor] = useState<boolean | null>(null);
+  useEffect(() => { void supabase.auth.mfa.listFactors().then(({ data }) => setTwoFactor(!!data?.totp.some(f => f.status === "verified"))); }, []);
   const items = [
     { to: "/change-pin", icon: KeyRound, title: "Change PIN", detail: "Set a 4-digit preview PIN", status: session.pinSet ? "Saved" : "Not set" },
     { to: "/change-password", icon: Lock, title: "Change password", detail: "Update the preview password", status: session.passwordSet ? "Saved" : "Not set" },
-    { to: "/two-factor", icon: ShieldCheck, title: "Two-factor authentication", detail: "Turn a second step on or off", status: session.twoFactor ? "On" : "Off" },
+    { to: "/two-factor", icon: ShieldCheck, title: "Two-factor authentication", detail: "Authenticator app code at sign-in", status: twoFactor === null ? "…" : twoFactor ? "On" : "Off" },
   ] as const;
 
   return <AccountShell active="/profile" title="Security">

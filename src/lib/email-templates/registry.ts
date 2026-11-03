@@ -17,7 +17,10 @@ export interface TemplateEntry {
  *   import { template as welcomeTemplate } from './welcome'
  *   // then add to TEMPLATES: 'welcome': welcomeTemplate
  */
+import { template as verificationDecision } from './verification-decision'
+
 export const TEMPLATES: Record<string, TemplateEntry> = {
+  'verification-decision': verificationDecision,
   // Add templates here as they are created, e.g.:
   // 'welcome': welcomeTemplate,
 }

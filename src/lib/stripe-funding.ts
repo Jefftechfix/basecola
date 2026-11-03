@@ -97,3 +97,12 @@ export async function verifyMicrodeposits(sessionId: string, input: { amounts?: 
   const { error } = await supabase.functions.invoke("stripe-fund-wallet", { body: { action: "verify", sessionId, ...input } });
   if (error) throw new Error(await functionMessage(error));
 }
+
+/** Records any paid Stripe checkout for the signed-in member that was never confirmed. */
+export async function syncStripeFundings(): Promise<number> {
+  const { data: auth } = await supabase.auth.getSession();
+  if (!auth.session) return 0;
+  const { data, error } = await supabase.functions.invoke("stripe-fund-wallet", { body: { action: "sync" } });
+  if (error) return 0;
+  return data && typeof data.synced === "number" ? data.synced : 0;
+}

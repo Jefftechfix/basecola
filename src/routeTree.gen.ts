@@ -39,6 +39,7 @@ import { Route as VerifyAccountRouteImport } from './routes/verify-account'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as AssetsSymbolRouteImport } from './routes/assets_.$symbol'
 import { Route as TransactionsTransactionIdRouteImport } from './routes/transactions_.$transactionId'
+import { Route as ApiPublicStripeWalletWebhookRouteImport } from './routes/api/public/stripe-wallet-webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -191,6 +192,12 @@ const TransactionsTransactionIdRoute =
     path: '/transactions/$transactionId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicStripeWalletWebhookRoute =
+  ApiPublicStripeWalletWebhookRouteImport.update({
+    id: '/api/public/stripe-wallet-webhook',
+    path: '/api/public/stripe-wallet-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/wallet': typeof WalletRoute
   '/assets/$symbol': typeof AssetsSymbolRoute
   '/transactions/$transactionId': typeof TransactionsTransactionIdRoute
+  '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -255,6 +263,7 @@ export interface FileRoutesByTo {
   '/wallet': typeof WalletRoute
   '/assets/$symbol': typeof AssetsSymbolRoute
   '/transactions/$transactionId': typeof TransactionsTransactionIdRoute
+  '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -288,6 +297,7 @@ export interface FileRoutesById {
   '/wallet': typeof WalletRoute
   '/assets_/$symbol': typeof AssetsSymbolRoute
   '/transactions_/$transactionId': typeof TransactionsTransactionIdRoute
+  '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/assets/$symbol'
     | '/transactions/$transactionId'
+    | '/api/public/stripe-wallet-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/assets/$symbol'
     | '/transactions/$transactionId'
+    | '/api/public/stripe-wallet-webhook'
   id:
     | '__root__'
     | '/'
@@ -386,6 +398,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/assets_/$symbol'
     | '/transactions_/$transactionId'
+    | '/api/public/stripe-wallet-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -419,6 +432,7 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   AssetsSymbolRoute: typeof AssetsSymbolRoute
   TransactionsTransactionIdRoute: typeof TransactionsTransactionIdRoute
+  ApiPublicStripeWalletWebhookRoute: typeof ApiPublicStripeWalletWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -633,6 +647,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TransactionsTransactionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/stripe-wallet-webhook': {
+      id: '/api/public/stripe-wallet-webhook'
+      path: '/api/public/stripe-wallet-webhook'
+      fullPath: '/api/public/stripe-wallet-webhook'
+      preLoaderRoute: typeof ApiPublicStripeWalletWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -667,6 +688,7 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   AssetsSymbolRoute: AssetsSymbolRoute,
   TransactionsTransactionIdRoute: TransactionsTransactionIdRoute,
+  ApiPublicStripeWalletWebhookRoute: ApiPublicStripeWalletWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

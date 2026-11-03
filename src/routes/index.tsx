@@ -66,7 +66,6 @@ function PhoneMock() {
 const MENU = [
   { href: "#markets", label: "Markets", icon: BarChart3 },
   { href: "#why", label: "Why Basecola", icon: ShieldCheck },
-  { href: "#features", label: "Features", icon: Layers },
 ] as const;
 const FEATURE_LINKS = [
   { label: "Buy & sell crypto", icon: Repeat },

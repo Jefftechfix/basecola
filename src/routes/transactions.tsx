@@ -32,6 +32,15 @@ function TransactionsPage() {
   const [filter, setFilter] = useState("All");
   const [query, setQuery] = useState("");
   const { data, isPending, error } = useQuery({ queryKey: ["transactions"], queryFn: listTransactions });
+  const qc = useQueryClient();
+  useEffect(() => {
+    syncStripeFundings().then(count => {
+      if (count > 0) {
+        qc.invalidateQueries({ queryKey: ["transactions"] });
+        qc.invalidateQueries({ queryKey: ["wallet-balance"] });
+      }
+    });
+  }, [qc]);
   const rows = data ?? [];
   const filtered = rows.filter(item => (filter === "All" || item.kind.toLowerCase() === filter.toLowerCase()) && `${item.kind} ${item.coin ?? ""} ${item.counterparty ?? ""} ${item.reference ?? ""} ${item.status}`.toLowerCase().includes(query.toLowerCase()));
   return <AccountShell active="/transactions" title="Transactions">

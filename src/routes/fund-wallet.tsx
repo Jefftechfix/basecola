@@ -19,7 +19,7 @@ export const Route = createFileRoute("/fund-wallet")({
   }),
   head: () => ({ meta: [
     { title: "Fund Wallet — Basecola" },
-    { name: "description", content: "Add USD to a Basecola wallet with Stripe. Card details are entered on Stripe, and the funding stays pending until an admin completes it." },
+    { name: "description", content: "Add USD to a Basecola wallet with Stripe. Card details are entered on Stripe and confirmed payments are added to the balance automatically." },
     { property: "og:title", content: "Fund Wallet — Basecola" },
     { property: "og:description", content: "Pay with Stripe to fund a Basecola wallet. The card is charged by Stripe." },
     { property: "og:type", content: "website" },
@@ -72,7 +72,7 @@ function FundWalletPage() {
     }
   }
 
-  const notice = "Stripe charges the card on its own page. A confirmed payment is added to your wallet balance and stays pending until an admin completes the record.";
+  const notice = "Stripe charges the card on its own page. A confirmed payment is added to your wallet balance automatically.";
 
   return <WalletLayout title="Fund Wallet" notice={notice}>
     {confirming ? <p className="text-sm text-muted-foreground">Confirming the Stripe payment…</p> : receipt ? <section className="space-y-5 text-center">
@@ -80,7 +80,7 @@ function FundWalletPage() {
       <h2 className="text-2xl font-bold">{receipt.bankPending ? "Bank payment started" : "Payment received"}</h2>
       <p className="text-4xl font-extrabold">{money(receipt.amount)}</p>
       <p className="text-sm text-muted-foreground">{receipt.paymentMethod}</p>
-      {receipt.bankPending ? <p className="text-sm leading-relaxed text-muted-foreground">{receipt.awaitingVerification ? "Stripe will send 2 small deposits to your bank account in 1–2 business days. Stripe then emails you a link to enter the two amounts (or a descriptor code) to verify the account." : "Your bank account is verified. The bank transfer is processing and usually settles in a few business days."} This funding is not added to your balance until the payment clears.</p> : <p className="text-sm leading-relaxed text-muted-foreground">Stripe confirmed this charge. It is included in your wallet balance, and the funding record stays {receipt.status} until an admin completes it.</p>}
+      {receipt.bankPending ? <p className="text-sm leading-relaxed text-muted-foreground">{receipt.awaitingVerification ? "Stripe will send 2 small deposits to your bank account in 1–2 business days. Stripe then emails you a link to enter the two amounts (or a descriptor code) to verify the account." : "Your bank account is verified. The bank transfer is processing and usually settles in a few business days."} This funding is not added to your balance until the payment clears.</p> : <p className="text-sm leading-relaxed text-muted-foreground">Stripe confirmed this charge. It has been added to your wallet balance.</p>}
       <Button asChild variant="outline" className="w-full"><Link to="/fund-wallet">Fund again</Link></Button>
     </section> : <>
       <div className="mb-6 flex items-center gap-3">

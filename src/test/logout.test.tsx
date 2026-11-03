@@ -33,6 +33,8 @@ describe("Signing out", () => {
     });
 
     render(<RouterProvider router={router} />);
+    await new Promise(resolve => setTimeout(resolve, 800));
+    console.log("BODY:", document.body.innerHTML.slice(0, 900));
 
     const button = await screen.findByRole("button", { name: "Log Out" });
     fireEvent.click(button);

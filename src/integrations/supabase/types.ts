@@ -645,6 +645,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      sell_crypto_to_balance: {
+        Args: {
+          _coin: string
+          _crypto_amount: number
+          _network: string
+          _price_usd: number
+        }
+        Returns: Json
+      }
       set_login_pin: { Args: { _pin: string }; Returns: undefined }
       verify_login_pin: { Args: { _pin: string }; Returns: boolean }
     }

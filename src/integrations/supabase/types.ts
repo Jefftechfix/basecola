@@ -70,6 +70,89 @@ export type Database = {
           },
         ]
       }
+      admin_user_management: {
+        Row: {
+          account_status: string
+          admin_note: string | null
+          created_at: string
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          account_status?: string
+          admin_note?: string | null
+          created_at?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          account_status?: string
+          admin_note?: string | null
+          created_at?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_user_management_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_verification_reviews: {
+        Row: {
+          created_at: string
+          decision: string
+          email_status: string
+          id: string
+          note: string | null
+          reviewer_id: string
+          user_id: string
+          verification_id: string
+        }
+        Insert: {
+          created_at?: string
+          decision: string
+          email_status?: string
+          id?: string
+          note?: string | null
+          reviewer_id: string
+          user_id: string
+          verification_id: string
+        }
+        Update: {
+          created_at?: string
+          decision?: string
+          email_status?: string
+          id?: string
+          note?: string | null
+          reviewer_id?: string
+          user_id?: string
+          verification_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_verification_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_verification_reviews_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "account_verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crypto_buys: {
         Row: {
           coin: string

@@ -31,16 +31,18 @@ async function functionMessage(error: unknown) {
   return error instanceof Error ? error.message : "Stripe funding could not be completed.";
 }
 
-export async function startStripeFunding(amount: string, onCheckoutStart?: () => void) {
+export type StripeFundingMethod = "card" | "bank";
+
+export async function startStripeFunding(amount: string, onCheckoutStart?: () => void, method: StripeFundingMethod = "card") {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Log in to fund your wallet with Stripe.");
   onCheckoutStart?.();
-  return openStripeFunding(amount);
+  return openStripeFunding(amount, method);
 }
 
-async function openStripeFunding(amount: string) {
+async function openStripeFunding(amount: string, method: StripeFundingMethod) {
   const { data, error } = await supabase.functions.invoke("stripe-fund-wallet", {
-    body: { action: "checkout", amount: amount.trim(), origin: window.location.origin },
+    body: { action: "checkout", amount: amount.trim(), method, origin: window.location.origin },
   });
   if (error) throw new Error(await functionMessage(error));
   const url = data && typeof data.url === "string" ? data.url : "";
@@ -53,6 +55,8 @@ export type StripeFundingReceipt = {
   paymentMethod: string;
   status: string;
   alreadySaved: boolean;
+  bankPending: boolean;
+  awaitingVerification: boolean;
 };
 
 export async function confirmStripeFunding(sessionId: string): Promise<StripeFundingReceipt> {
@@ -68,5 +72,7 @@ export async function confirmStripeFunding(sessionId: string): Promise<StripeFun
     paymentMethod: data.paymentMethod,
     status: typeof data.status === "string" ? data.status : "pending",
     alreadySaved: Boolean(data.alreadySaved),
+    bankPending: Boolean(data.bankPending),
+    awaitingVerification: Boolean(data.awaitingVerification),
   };
 }

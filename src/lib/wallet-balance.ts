@@ -39,7 +39,8 @@ export function walletUsdBalance(fundings: FundingBalanceRow[], transactions: Tr
   for (const row of fundings) {
     const status = row.status.toLowerCase();
     if (EXCLUDED.has(status)) continue;
-    if (AVAILABLE.has(status) || (status === "pending" && stripePayment(row))) add(Number(row.amount), row.created_at);
+    const awaitingBank = row.payment_method.includes("awaiting bank verification");
+    if (AVAILABLE.has(status) || (status === "pending" && stripePayment(row) && !awaitingBank)) add(Number(row.amount), row.created_at);
   }
 
   for (const row of transactions) {

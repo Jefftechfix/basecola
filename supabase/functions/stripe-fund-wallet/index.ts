@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
   const { data: auth, error: authError } = await userClient.auth.getUser(token);
   if (authError || !auth.user) return json({ error: "Log in to fund your wallet with Stripe." }, 401);
 
-  let body: { action?: string; amount?: string; origin?: string; sessionId?: string };
+  let body: { action?: string; amount?: string; origin?: string; sessionId?: string; method?: string };
   try {
     body = await req.json();
   } catch {
@@ -111,7 +111,14 @@ Deno.serve(async (req) => {
       form.set("line_items[0][price_data][currency]", "usd");
       form.set("line_items[0][price_data][unit_amount]", String(cents));
       form.set("line_items[0][price_data][product_data][name]", "Basecola wallet funding");
-      form.set("payment_method_types[0]", "card");
+      if (body.method === "bank") {
+        form.set("customer_creation", "always");
+        form.set("payment_method_types[0]", "us_bank_account");
+        form.set("payment_method_options[us_bank_account][verification_method]", "microdeposits");
+        form.set("metadata[method]", "bank");
+      } else {
+        form.set("payment_method_types[0]", "card");
+      }
       form.set("cancel_url", `${origin}/fund-wallet?checkout=cancel`);
       const encoded = `${form.toString()}&success_url=${encodeURI(`${origin}/fund-wallet?session_id=`)}{CHECKOUT_SESSION_ID}`;
       const session = await stripeRequest(stripeSecret, "checkout/sessions", "POST", encoded);
@@ -132,28 +139,44 @@ Deno.serve(async (req) => {
       );
       const owner = session.metadata?.user_id || session.client_reference_id;
       if (owner !== auth.user.id) return json({ error: "This payment belongs to another account." }, 403);
-      if (session.payment_status !== "paid") return json({ error: "Stripe has not confirmed this payment." }, 409);
+      const isBank = session.metadata?.method === "bank";
+      const paid = session.payment_status === "paid";
+      const bankPending = isBank && session.status === "complete" && !paid;
+      if (!paid && !bankPending) return json({ error: "Stripe has not confirmed this payment." }, 409);
 
       if (!serviceKey) return json({ error: "Stripe funding is not configured on the server." }, 500);
       const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+      const pm = session.payment_intent?.payment_method;
+      const bankLabel = pm?.us_bank_account
+        ? `Stripe bank · ${pm.us_bank_account.bank_name || "Bank"} ending ${pm.us_bank_account.last4}`
+        : "Stripe bank account";
+      const paymentMethod = isBank
+        ? (bankPending ? `${bankLabel} · awaiting bank verification` : bankLabel)
+        : paymentLabel(session);
+      const awaitingVerification = bankPending && session.payment_intent?.status === "requires_action";
+
       const { data: existing, error: existingError } = await admin
         .from("wallet_fundings")
-        .select("amount, payment_method, status")
+        .select("id, amount, payment_method, status")
         .eq("user_id", auth.user.id)
         .eq("reference", session.id)
         .maybeSingle();
       if (existingError) return json({ error: existingError.message }, 500);
       if (existing) {
+        if (existing.payment_method !== paymentMethod) {
+          await admin.from("wallet_fundings").update({ payment_method: paymentMethod }).eq("id", existing.id);
+        }
         return json({
           amount: Number(existing.amount),
-          paymentMethod: existing.payment_method,
+          paymentMethod,
           status: existing.status,
           alreadySaved: true,
+          bankPending,
+          awaitingVerification,
         });
       }
 
       const amount = Number(session.amount_total) / 100;
-      const paymentMethod = paymentLabel(session);
       const { error: insertError } = await admin.from("wallet_fundings").insert({
         user_id: auth.user.id,
         amount,
@@ -163,7 +186,7 @@ Deno.serve(async (req) => {
         status: "pending",
       });
       if (insertError) return json({ error: insertError.message }, 500);
-      return json({ amount, paymentMethod, status: "pending", alreadySaved: false });
+      return json({ amount, paymentMethod, status: "pending", alreadySaved: false, bankPending, awaitingVerification });
     }
 
     return json({ error: "Choose a funding action." }, 400);

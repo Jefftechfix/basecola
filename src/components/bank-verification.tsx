@@ -20,7 +20,7 @@ function VerifyForm({ row }: { row: Record<string, unknown> }) {
   async function submit(event: FormEvent) {
     event.preventDefault();
     const input = microdepositInput(first, second, code);
-    if ("error" in input) return setError(input.error);
+    if ("error" in input) { setError(input.error ?? ""); return; }
     setBusy(true); setError("");
     try {
       await verifyMicrodeposits(String(row.reference), input);

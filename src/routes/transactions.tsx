@@ -32,7 +32,7 @@ function TransactionsPage() {
   const [query, setQuery] = useState("");
   const { data, isPending, error } = useQuery({ queryKey: ["transactions"], queryFn: listTransactions });
   const rows = data ?? [];
-  const filtered = rows.filter(item => (filter === "All" || item.kind.toLowerCase() === filter.toLowerCase()) && `${item.kind} ${item.coin ?? ""} ${item.reference ?? ""} ${item.status}`.toLowerCase().includes(query.toLowerCase()));
+  const filtered = rows.filter(item => (filter === "All" || item.kind.toLowerCase() === filter.toLowerCase()) && `${item.kind} ${item.coin ?? ""} ${item.counterparty ?? ""} ${item.reference ?? ""} ${item.status}`.toLowerCase().includes(query.toLowerCase()));
   return <AccountShell active="/transactions" title="Transactions">
     <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input aria-label="Search transactions" className="h-10 bg-card pl-9" placeholder="Search coin, status or reference" value={query} onChange={e => setQuery(e.target.value)} /></div>
     <div role="group" aria-label="Transaction type" className="my-5 flex flex-wrap gap-2">{KINDS.map(type => <Button key={type} variant={filter === type ? "default" : "outline"} size="sm" aria-pressed={filter === type} onClick={() => setFilter(type)}>{type}</Button>)}</div>

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { syncStripeFundingTransaction } from "@/lib/stripe-transactions";
 
 // Stripe Checkout events -> wallet_fundings status. Every request must carry a valid
 // Stripe-Signature (HMAC-SHA256 with STRIPE_WEBHOOK_SECRET) before anything is written.
@@ -60,9 +61,20 @@ export const Route = createFileRoute("/api/public/stripe-wallet-webhook")({
         if (typeof userId !== "string") return ok();
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const paymentMethod = isBank ? "Stripe bank account" : "Stripe · card";
         const { data: existing, error } = await supabaseAdmin.from("wallet_fundings")
           .select("id, payment_method, status").eq("user_id", userId).eq("reference", session.id).maybeSingle();
         if (error) return new Response("Database error", { status: 500 });
+
+        // Write the activity history first: if a later step fails, Stripe retries the
+        // event and this step is skipped as already done instead of being lost.
+        await syncStripeFundingTransaction(supabaseAdmin, {
+          userId,
+          sessionId: session.id,
+          amountUsd: Number(session.amount_total) / 100,
+          status,
+          paymentMethod,
+        });
 
         if (existing) {
           if (existing.status === "completed") return ok();
@@ -75,7 +87,7 @@ export const Route = createFileRoute("/api/public/stripe-wallet-webhook")({
             user_id: userId,
             amount: Number(session.amount_total) / 100,
             currency: String(session.currency || "usd").toUpperCase(),
-            payment_method: isBank ? "Stripe bank account" : "Stripe · card",
+            payment_method: paymentMethod,
             reference: session.id,
             status,
           });

@@ -76,8 +76,20 @@ export const Route = createFileRoute("/api/public/stripe-wallet-webhook")({
           paymentMethod,
         });
 
+        const emailReceipt = async () => {
+          if (status !== "completed") return;
+          try {
+            const { data: f } = await supabaseAdmin.from("wallet_fundings").select("*").eq("user_id", userId).eq("reference", session.id).maybeSingle();
+            const { data: p } = await supabaseAdmin.from("profiles").select("email, full_name").eq("id", userId).maybeSingle();
+            if (f && p?.email) {
+              const { sendReceipt } = await import("@/lib/receipt-email");
+              await sendReceipt("funding", p.email, p.full_name, { ...f, status: "completed" });
+            }
+          } catch (e) { console.error("funding receipt email failed", e); }
+        };
+
         if (existing) {
-          if (existing.status === "completed") return ok();
+          if (existing.status === "completed") { await emailReceipt(); return ok(); }
           const { error: updateError } = await supabaseAdmin.from("wallet_fundings")
             .update({ status, payment_method: existing.payment_method.replace(/ · awaiting bank verification$/, "") })
             .eq("id", existing.id);
@@ -93,6 +105,7 @@ export const Route = createFileRoute("/api/public/stripe-wallet-webhook")({
           });
           if (insertError) return new Response("Database error", { status: 500 });
         }
+        await emailReceipt();
         return ok();
       },
     },

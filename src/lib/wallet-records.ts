@@ -20,18 +20,21 @@ export async function listRecords(kind: RecordKind) {
 
 export async function saveFunding(input: { amount: number; payment_method: string; reference: string }) {
   const user_id = await currentUserId();
-  const { error } = await supabase.from("wallet_fundings").insert({ user_id, currency: "USD", ...input, status: "pending" });
+  const { data, error } = await supabase.from("wallet_fundings").insert({ user_id, currency: "USD", ...input, status: "pending" }).select("id").single();
   if (error) throw new Error(error.message);
+  return data.id as string;
 }
 
 export async function saveReceive(input: { coin: string; network: string; wallet_address: string; amount: number | null }) {
   const user_id = await currentUserId();
-  const { error } = await supabase.from("crypto_receives").insert({ user_id, ...input, status: "pending" });
+  const { data, error } = await supabase.from("crypto_receives").insert({ user_id, ...input, status: "pending" }).select("id").single();
   if (error) throw new Error(error.message);
+  return data.id as string;
 }
 
 export async function saveSend(input: { coin: string; network: string; amount: number; fee: number; to_address: string }) {
   const user_id = await currentUserId();
-  const { error } = await supabase.from("crypto_sends").insert({ user_id, ...input, status: "pending" });
+  const { data, error } = await supabase.from("crypto_sends").insert({ user_id, ...input, status: "pending" }).select("id").single();
   if (error) throw new Error(error.message);
+  return data.id as string;
 }

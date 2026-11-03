@@ -563,6 +563,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      buy_crypto_with_balance: {
+        Args: {
+          _coin: string
+          _network: string
+          _price_usd: number
+          _usd_amount: number
+        }
+        Returns: Json
+      }
       has_login_pin: { Args: never; Returns: boolean }
       has_role: {
         Args: {

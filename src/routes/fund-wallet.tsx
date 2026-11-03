@@ -19,7 +19,7 @@ export const Route = createFileRoute("/fund-wallet")({
   }),
   head: () => ({ meta: [
     { title: "Fund Wallet — Basecola" },
-    { name: "description", content: "Add USD to a Basecola wallet with Stripe. Card details are entered on Stripe, and the funding stays pending until an admin completes it." },
+    { name: "description", content: "Add USD to a Basecola wallet with Stripe. Card details are entered on Stripe and confirmed payments are added to the balance automatically." },
     { property: "og:title", content: "Fund Wallet — Basecola" },
     { property: "og:description", content: "Pay with Stripe to fund a Basecola wallet. The card is charged by Stripe." },
     { property: "og:type", content: "website" },

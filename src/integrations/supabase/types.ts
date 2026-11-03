@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_verifications: {
+        Row: {
+          address: string
+          country: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          id_document_type: string
+          phone: string
+          reviewer_note: string | null
+          ssn_last4: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          country: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          id_document_type: string
+          phone: string
+          reviewer_note?: string | null
+          ssn_last4?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          country?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          id_document_type?: string
+          phone?: string
+          reviewer_note?: string | null
+          ssn_last4?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_verifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crypto_buys: {
         Row: {
           coin: string
@@ -330,6 +386,33 @@ export type Database = {
           },
         ]
       }
+      user_pins: {
+        Row: {
+          created_at: string
+          failed_attempts: number
+          locked_until: string | null
+          pin_hash: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          failed_attempts?: number
+          locked_until?: string | null
+          pin_hash: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          failed_attempts?: number
+          locked_until?: string | null
+          pin_hash?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wallet_fundings: {
         Row: {
           amount: number
@@ -379,7 +462,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_login_pin: { Args: never; Returns: boolean }
+      set_login_pin: { Args: { _pin: string }; Returns: undefined }
+      verify_login_pin: { Args: { _pin: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

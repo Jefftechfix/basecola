@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Check, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { listAdminUsers, listAdminVerifications, reviewVerification, setAdminUserStatus, type AdminVerificationRow } from "@/lib/admin.functions";
+import { listAdminReferrals, listAdminUsers, listAdminVerifications, reviewVerification, setAdminUserStatus, updateAdminReferral, type AdminVerificationRow } from "@/lib/admin.functions";
 
 const pill: Record<string, string> = {
   active: "bg-emerald-100 text-emerald-700", approved: "bg-emerald-100 text-emerald-700",
@@ -106,4 +106,45 @@ export function LiveVerificationManagement() {
       {notice && <p role="status" className="rounded-xl bg-[#f3eefe] p-3 text-sm">{notice}</p>}
     </article> : <p className="rounded-3xl bg-white p-5 text-sm text-muted-foreground shadow-sm">Select a request.</p>}
   </section>;
+}
+
+export function LiveReferralManagement() {
+  const fetchRefs = useServerFn(listAdminReferrals);
+  const update = useServerFn(updateAdminReferral);
+  const qc = useQueryClient();
+  const [query, setQuery] = useState("");
+  const [msg, setMsg] = useState("");
+  const { data, isPending, error } = useQuery({ queryKey: ["admin-referrals"], queryFn: () => fetchRefs() });
+  const act = useMutation({
+    mutationFn: (v: { id: string; status: "approved" | "rejected" | "paid"; note?: string }) => update({ data: v }),
+    onSuccess: () => { setMsg(""); qc.invalidateQueries({ queryKey: ["admin-referrals"] }); },
+    onError: (e: Error) => setMsg(e.message),
+  });
+  const q = query.trim().toLowerCase();
+  const refs = (data?.referrals ?? []).filter(r => `${r.referral_code} ${r.referrer.name} ${r.referrer.email} ${r.referred.name} ${r.referred.email}`.toLowerCase().includes(q));
+  const all = data?.referrals ?? [];
+  const sum = (s: string) => all.filter(r => r.status === s).reduce((t, r) => t + r.reward_usd, 0);
+  const stats = [["Total referrals", String(all.length)], ["Pending", String(all.filter(r => r.status === "pending").length)], ["Approved rewards", `$${sum("approved").toFixed(2)}`], ["Paid rewards", `$${sum("paid").toFixed(2)}`]];
+
+  return <div className="space-y-4">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{stats.map(([k, v]) => <div key={k} className="rounded-2xl bg-white p-4 shadow-sm"><p className="text-xs text-muted-foreground">{k}</p><p className="mt-1 text-xl font-extrabold">{v}</p></div>)}</div>
+    <section className="space-y-4 rounded-3xl bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-bold">Referrals</h2><div className="relative w-full max-w-xs"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" placeholder="Search code, name or email" value={query} onChange={e => setQuery(e.target.value)} /></div></div>
+      {msg && <p role="alert" className="text-sm text-destructive">{msg}</p>}
+      {isPending ? <p className="text-sm text-muted-foreground">Loading…</p> : error ? <p className="text-sm text-destructive">{(error as Error).message}</p> : refs.length === 0 ? <p className="text-sm text-muted-foreground">No referrals yet. They appear when someone signs up with a member's code.</p> :
+      <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="text-left text-xs text-muted-foreground"><tr><th className="py-2">Referrer</th><th>Referred user</th><th>Code</th><th>Reward</th><th>Status</th><th>Date</th><th className="text-right">Actions</th></tr></thead>
+        <tbody className="divide-y">{refs.map(r => <tr key={r.id}>
+          <td className="py-3"><p className="font-semibold">{r.referrer.name ?? "—"}</p><p className="text-xs text-muted-foreground">{r.referrer.email}</p></td>
+          <td><p className="font-semibold">{r.referred.name ?? "—"}</p><p className="text-xs text-muted-foreground">{r.referred.email}</p></td>
+          <td className="font-mono">{r.referral_code}</td><td>${r.reward_usd.toFixed(2)}</td><td><Pill value={r.status} /></td><td>{date(r.created_at)}</td>
+          <td className="text-right"><div className="flex justify-end gap-2">
+            {r.status === "pending" && <><Button size="sm" disabled={act.isPending} onClick={() => act.mutate({ id: r.id, status: "approved" })}><Check />Approve</Button><Button size="sm" variant="outline" disabled={act.isPending} onClick={() => { const note = window.prompt("Reason for rejection (optional)") ?? undefined; act.mutate({ id: r.id, status: "rejected", note }); }}><X />Reject</Button></>}
+            {r.status === "approved" && <Button size="sm" disabled={act.isPending} onClick={() => { if (window.confirm(`Credit $${r.reward_usd.toFixed(2)} to ${r.referrer.name ?? "this member"}'s wallet?`)) act.mutate({ id: r.id, status: "paid" }); }}>Pay reward</Button>}
+          </div></td></tr>)}</tbody></table></div>}
+    </section>
+    <section className="space-y-3 rounded-3xl bg-white p-5 shadow-sm"><h2 className="font-bold">Member referral codes</h2>
+      <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="text-left text-xs text-muted-foreground"><tr><th className="py-2">Member</th><th>Code</th><th>Referrals</th></tr></thead>
+        <tbody className="divide-y">{(data?.codes ?? []).map(c => <tr key={c.id}><td className="py-3"><p className="font-semibold">{c.name ?? "—"}</p><p className="text-xs text-muted-foreground">{c.email}</p></td><td className="font-mono">{c.code ?? "—"}</td><td>{c.count}</td></tr>)}</tbody></table></div>
+    </section>
+  </div>;
 }

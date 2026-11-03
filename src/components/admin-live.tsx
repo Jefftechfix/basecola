@@ -64,7 +64,7 @@ export function LiveVerificationManagement() {
     mutationFn: (v: { id: string; decision: "approved" | "rejected"; note?: string }) => review({ data: v }),
     onSuccess: (res, v) => {
       setNote("");
-      setNotice(`${v.decision === "approved" ? "Approved" : "Rejected"}. ${res.emailStatus === "sent" ? "The member was emailed." : res.emailStatus === "email_not_configured" ? "Email not sent yet — the sender domain still needs setting up." : "The email could not be sent."}`);
+      setNotice(`${v.decision === "approved" ? "Approved" : "Rejected"}. ${res.emailStatus === "sent" ? "The member was emailed." : res.emailStatus === "suppressed" ? "The member has opted out of emails." : "The email could not be sent."}`);
       qc.invalidateQueries({ queryKey: ["admin-verifications"] });
       qc.invalidateQueries({ queryKey: ["admin-users"] });
     },

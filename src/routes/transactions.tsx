@@ -45,7 +45,7 @@ function TransactionsPage() {
           const incoming = item.direction === "credit";
           return <div key={item.id} className="flex min-h-24 items-center gap-3 py-4">
             <TransactionCoin symbol={item.coin ?? ""} incoming={incoming} />
-            <div className="min-w-0 flex-1"><p className="font-bold capitalize">{item.kind} {item.coin ?? ""}</p><p className="mt-1 text-xs text-muted-foreground">{new Date(item.created_at).toLocaleString()}</p>{item.reference && <p className="truncate text-xs text-muted-foreground">{item.reference}</p>}</div>
+            <div className="min-w-0 flex-1"><p className="font-bold capitalize">{item.kind} {item.coin ?? ""}</p><p className="mt-1 text-xs text-muted-foreground">{new Date(item.created_at).toLocaleString()}</p>{item.counterparty && <p className="truncate text-xs text-muted-foreground">{item.counterparty}</p>}{item.reference && <p className="truncate text-xs text-muted-foreground">{item.reference}</p>}</div>
             <div className="text-right"><p className="font-semibold">{item.crypto_amount != null ? `${item.crypto_amount} ${item.coin ?? ""}` : money(Number(item.usd_amount))}</p><p className="my-1 text-xs text-muted-foreground">Fee {money(Number(item.fee_usd))}</p><span className="inline-flex rounded-md bg-accent px-2 py-1 text-xs font-medium capitalize">{item.status}</span></div>
           </div>;
         })}</div>

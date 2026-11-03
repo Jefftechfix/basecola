@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { Lock } from "lucide-react";
 import { AuthShell } from "@/components/brand";
 import { applyPin, signupPinError } from "@/lib/security-demo";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/wallet")({
   head: () => ({

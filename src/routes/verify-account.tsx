@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { loadVerifications, saveVerification, statusLabel } from "@/lib/verification-records";
 import { Camera, Check, ChevronRight, CloudUpload, CreditCard, Globe, Lock, Mail, MapPin, Phone, ShieldCheck, User } from "lucide-react";
 import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatSsn, getAccountVerification, ID_DOCUMENTS, submitAccountVerification, subscribeAccountVerification, VERIFY_COUNTRIES, verifyDetailsError, verifyDocumentError } from "@/lib/account-verify";
+import { formatSsn, ID_DOCUMENTS, VERIFY_COUNTRIES, verifyDetailsError, verifyDocumentError } from "@/lib/account-verify";
 import { loadAccountProfile } from "@/lib/account-profile";
 import { COUNTRY_DIALS, countryByIso, countryByName, countryOptionLabel, splitPhone } from "@/lib/countries";
 
@@ -28,7 +29,10 @@ const INTRO = [
 ];
 function VerifyAccountPage() {
   const nav = useNavigate();
-  const { status } = useSyncExternalStore(subscribeAccountVerification, getAccountVerification, getAccountVerification);
+  const qc = useQueryClient();
+  const { data: records, isLoading } = useQuery({ queryKey: ["account-verifications"], queryFn: loadVerifications });
+  const [saving, setSaving] = useState(false);
+  const [resubmit, setResubmit] = useState(false);
   const [step, setStep] = useState(0);
   const { data: profile } = useQuery({ queryKey: ["account-profile"], queryFn: loadAccountProfile });
   const seeded = useRef(false);
@@ -97,22 +101,46 @@ function VerifyAccountPage() {
     setStep(4);
   }
 
-  function submit() {
-    if (selfieUrl) URL.revokeObjectURL(selfieUrl);
-    setSelfieUrl("");
-    setIdName("");
-    setSsn("");
-    submitAccountVerification();
-    setSuccess(true);
+  async function submit() {
+    setSaving(true); setError("");
+    try {
+      await saveVerification({ full_name: name, email, phone: `${countryByIso(phoneIso)?.dial ?? ""} ${phone}`.trim(), country, address, ssn, id_document_type: idType });
+      if (selfieUrl) URL.revokeObjectURL(selfieUrl);
+      setSelfieUrl(""); setIdName(""); setSsn(""); setResubmit(false);
+      await qc.invalidateQueries({ queryKey: ["account-verifications"] });
+      setSuccess(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not submit verification. Please try again.");
+    } finally { setSaving(false); }
   }
 
-  if (status === "pending" && !success && step === 0) {
+  if (isLoading) return <AccountShell active="/profile" title="Verify Your Account"><p className="rounded-3xl bg-card p-6 text-center text-sm text-muted-foreground shadow-soft">Loading your verification…</p></AccountShell>;
+
+  if (records && !records.signedIn) {
     return <AccountShell active="/profile" title="Verify Your Account">
       <section className="rounded-3xl bg-card p-6 text-center shadow-soft">
-        <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-green-soft text-success"><Check className="h-8 w-8" /></span>
-        <h2 className="mt-4 text-2xl font-extrabold">Verification submitted</h2>
-        <p className="mt-2 text-sm text-muted-foreground">This preview has your sample details. No document was sent, and no review notification will be sent.</p>
-        <Button asChild className="mt-6 h-12 w-full rounded-2xl"><Link to="/dashboard">Continue to Dashboard</Link></Button>
+        <h2 className="text-2xl font-extrabold">Log in to verify</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Sign in to submit and track your verification request.</p>
+        <Button asChild className="mt-6 h-12 w-full rounded-2xl"><Link to="/login">Log in</Link></Button>
+      </section>
+    </AccountShell>;
+  }
+
+  const latest = records?.records[0];
+  if (latest && !success && step === 0 && !resubmit) {
+    const tone = latest.status === "approved" ? "bg-green-soft text-success" : latest.status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-accent text-primary";
+    return <AccountShell active="/profile" title="Verify Your Account">
+      <section className="rounded-3xl bg-card p-6 text-center shadow-soft">
+        <span className={`mx-auto grid h-16 w-16 place-items-center rounded-full ${tone}`}><ShieldCheck className="h-8 w-8" /></span>
+        <h2 className="mt-4 text-2xl font-extrabold">{statusLabel(latest.status)}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{latest.status === "approved" ? "Your account is verified." : latest.status === "rejected" ? "Your request was not approved. You can submit a new one." : "We received your request and it is waiting for review."}</p>
+        {latest.reviewer_note && <p className="mt-3 rounded-2xl bg-background p-3 text-sm"><span className="font-semibold">Reviewer note:</span> {latest.reviewer_note}</p>}
+        {latest.status === "rejected" && <Button type="button" className="mt-6 h-12 w-full rounded-2xl" onClick={() => { setResubmit(true); setStep(1); }}>Submit again</Button>}
+        <Button asChild variant={latest.status === "rejected" ? "outline" : "default"} className="mt-3 h-12 w-full rounded-2xl"><Link to="/dashboard">Continue to Dashboard</Link></Button>
+      </section>
+      <section className="mt-4 rounded-3xl bg-card p-5 shadow-soft">
+        <h3 className="font-bold">Request history</h3>
+        <ul className="mt-3 divide-y">{records!.records.map(r => <li key={r.id} className="flex items-center justify-between py-3 text-sm"><span><span className="block font-semibold">{r.id_document_type}</span><span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</span></span><span className="font-semibold">{statusLabel(r.status)}</span></li>)}</ul>
       </section>
     </AccountShell>;
   }
@@ -188,17 +216,18 @@ function VerifyAccountPage() {
         <ReviewRow icon={MapPin} label="Address" value={address} onEdit={() => setStep(1)} />
         <ReviewRow icon={CreditCard} label="ID Document" value={idName ? `${idType} · ${idName}` : idType} onEdit={() => setStep(2)} />
         <ReviewRow icon={Camera} label="Selfie" value={selfieLabel || "Photo captured"} onEdit={() => setStep(3)} />
-        <p className="text-xs text-muted-foreground">Submitting keeps this sample in the preview. No document or Social Security number is saved, and no one is notified.</p>
-        <div className="flex gap-2"><Button type="button" variant="outline" className="h-12 flex-1 rounded-2xl" onClick={() => setStep(3)}>Back</Button><Button type="button" className="h-12 flex-1 rounded-2xl" onClick={submit}>Submit for Verification <ChevronRight className="h-4 w-4" /></Button></div>
+        <p className="text-xs text-muted-foreground">Your details are saved for review. Document files and selfies are not uploaded; only the last 4 digits of an SSN are kept.</p>
+        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+        <div className="flex gap-2"><Button type="button" variant="outline" className="h-12 flex-1 rounded-2xl" onClick={() => setStep(3)}>Back</Button><Button type="button" disabled={saving} className="h-12 flex-1 rounded-2xl" onClick={submit}>{saving ? "Submitting…" : "Submit for Verification"} <ChevronRight className="h-4 w-4" /></Button></div>
       </section>}
     </div>}
 
-    <Dialog open={success} onOpenChange={open => { if (!open) nav({ to: "/dashboard" }); }}>
+    <Dialog open={success} onOpenChange={open => { if (!open) { setSuccess(false); setStep(0); } }}>
       <DialogContent className="max-w-sm rounded-3xl text-center">
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-green-soft text-success"><Check className="h-8 w-8" /></div>
         <DialogHeader>
           <DialogTitle className="text-center text-2xl">Verification Submitted Successfully!</DialogTitle>
-          <DialogDescription className="text-center">Your verification has been received in this preview. No document was sent, and no review notification will be sent.</DialogDescription>
+          <DialogDescription className="text-center">Your request is pending review. You can check its status on this page anytime.</DialogDescription>
         </DialogHeader>
         <Button asChild className="h-12 w-full rounded-2xl"><Link to="/dashboard">Continue to Dashboard</Link></Button>
       </DialogContent>

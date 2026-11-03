@@ -26,6 +26,10 @@ vi.mock("@/lib/account-profile", () => ({
 
 describe("Signing out", () => {
   it("ends on the login page, not the landing page", async () => {
+    // The real root route wraps the app in <html>; that document shell cannot
+    // render inside the test container, so drop it for this render only.
+    (routeTree as unknown as { options: { shellComponent?: unknown } }).options.shellComponent = undefined;
+
     const router = createRouter({
       routeTree,
       context: { queryClient: new QueryClient() },
@@ -33,8 +37,6 @@ describe("Signing out", () => {
     });
 
     render(<RouterProvider router={router} />);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    console.log("BODY:", document.body.innerHTML.slice(0, 900));
 
     const button = await screen.findByRole("button", { name: "Log Out" });
     fireEvent.click(button);

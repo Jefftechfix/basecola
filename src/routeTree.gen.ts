@@ -40,6 +40,7 @@ import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as AssetsSymbolRouteImport } from './routes/assets_.$symbol'
 import { Route as TransactionsTransactionIdRouteImport } from './routes/transactions_.$transactionId'
 import { Route as ApiPublicStripeWalletWebhookRouteImport } from './routes/api/public/stripe-wallet-webhook'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -198,6 +199,12 @@ const ApiPublicStripeWalletWebhookRoute =
     path: '/api/public/stripe-wallet-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -231,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/assets/$symbol': typeof AssetsSymbolRoute
   '/transactions/$transactionId': typeof TransactionsTransactionIdRoute
   '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -264,6 +272,7 @@ export interface FileRoutesByTo {
   '/assets/$symbol': typeof AssetsSymbolRoute
   '/transactions/$transactionId': typeof TransactionsTransactionIdRoute
   '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -298,6 +307,7 @@ export interface FileRoutesById {
   '/assets_/$symbol': typeof AssetsSymbolRoute
   '/transactions_/$transactionId': typeof TransactionsTransactionIdRoute
   '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -333,6 +343,7 @@ export interface FileRouteTypes {
     | '/assets/$symbol'
     | '/transactions/$transactionId'
     | '/api/public/stripe-wallet-webhook'
+    | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/assets/$symbol'
     | '/transactions/$transactionId'
     | '/api/public/stripe-wallet-webhook'
+    | '/lovable/email/transactional/preview'
   id:
     | '__root__'
     | '/'
@@ -399,6 +411,7 @@ export interface FileRouteTypes {
     | '/assets_/$symbol'
     | '/transactions_/$transactionId'
     | '/api/public/stripe-wallet-webhook'
+    | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -433,6 +446,7 @@ export interface RootRouteChildren {
   AssetsSymbolRoute: typeof AssetsSymbolRoute
   TransactionsTransactionIdRoute: typeof TransactionsTransactionIdRoute
   ApiPublicStripeWalletWebhookRoute: typeof ApiPublicStripeWalletWebhookRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -654,6 +668,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStripeWalletWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -689,6 +710,7 @@ const rootRouteChildren: RootRouteChildren = {
   AssetsSymbolRoute: AssetsSymbolRoute,
   TransactionsTransactionIdRoute: TransactionsTransactionIdRoute,
   ApiPublicStripeWalletWebhookRoute: ApiPublicStripeWalletWebhookRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

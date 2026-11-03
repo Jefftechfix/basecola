@@ -46,9 +46,10 @@ function ProfilePage() {
   }
 
   async function logOut() {
-    await supabase.auth.signOut();
+    await qc.cancelQueries();
     qc.clear();
-    nav({ to: "/" });
+    await supabase.auth.signOut();
+    nav({ to: "/login", replace: true });
   }
 
   return <div className="min-h-screen bg-background pb-28">

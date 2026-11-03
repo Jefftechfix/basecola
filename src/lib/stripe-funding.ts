@@ -76,3 +76,24 @@ export async function confirmStripeFunding(sessionId: string): Promise<StripeFun
     awaitingVerification: Boolean(data.awaitingVerification),
   };
 }
+
+export function microdepositInput(first: string, second: string, code: string) {
+  const descriptor = code.trim().toUpperCase();
+  if (descriptor) {
+    if (!/^SM[A-Z0-9]{4}$/.test(descriptor)) return { error: "The code has 6 characters and starts with SM." } as const;
+    return { descriptorCode: descriptor } as const;
+  }
+  const toCents = (v: string) => {
+    const t = v.trim().replace(/^\$/, "");
+    if (!/^0?\.\d{2}$|^\d{1,2}$/.test(t)) return NaN;
+    return t.includes(".") ? Math.round(Number(t) * 100) : Number(t);
+  };
+  const a = toCents(first), b = toCents(second);
+  if (!(a > 0 && a < 100 && b > 0 && b < 100)) return { error: "Enter both deposit amounts, e.g. 0.32 and 0.45." } as const;
+  return { amounts: [a, b] as [number, number] } as const;
+}
+
+export async function verifyMicrodeposits(sessionId: string, input: { amounts?: [number, number]; descriptorCode?: string }) {
+  const { error } = await supabase.functions.invoke("stripe-fund-wallet", { body: { action: "verify", sessionId, ...input } });
+  if (error) throw new Error(await functionMessage(error));
+}

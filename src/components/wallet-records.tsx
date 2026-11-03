@@ -20,6 +20,6 @@ export function WalletRecords({ kind }: { kind: RecordKind }) {
       : <><ul className="divide-y rounded-2xl bg-card shadow-soft">{data.length ? data.map(r => <li key={String(r.id)} className="flex items-center justify-between gap-3 p-4 text-sm">
           <div className="min-w-0"><p className="truncate font-semibold">{line(kind, r)}</p><p className="text-xs text-muted-foreground">{new Date(String(r.created_at)).toLocaleString()}</p></div>
           <span className="shrink-0 rounded-full bg-accent px-2.5 py-1 text-xs font-bold capitalize">{String(r.status)}</span>
-        </li>) : <li className="p-4 text-sm text-muted-foreground">No records yet.</li>}</ul><p className="mt-3 text-xs text-muted-foreground">Status stays pending until an admin updates it. You cannot mark your own record completed.</p></>}
+        </li>) : <li className="p-4 text-sm text-muted-foreground">No records yet.</li>}</ul><p className="mt-3 text-xs text-muted-foreground">Stripe payments update automatically once confirmed.</p></>}
   </section>;
 }

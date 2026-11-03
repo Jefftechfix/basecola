@@ -53,7 +53,7 @@ export const Route = createFileRoute("/api/public/stripe-wallet-webhook")({
         let status: string | null = null;
         if (event.type === "checkout.session.async_payment_succeeded") status = "completed";
         else if (event.type === "checkout.session.async_payment_failed") status = "failed";
-        else if (event.type === "checkout.session.completed" && isBank && session.payment_status === "paid") status = "completed";
+        else if (event.type === "checkout.session.completed" && session.payment_status === "paid") status = "completed";
         if (!status) return ok();
 
         const userId = session.metadata?.user_id || session.client_reference_id;

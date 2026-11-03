@@ -163,8 +163,10 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (existingError) return json({ error: existingError.message }, 500);
       if (existing) {
-        if (existing.payment_method !== paymentMethod) {
-          await admin.from("wallet_fundings").update({ payment_method: paymentMethod }).eq("id", existing.id);
+        const nextStatus = paid && existing.status === "pending" ? "completed" : existing.status;
+        if (existing.payment_method !== paymentMethod || nextStatus !== existing.status) {
+          await admin.from("wallet_fundings").update({ payment_method: paymentMethod, status: nextStatus }).eq("id", existing.id);
+          existing.status = nextStatus;
         }
         return json({
           amount: Number(existing.amount),
@@ -183,10 +185,10 @@ Deno.serve(async (req) => {
         currency: (session.currency || "usd").toUpperCase(),
         payment_method: paymentMethod,
         reference: session.id,
-        status: "pending",
+        status: paid ? "completed" : "pending",
       });
       if (insertError) return json({ error: insertError.message }, 500);
-      return json({ amount, paymentMethod, status: "pending", alreadySaved: false, bankPending, awaitingVerification });
+      return json({ amount, paymentMethod, status: paid ? "completed" : "pending", alreadySaved: false, bankPending, awaitingVerification });
     }
 
     return json({ error: "Choose a funding action." }, 400);

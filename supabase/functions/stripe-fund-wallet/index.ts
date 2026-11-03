@@ -40,6 +40,43 @@ function returnOrigin(value: unknown) {
   return "https://crypto-basecamp-beacon.lovable.app";
 }
 
+// One Stripe payment = one row in the unified activity history. This mirrors
+// src/lib/stripe-transactions.ts because edge functions cannot import from src.
+type AdminClient = { from(table: string): any };
+
+async function syncStripeTransaction(
+  admin: AdminClient,
+  input: { userId: string; sessionId: string; amountUsd: number; status: string; paymentMethod: string },
+) {
+  const row = {
+    user_id: input.userId,
+    kind: "funding",
+    direction: "credit",
+    usd_amount: Math.round(input.amountUsd * 100) / 100,
+    fee_usd: 0,
+    reference: input.sessionId,
+    counterparty: "Stripe",
+    status: input.status,
+    note: input.paymentMethod,
+  };
+  const { data: existing } = await admin
+    .from("transactions")
+    .select("id, status, note")
+    .eq("user_id", input.userId)
+    .eq("kind", "funding")
+    .eq("reference", input.sessionId)
+    .maybeSingle();
+  if (existing) {
+    if (existing.status !== input.status || existing.note !== input.paymentMethod) {
+      await admin.from("transactions").update({ status: input.status, note: input.paymentMethod }).eq("id", existing.id);
+    }
+    return;
+  }
+  const { error } = await admin.from("transactions").insert(row);
+  // 23505 = the history row already exists (Stripe retried an event we already handled).
+  if (error && error.code !== "23505") throw new Error(error.message);
+}
+
 async function stripeRequest(secret: string, path: string, method: "GET" | "POST", body?: string) {
   const response = await fetch(`https://api.stripe.com/v1/${path}`, {
     method,
@@ -205,6 +242,17 @@ Deno.serve(async (req) => {
           await admin.from("wallet_fundings").update({ payment_method: paymentMethod, status: nextStatus }).eq("id", existing.id);
           existing.status = nextStatus;
         }
+        try {
+          await syncStripeTransaction(admin, {
+            userId: auth.user.id,
+            sessionId: session.id,
+            amountUsd: Number(existing.amount),
+            status: existing.status,
+            paymentMethod,
+          });
+        } catch (historyError) {
+          console.error("Stripe funding history row could not be saved:", historyError);
+        }
         return json({
           amount: Number(existing.amount),
           paymentMethod,
@@ -225,6 +273,17 @@ Deno.serve(async (req) => {
         status: paid ? "completed" : "pending",
       });
       if (insertError) return json({ error: insertError.message }, 500);
+      try {
+        await syncStripeTransaction(admin, {
+          userId: auth.user.id,
+          sessionId: session.id,
+          amountUsd: amount,
+          status: paid ? "completed" : "pending",
+          paymentMethod,
+        });
+      } catch (historyError) {
+        console.error("Stripe funding history row could not be saved:", historyError);
+      }
       return json({ amount, paymentMethod, status: paid ? "completed" : "pending", alreadySaved: false, bankPending, awaitingVerification });
     }
 

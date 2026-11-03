@@ -32,7 +32,7 @@ function TransactionsPage() {
   const [query, setQuery] = useState("");
   const { data, isPending, error } = useQuery({ queryKey: ["transactions"], queryFn: listTransactions });
   const rows = data ?? [];
-  const filtered = rows.filter(item => (filter === "All" || item.kind.toLowerCase() === filter.toLowerCase()) && `${item.kind} ${item.coin ?? ""} ${item.reference ?? ""} ${item.status}`.toLowerCase().includes(query.toLowerCase()));
+  const filtered = rows.filter(item => (filter === "All" || item.kind.toLowerCase() === filter.toLowerCase()) && `${item.kind} ${item.coin ?? ""} ${item.counterparty ?? ""} ${item.reference ?? ""} ${item.status}`.toLowerCase().includes(query.toLowerCase()));
   return <AccountShell active="/transactions" title="Transactions">
     <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input aria-label="Search transactions" className="h-10 bg-card pl-9" placeholder="Search coin, status or reference" value={query} onChange={e => setQuery(e.target.value)} /></div>
     <div role="group" aria-label="Transaction type" className="my-5 flex flex-wrap gap-2">{KINDS.map(type => <Button key={type} variant={filter === type ? "default" : "outline"} size="sm" aria-pressed={filter === type} onClick={() => setFilter(type)}>{type}</Button>)}</div>
@@ -45,7 +45,7 @@ function TransactionsPage() {
           const incoming = item.direction === "credit";
           return <div key={item.id} className="flex min-h-24 items-center gap-3 py-4">
             <TransactionCoin symbol={item.coin ?? ""} incoming={incoming} />
-            <div className="min-w-0 flex-1"><p className="font-bold capitalize">{item.kind} {item.coin ?? ""}</p><p className="mt-1 text-xs text-muted-foreground">{new Date(item.created_at).toLocaleString()}</p>{item.reference && <p className="truncate text-xs text-muted-foreground">{item.reference}</p>}</div>
+            <div className="min-w-0 flex-1"><p className="font-bold capitalize">{item.kind} {item.coin ?? ""}</p><p className="mt-1 text-xs text-muted-foreground">{new Date(item.created_at).toLocaleString()}</p>{item.counterparty && <p className="truncate text-xs text-muted-foreground">{item.counterparty}</p>}{item.reference && <p className="truncate text-xs text-muted-foreground">{item.reference}</p>}</div>
             <div className="text-right"><p className="font-semibold">{item.crypto_amount != null ? `${item.crypto_amount} ${item.coin ?? ""}` : money(Number(item.usd_amount))}</p><p className="my-1 text-xs text-muted-foreground">Fee {money(Number(item.fee_usd))}</p><span className="inline-flex rounded-md bg-accent px-2 py-1 text-xs font-medium capitalize">{item.status}</span></div>
           </div>;
         })}</div>

@@ -1,4 +1,4 @@
-import { LiveUsersManagement, LiveVerificationManagement } from "@/components/admin-live";
+import { LiveReferralManagement, LiveUsersManagement, LiveVerificationManagement } from "@/components/admin-live";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ArrowDownToLine, BadgeCheck, BarChart3, Bell, Calendar, ChevronDown, CircleDollarSign, Home, Info, Landmark, Menu, RefreshCw, Settings, SlidersHorizontal, Ticket, UserPlus, Users, Wallet, X, type LucideIcon } from "lucide-react";
 import { COINS, CoinIcon } from "@/components/brand";
@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { AssetsManagement, DepositsMonitoring, PricingManagement, ReferralManagement, ReportsManagement, SettingsManagement, TradeManagement, TreasuryManagement, TransactionsManagement, UsersManagement } from "@/components/admin-management";
+import { AssetsManagement, DepositsMonitoring, PricingManagement, ReportsManagement, SettingsManagement, TradeManagement, TreasuryManagement, TransactionsManagement, UsersManagement } from "@/components/admin-management";
 import { VerificationManagement } from "@/components/admin-verifications";
 import { ADMIN_ACTIVITY, ADMIN_MARKET, ADMIN_NOTICES, ADMIN_PERIODS, ADMIN_QUICK_ACTIONS, ADMIN_STATS, ADMIN_USERS, adminCount, adminMoney } from "@/lib/admin-demo";
 
@@ -185,7 +185,7 @@ export function AdminPanel({ section }: { section: Exclude<AdminSection, "dashbo
   if (section === "pricing") return <PricingManagement />;
   if (section === "treasury") return <TreasuryManagement />;
   if (section === "reports") return <ReportsManagement />;
-  if (section === "referrals") return <ReferralManagement />;
+  if (section === "referrals") return <LiveReferralManagement />;
   if (section === "deposits") return <DepositsMonitoring />;
   if (section === "verifications") return <LiveVerificationManagement />;
   return <SettingsManagement />;

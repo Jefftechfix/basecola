@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AdminDashboard, AdminPanel, AdminShell, type AdminSection } from "@/components/admin-dashboard";
-import { ADMIN_PERIODS, clearAdminSession, readAdminSession } from "@/lib/admin-demo";
+import { ADMIN_PERIODS, currentUserIsAdmin } from "@/lib/admin-demo";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [
@@ -18,13 +19,18 @@ function AdminPage() {
   const [periodId, setPeriodId] = useState<(typeof ADMIN_PERIODS)[number]["id"]>("week");
 
   useEffect(() => {
-    if (!readAdminSession()) nav({ to: "/admin-login" });
-    else setReady(true);
+    let active = true;
+    currentUserIsAdmin().then(ok => {
+      if (!active) return;
+      if (ok) setReady(true);
+      else nav({ to: "/admin-login", replace: true });
+    });
+    return () => { active = false; };
   }, [nav]);
 
-  function signOut() {
-    clearAdminSession();
-    nav({ to: "/admin-login" });
+  async function signOut() {
+    await supabase.auth.signOut();
+    nav({ to: "/admin-login", replace: true });
   }
 
   if (!ready) return null;

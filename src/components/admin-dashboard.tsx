@@ -1,3 +1,4 @@
+import { LiveUsersManagement, LiveVerificationManagement } from "@/components/admin-live";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { ArrowDownToLine, BadgeCheck, BarChart3, Bell, Calendar, ChevronDown, CircleDollarSign, Home, Info, Landmark, Menu, RefreshCw, Settings, SlidersHorizontal, Ticket, UserPlus, Users, Wallet, X, type LucideIcon } from "lucide-react";
 import { COINS, CoinIcon } from "@/components/brand";
@@ -174,7 +175,7 @@ export function AdminDashboard({ onSection, periodId }: { onSection: (section: A
 }
 
 export function AdminPanel({ section }: { section: Exclude<AdminSection, "dashboard"> }) {
-  if (section === "users") return <UsersManagement />;
+  if (section === "users") return <LiveUsersManagement />;
   if (section === "transactions") return <TransactionsManagement />;
   if (section === "assets") return <AssetsManagement />;
   if (section === "trade") return <TradeManagement />;
@@ -186,7 +187,7 @@ export function AdminPanel({ section }: { section: Exclude<AdminSection, "dashbo
   if (section === "reports") return <ReportsManagement />;
   if (section === "referrals") return <ReferralManagement />;
   if (section === "deposits") return <DepositsMonitoring />;
-  if (section === "verifications") return <VerificationManagement />;
+  if (section === "verifications") return <LiveVerificationManagement />;
   return <SettingsManagement />;
 }
 

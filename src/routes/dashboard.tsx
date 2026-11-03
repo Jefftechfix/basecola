@@ -78,7 +78,6 @@ function Dashboard() {
           <span className="grid h-12 w-12 place-items-center rounded-full bg-accent font-bold text-primary">{initials}</span>
           <div>
             <p className="text-xl font-bold">Hello, {greeting}</p>
-            <p className="text-sm text-muted-foreground">{profile.email}</p>
           </div>
         </div>
 

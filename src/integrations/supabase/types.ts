@@ -572,6 +572,10 @@ export type Database = {
         }
         Returns: Json
       }
+      change_login_pin: {
+        Args: { _current_pin: string; _new_pin: string }
+        Returns: undefined
+      }
       has_login_pin: { Args: never; Returns: boolean }
       has_role: {
         Args: {

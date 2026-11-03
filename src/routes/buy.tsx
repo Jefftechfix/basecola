@@ -8,6 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { amountError, formatAssetAmount, quoteTradeFee, sampleUnitPrice, WALLET_ASSETS } from "@/lib/wallet-demo";
 import { money } from "@/lib/account-demo";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+import { loadWalletBalance } from "@/lib/wallet-balance";
 
 export const Route = createFileRoute("/buy")({
   head: () => ({ meta: [
@@ -22,6 +26,10 @@ function BuyPage() {
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
   const [step, setStep] = useState<"form" | "preview" | "success">("form");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ reference: string; balance: number } | null>(null);
+  const qc = useQueryClient();
+  const { data: balance, isPending: balanceLoading } = useQuery({ queryKey: ["wallet-balance"], queryFn: loadWalletBalance });
   const asset = WALLET_ASSETS.find(item => item.sym === symbol);
   if (!asset) return null;
   const unit = sampleUnitPrice(asset.price);
@@ -31,15 +39,29 @@ function BuyPage() {
   const total = usd > 0 ? usd + fee : 0;
   const headline = `${formatAssetAmount(crypto)} ${symbol}`;
 
+  async function confirmBuy() {
+    if (!asset) return;
+    setBusy(true);
+    const { data, error: rpcError } = await supabase.rpc("buy_crypto_with_balance", { _coin: symbol, _network: asset.network, _usd_amount: usd, _price_usd: unit });
+    setBusy(false);
+    if (rpcError) { setError(rpcError.message); setStep("form"); return; }
+    const out = data as { reference: string; balance: number };
+    setResult(out);
+    setStep("success");
+    for (const key of [["wallet-balance"], ["transactions"], ["wallet-records"]]) qc.invalidateQueries({ queryKey: key });
+  }
+
   function reset() {
+    setResult(null);
     setAmount("");
     setError("");
     setStep("form");
   }
 
   return <WalletLayout title="Buy Crypto">
-    <form className="space-y-6" onSubmit={event => { event.preventDefault(); const message = amountError(amount); setError(message); if (!message) setStep("preview"); }}>
-      <div className="flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-lg bg-accent text-primary"><Bitcoin /></span><div><h2 className="text-xl font-bold">Buy crypto</h2><p className="text-sm text-muted-foreground">Pay in USD · Sample price</p></div></div>
+    <form className="space-y-6" onSubmit={event => { event.preventDefault(); if (!balance) { setError("Please log in to buy with your wallet balance."); return; } const message = amountError(amount) || (total > balance.total ? `Insufficient wallet balance. Available: ${money(balance.total)}` : ""); setError(message); if (!message) setStep("preview"); }}>
+      <div className="flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-lg bg-accent text-primary"><Bitcoin /></span><div><h2 className="text-xl font-bold">Buy crypto</h2><p className="text-sm text-muted-foreground">Pay with wallet balance · Sample price</p></div></div>
+      <div className="flex items-center justify-between rounded-lg border bg-card p-4 text-sm"><span className="text-muted-foreground">Wallet balance</span>{balanceLoading ? <span>Loading…</span> : balance ? <span className="font-semibold">{money(balance.total)}</span> : <Link to="/login" className="font-semibold text-primary">Log in</Link>}</div>
       <WalletCoinSelect symbol={symbol} onChange={value => { setSymbol(value); setAmount(""); setError(""); setStep("form"); }} />
       <div className="space-y-2"><Label htmlFor="buy-amount">Amount (USD)</Label><Input id="buy-amount" inputMode="decimal" placeholder="0.00" value={amount} onChange={event => { setAmount(event.target.value); setError(""); }} className="h-14 bg-card text-2xl" aria-invalid={!!error} aria-describedby={error ? "buy-error" : undefined} />{error && <p id="buy-error" role="alert" className="text-sm text-destructive">{error}</p>}</div>
       <div className="grid grid-cols-3 gap-3">{[50, 100, 250].map(value => <Button key={value} type="button" variant="outline" onClick={() => { setAmount(String(value)); setError(""); }}>{money(value)}</Button>)}</div>
@@ -48,26 +70,26 @@ function BuyPage() {
         <div className="flex justify-between gap-4"><span className="text-muted-foreground">Fee 1.5%</span><span className="font-semibold">{fee > 0 ? money(fee) : "—"}</span></div>
         <div className="flex justify-between gap-4"><span className="text-muted-foreground">Total</span><span className="font-semibold">{total > 0 ? money(total) : "—"}</span></div>
       </div>
-      <Button className="h-12 w-full" type="submit">Review demo purchase<ArrowRight /></Button>
+      <Button className="h-12 w-full" type="submit">Review purchase<ArrowRight /></Button>
     </form>
     <TradePreviewModal
       open={step === "preview"}
-      title="Review demo purchase"
+      title="Review purchase"
       headline={headline}
       detail={`You pay ${money(total)} · Sample price ${asset.price}`}
       rows={[{ label: "Asset", value: asset.name }, { label: "Network", value: asset.network }, { label: "Amount", value: money(usd) }, { label: "Fee 1.5%", value: money(fee) }, { label: "Total", value: money(total) }]}
-      note="This quote uses a fixed sample price. The fee is a sample and confirming does not place an order or change your balance."
-      confirmLabel="Confirm preview"
+      note={`Paid from your wallet balance${balance ? ` (${money(balance.total)} available)` : ""}. Price is a fixed sample price.`}
+      confirmLabel={busy ? "Buying…" : "Confirm purchase"}
       editLabel="Edit purchase"
-      onConfirm={() => setStep("success")}
+      onConfirm={() => { if (!busy) void confirmBuy(); }}
       onClose={() => setStep("form")}
     />
     <TradeSuccessModal
       open={step === "success"}
-      title="Purchase preview complete"
+      title="Purchase complete"
       headline={headline}
-      detail={`Sample fee ${money(fee)}. No payment was taken. Your balance and transactions have not changed.`}
-      againLabel="New demo purchase"
+      detail={result ? `Reference ${result.reference}. New wallet balance ${money(result.balance)}.` : ""}
+      againLabel="Buy more"
       onAgain={reset}
       onClose={reset}
     />

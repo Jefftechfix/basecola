@@ -8,7 +8,7 @@ import { routeTree } from "@/routeTree.gen";
 const { signOut } = vi.hoisted(() => ({ signOut: vi.fn(async () => ({ error: null })) }));
 
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: { auth: { signOut: (...args: unknown[]) => signOut(...args) } },
+  supabase: { auth: { signOut } },
 }));
 
 vi.mock("@/lib/account-profile", () => ({

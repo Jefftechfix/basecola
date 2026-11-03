@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Bell, Menu, ShieldCheck, Zap, Globe, Layers, BarChart3, Wallet, Eye, Plus, Minus, Send, Download, Home, Repeat, User, Coins } from "lucide-react";
 import { Logo, COINS, CoinIcon, Change } from "@/components/brand";
 import coins from "@/assets/coins.png";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Gift, LogIn, UserPlus } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -61,6 +63,35 @@ function PhoneMock() {
   );
 }
 
+const MENU = [
+  { href: "#markets", label: "Markets", icon: BarChart3 },
+  { href: "#why", label: "Why Basecola", icon: ShieldCheck },
+  { href: "#features", label: "Features", icon: Layers },
+] as const;
+const FEATURE_LINKS = [
+  { label: "Buy & sell crypto", icon: Repeat },
+  { label: "Send & receive", icon: Send },
+  { label: "Fund your wallet", icon: Wallet },
+  { label: "Referral rewards", icon: Gift },
+] as const;
+
+function MobileMenu() {
+  return <Sheet>
+    <SheetTrigger aria-label="Open menu" className="md:hidden"><Menu className="h-6 w-6" /></SheetTrigger>
+    <SheetContent side="right" className="flex w-80 flex-col gap-6">
+      <SheetTitle className="sr-only">Menu</SheetTitle>
+      <Logo />
+      <nav className="space-y-1">{MENU.map(m => <a key={m.href} href={m.href} className="flex items-center gap-3 rounded-xl px-3 py-3 font-semibold hover:bg-accent"><m.icon className="h-5 w-5 text-primary" />{m.label}</a>)}</nav>
+      <div><p className="px-3 text-xs font-bold uppercase tracking-wide text-muted-foreground">Features</p>
+        <ul className="mt-2 space-y-1">{FEATURE_LINKS.map(f => <li key={f.label}><Link to="/signup" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-accent"><f.icon className="h-4 w-4 text-primary" />{f.label}</Link></li>)}</ul></div>
+      <div className="mt-auto space-y-3">
+        <Link to="/login" className="flex w-full items-center justify-center gap-2 rounded-2xl border border-primary py-3 font-semibold text-primary"><LogIn className="h-4 w-4" />Log In</Link>
+        <Link to="/signup" className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 font-semibold text-primary-foreground"><UserPlus className="h-4 w-4" />Sign Up</Link>
+      </div>
+    </SheetContent>
+  </Sheet>;
+}
+
 function Index() {
   return (
     <div className="min-h-screen">
@@ -72,7 +103,7 @@ function Index() {
         <div className="flex items-center gap-4">
           <Link to="/login" className="hidden text-sm font-semibold text-primary md:block">Log In</Link>
           <Link to="/signup" className="hidden rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground md:block">Sign Up</Link>
-          <Bell className="h-6 w-6 md:hidden" /><Menu className="h-6 w-6 md:hidden" />
+          <Bell className="h-6 w-6 md:hidden" /><MobileMenu />
         </div>
       </header>
 

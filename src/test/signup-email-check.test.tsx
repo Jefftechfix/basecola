@@ -65,6 +65,17 @@ describe("Signup email availability", () => {
     expect(screen.queryByText(/This email is already registered/)).toBeNull();
   });
 
+  it("asks the server right away instead of waiting out a pause", async () => {
+    state.emailTaken = false;
+    rpc.mockClear();
+    const email = await openSignup();
+
+    fireEvent.change(email, { target: { value: "quick@example.com" } });
+    await new Promise(resolve => setTimeout(resolve, 60));
+
+    expect(availabilityCalls().length).toBeGreaterThan(0);
+  });
+
   it("re-checks when the member edits the email", async () => {
     state.emailTaken = true;
     const email = await openSignup();

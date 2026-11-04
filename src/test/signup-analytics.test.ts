@@ -16,7 +16,7 @@ describe("summarizeSignups", () => {
   it("ranks countries by signup count with share and first/last dates", () => {
     const result = summarizeSignups(ROWS, "all", NOW);
     expect(result.total).toBe(6);
-    expect(result.countries.map(c => c.country)).toEqual(["Nigeria", "United States", "Not provided"]);
+    expect(result.countries.map(c => c.country)).toEqual(["Nigeria", "Not provided", "United States"]);
     expect(result.countries[0].signups).toBe(3);
     expect(result.countries[0].share).toBeCloseTo(0.5, 6);
     expect(result.countries[0].firstSignup).toBe("2026-11-01T09:00:00.000Z");
@@ -43,7 +43,7 @@ describe("summarizeSignups", () => {
     const week = summarizeSignups(ROWS, "7d", NOW);
     expect(week.since).toBe("2026-10-28T12:00:00.000Z");
     expect(week.total).toBe(4);
-    expect(week.countries.find(c => c.country === "Nigeria")?.signups).toBe(2);
+    expect(week.countries.find(c => c.country === "Nigeria")?.signups).toBe(3);
     expect(week.countries.some(c => c.country === "Not provided")).toBe(false);
 
     const day = summarizeSignups(ROWS, "24h", NOW);
@@ -78,13 +78,17 @@ describe("rangeStart", () => {
 describe("signupCsv", () => {
   it("writes one row per country and quotes names containing commas", () => {
     const csv = signupCsv(summarizeSignups(
-      [{ country: "Korea, South", created_at: "2026-11-04T09:00:00.000Z" }, { country: "Ghana", created_at: "2026-11-03T09:00:00.000Z" }],
+      [
+        { country: "Korea, South", created_at: "2026-11-04T09:00:00.000Z" },
+        { country: "Korea, South", created_at: "2026-11-02T09:00:00.000Z" },
+        { country: "Ghana", created_at: "2026-11-03T09:00:00.000Z" },
+      ],
       "all",
       NOW,
     ));
     const lines = csv.trim().split("\n");
     expect(lines[0]).toBe("Country,Signups,Share %,First signup,Last signup");
-    expect(lines[1]).toBe('"Korea, South",1,50.0,2026-11-04T09:00:00.000Z,2026-11-04T09:00:00.000Z');
-    expect(lines[2]).toBe("Ghana,1,50.0,2026-11-03T09:00:00.000Z,2026-11-03T09:00:00.000Z");
+    expect(lines[1]).toBe('"Korea, South",2,66.7,2026-11-02T09:00:00.000Z,2026-11-04T09:00:00.000Z');
+    expect(lines[2]).toBe("Ghana,1,33.3,2026-11-03T09:00:00.000Z,2026-11-03T09:00:00.000Z");
   });
 });

@@ -854,3 +854,72 @@ export const listAdminSignupAnalytics = createServerFn({ method: "GET" })
       now,
     );
   });
+
+export type AdminDashboardOverview = {
+  days: number;
+  stats: { users: number; usersChange: number; transactions: number; transactionsChange: number; volume: number; volumeChange: number; fees: number; feesChange: number };
+  users: { total: number; verified: number; unverified: number; active: number; joinedToday: number };
+  points: { label: string; volume: number; transactions: number }[];
+  recent: { id: string; reference: string; user: string; kind: string; coin: string; amount: number; usd: number; status: string; created_at: string }[];
+  market: { coin: string; buy: number; sell: number }[];
+};
+
+const pct = (now: number, before: number) => before === 0 ? (now > 0 ? 100 : 0) : ((now - before) / before) * 100;
+
+export const getAdminDashboardOverview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { days: number }) => ({ days: [1, 4, 7, 30].includes(Number(d?.days)) ? Number(d.days) : 7 }))
+  .handler(async ({ data, context }): Promise<AdminDashboardOverview> => {
+    await assertAdmin(context as AuthCtx);
+    const db = await admin();
+    const DAY = 86_400_000;
+    const now = Date.now();
+    const start = now - data.days * DAY;
+    const prevStart = start - data.days * DAY;
+    const since = new Date(Math.min(prevStart, now - 30 * DAY)).toISOString();
+    const [{ data: profiles, error: pe }, { data: verifs }, { data: txs, error: te }, { data: recent }, { data: market }] = await Promise.all([
+      db.from("profiles").select("id, full_name, email, created_at").limit(5000),
+      db.from("account_verifications").select("user_id, status"),
+      db.from("transactions").select("user_id, usd_amount, fee_usd, status, created_at").gte("created_at", since).limit(10000),
+      db.from("transactions").select("id, user_id, reference, kind, coin, crypto_amount, usd_amount, status, created_at").order("created_at", { ascending: false }).limit(8),
+      db.from("trade_asset_settings").select("coin, buy_price_usd, sell_price_usd").order("coin"),
+    ]);
+    if (pe || te) throw new Error(pe?.message ?? te?.message);
+    const people = profiles ?? [];
+    const names = new Map(people.map(p => [p.id, p.full_name || p.email || "Member"]));
+    const at = (s: string) => new Date(s).getTime();
+    const usersNow = people.filter(p => at(p.created_at) >= start).length;
+    const usersPrev = people.filter(p => at(p.created_at) >= prevStart && at(p.created_at) < start).length;
+    const all = txs ?? [];
+    const inRange = (a: number, b: number) => all.filter(t => at(t.created_at) >= a && at(t.created_at) < b);
+    const cur = inRange(start, now + 1), prev = inRange(prevStart, start);
+    const done = (r: typeof all) => r.filter(t => t.status === "completed");
+    const sum = (r: typeof all, k: "usd_amount" | "fee_usd") => r.reduce((s, t) => s + Number(t[k] ?? 0), 0);
+    const verified = new Set((verifs ?? []).filter(v => v.status === "approved").map(v => v.user_id));
+    const today = new Date(); today.setUTCHours(0, 0, 0, 0);
+    const pointDays = Math.max(data.days, 2);
+    const points = Array.from({ length: pointDays }, (_, i) => {
+      const dayStart = new Date(today.getTime() - (pointDays - 1 - i) * DAY);
+      const rows = inRange(dayStart.getTime(), dayStart.getTime() + DAY);
+      return { label: dayStart.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }), volume: sum(done(rows), "usd_amount"), transactions: rows.length };
+    });
+    return {
+      days: data.days,
+      stats: {
+        users: people.length, usersChange: pct(usersNow, usersPrev),
+        transactions: cur.length, transactionsChange: pct(cur.length, prev.length),
+        volume: sum(done(cur), "usd_amount"), volumeChange: pct(sum(done(cur), "usd_amount"), sum(done(prev), "usd_amount")),
+        fees: sum(done(cur), "fee_usd"), feesChange: pct(sum(done(cur), "fee_usd"), sum(done(prev), "fee_usd")),
+      },
+      users: {
+        total: people.length,
+        verified: people.filter(p => verified.has(p.id)).length,
+        unverified: people.filter(p => !verified.has(p.id)).length,
+        active: new Set(all.filter(t => at(t.created_at) >= now - 30 * DAY).map(t => t.user_id)).size,
+        joinedToday: people.filter(p => at(p.created_at) >= today.getTime()).length,
+      },
+      points,
+      recent: (recent ?? []).map(t => ({ id: t.id, reference: t.reference ?? t.id.slice(0, 8).toUpperCase(), user: names.get(t.user_id) ?? "Member", kind: t.kind, coin: t.coin ?? "USD", amount: Number(t.crypto_amount ?? 0), usd: Number(t.usd_amount ?? 0), status: t.status, created_at: t.created_at })),
+      market: (market ?? []).map(m => ({ coin: m.coin, buy: Number(m.buy_price_usd), sell: Number(m.sell_price_usd) })),
+    };
+  });

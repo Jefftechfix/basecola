@@ -42,6 +42,18 @@ function Signup() {
     if (!ok || busy) return;
     setBusy(true); setError("");
     const dial = COUNTRY_DIALS.find(c => c.iso === phoneIso);
+    const fullPhone = phone.trim() ? `${dial?.dial ?? ""} ${phone.trim()}`.trim() : "";
+    const { data: check } = await supabase.rpc("check_signup_available", { _email: email.trim(), _phone: fullPhone });
+    const taken = (check ?? {}) as { email_taken?: boolean; phone_taken?: boolean };
+    if (taken.email_taken || taken.phone_taken) {
+      setBusy(false);
+      setError(taken.email_taken && taken.phone_taken
+        ? "This email and phone number are already registered. Please log in instead."
+        : taken.email_taken
+          ? "This email is already registered. Please log in or use a different email."
+          : "This phone number is already registered. Please use a different phone number.");
+      return;
+    }
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password: pw,
@@ -56,7 +68,18 @@ function Signup() {
       },
     });
     setBusy(false);
-    if (error) { setError(error.message); return; }
+    if (error) {
+      setError(/PHONE_ALREADY_REGISTERED|database error saving/i.test(error.message)
+        ? "This phone number is already registered. Please use a different phone number."
+        : /already registered|already exists/i.test(error.message)
+          ? "This email is already registered. Please log in or use a different email."
+          : error.message);
+      return;
+    }
+    if (data.user && data.user.identities?.length === 0) {
+      setError("This email is already registered. Please log in or use a different email.");
+      return;
+    }
     if (data.session) nav({ to: "/dashboard" });
     else nav({ to: "/verify", search: { email: email.trim() } });
   }

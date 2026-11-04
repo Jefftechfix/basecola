@@ -21,8 +21,9 @@ describe("summarizeSignups", () => {
     expect(result.countries[0].share).toBeCloseTo(0.5, 6);
     expect(result.countries[0].firstSignup).toBe("2026-11-01T09:00:00.000Z");
     expect(result.countries[0].lastSignup).toBe("2026-11-04T09:00:00.000Z");
-    expect(result.countries[1].country).toBe("United States");
-    expect(result.countries[1].signups).toBe(1);
+    const unitedStates = result.countries.find(c => c.country === "United States");
+    expect(unitedStates?.signups).toBe(1);
+    expect(unitedStates?.share).toBeCloseTo(1 / 6, 6);
   });
 
   it("groups case and whitespace variants under the most common spelling", () => {

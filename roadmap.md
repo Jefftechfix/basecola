@@ -17,3 +17,8 @@
 - [x] Re-check member pages at phone width for overflow and console errors.
 - [ ] Decide: show a friendlier reference than the raw Stripe `cs_live_...` id in member receipts.
 - [ ] Decide: clarify Assets showing $0.00 crypto holdings while Dashboard shows the $5.00 wallet balance.
+
+# Signup analytics (Nov 4, 2026)
+- [x] Add admin analytics ranking countries by number of member signups.
+- [x] Add a live Signups by Country card to the admin dashboard.
+- [x] Verify ranking, range switch, CSV export, and phone/tablet layouts.

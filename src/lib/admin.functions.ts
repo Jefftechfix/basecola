@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { notifyVerificationDecision } from "@/lib/verification-email";
+import { isSignupRange, rangeStart, summarizeSignups, type SignupAnalytics } from "@/lib/signup-analytics";
 
 type AuthCtx = { supabase: { from: (t: "user_roles") => any }; userId: string };
 
@@ -828,4 +829,28 @@ export const updateAdminReferral = createServerFn({ method: "POST" })
       if (txError) throw new Error(txError.message);
     }
     return { ok: true };
+  });
+
+export const listAdminSignupAnalytics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { range?: unknown }) => {
+    const range = d?.range ?? "all";
+    if (!isSignupRange(range)) throw new Error("Choose a valid reporting range.");
+    return { range };
+  })
+  .handler(async ({ data, context }): Promise<SignupAnalytics> => {
+    await assertAdmin(context as AuthCtx);
+    const db = await admin();
+    const now = new Date();
+    const since = rangeStart(data.range, now);
+    const source = since
+      ? db.from("profiles").select("country, created_at").gte("created_at", since)
+      : db.from("profiles").select("country, created_at");
+    const { data: rows, error } = await source.order("created_at", { ascending: false }).limit(20000);
+    if (error) throw new Error(error.message);
+    return summarizeSignups(
+      (rows ?? []).map(row => ({ country: row.country ?? null, created_at: row.created_at })),
+      data.range,
+      now,
+    );
   });

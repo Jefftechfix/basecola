@@ -14,3 +14,4 @@
 - Transaction details use an un-nested dynamic route so direct receipt links render without the transaction list; sharing uses the native share sheet with clipboard and manual-copy fallbacks.
 - Wallet action pages share WalletLayout and browser-safe wallet-demo helpers; funding and transfers are simulation-only and receive QR codes encode non-wallet identifiers to prevent accidental deposits.
 - Crypto details use an un-nested asset-symbol route backed by the shared demo holdings and transactions so direct links show the selected coin without nesting inside Assets.
+- Platform settings live in one service-role-only row (platform_settings) changed only via admin_update_platform_settings, which logs to admin_settings_audit; why: single source of truth with an audit trail.

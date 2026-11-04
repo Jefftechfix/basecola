@@ -1,4 +1,6 @@
-import { useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { getPlatformSettings, updatePlatformSettings, type SettingsAuditRow, type SettingsSection } from "@/lib/admin-settings.functions";
 import { Activity, ArrowDownLeft, ArrowDownToLine, ArrowLeftRight, ArrowUpRight, Ban, BadgeCheck, BarChart3, Bell, Calendar, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Code, Coins, Copy, Download, Eye, FileText, Flame, Gift, Globe, Headphones, Landmark, Layers, Link2, Lock, Mail, Megaphone, MessageCircle, Monitor, Moon, Pencil, Percent, Phone, PieChart, Plus, QrCode, RefreshCw, Scale, Search, Settings, Share2, Shield, ShoppingCart, Sun, Trophy, Upload, UserPlus, Users, Wallet, Wrench, X, Zap } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { COINS, CoinIcon } from "@/components/brand";
@@ -1737,13 +1739,54 @@ export function SettingsManagement() {
 
   function toggle(key: string, value: boolean) {
     setFlags(current => ({ ...current, [key]: value }));
-    if (key === "maintenance") setNotice(value ? "Maintenance mode is on in this preview. The customer app stays available." : "Maintenance mode is off in this preview.");
+    void persist({ features: { [key]: value } }, key === "maintenance" ? (value ? "Maintenance mode switch saved as on." : "Maintenance mode switch saved as off.") : "Switch saved.");
+  }
+
+  const loadSettings = useServerFn(getPlatformSettings);
+  const saveSettings = useServerFn(updatePlatformSettings);
+  const [audit, setAudit] = useState<SettingsAuditRow[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  async function refresh() {
+    const { settings: s, audit: log } = await loadSettings();
+    const str = (o: Record<string, string | boolean>, k: string, set: (v: string) => void) => { if (typeof o[k] === "string") set(o[k] as string); };
+    str(s.general, "name", setName); str(s.general, "siteUrl", setSiteUrl); str(s.general, "adminEmail", setAdminEmail); str(s.general, "language", setLanguage); str(s.general, "timezone", setTimezone);
+    if (typeof s.general.live === "boolean") setLive(s.general.live);
+    str(s.branding, "primary", setPrimary); str(s.branding, "secondary", setSecondary); str(s.branding, "accent", setAccent); str(s.branding, "theme", setTheme);
+    if (typeof s.branding.dark === "boolean") setDark(s.branding.dark);
+    str(s.support, "supportEmail", setSupportEmail); str(s.support, "phone", setPhone); str(s.support, "whatsapp", setWhatsapp); str(s.support, "helpUrl", setHelpUrl);
+    setFlags(current => { const next = { ...current }; for (const [k, v] of Object.entries(s.features)) if (typeof v === "boolean") next[k] = v; return next; });
+    setPages(current => { const next = { ...current }; for (const [k, v] of Object.entries(s.policies)) if (typeof v === "string" && v && k in next) next[k as PolicyId] = v; return next; });
+    setAudit(log);
+    setLoaded(true);
+  }
+
+  useEffect(() => { refresh().catch(error => setNotice(error instanceof Error ? error.message : "Could not load settings.")); }, []);
+
+  async function persist(sections: Partial<Record<SettingsSection, Record<string, string | boolean>>>, message: string) {
+    setSaving(true);
+    try {
+      for (const [section, value] of Object.entries(sections)) await saveSettings({ data: { section: section as SettingsSection, value: value!, note: `Updated from ${tab} tab` } });
+      await refresh();
+      setNotice(message);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Could not save settings.");
+    } finally { setSaving(false); }
   }
 
   function save(event?: FormEvent) {
     event?.preventDefault();
     setApiDraft("");
-    setNotice("Settings saved in this preview. No email was sent, no API key was stored, and customer accounts are unchanged.");
+    const general = { name, siteUrl, adminEmail, language, timezone, live };
+    const branding = { primary, secondary, accent, theme, dark };
+    const support = { supportEmail, phone, whatsapp, helpUrl };
+    void persist({ general, branding, support, features: flags }, "Settings saved. All admins now see these values.");
+  }
+
+  function savePolicy(id: PolicyId, text: string) {
+    setPages(current => ({ ...current, [id]: text }));
+    void persist({ policies: { [id]: text } }, `${POLICY_LABEL[id]} saved.`);
   }
 
   function rememberFile(kind: "logo" | "favicon", file: File | undefined) {
@@ -1846,13 +1889,13 @@ export function SettingsManagement() {
         {tab === "integrations" && <form className="max-w-xl space-y-3 rounded-3xl bg-white p-5 shadow-sm" onSubmit={save}><h2 className="font-bold">Integrations & APIs</h2><SettingInput icon={Zap} label="Payment provider" value="Sample preview" onChange={() => undefined} /><SettingInput icon={Link2} label="Webhook URL" value="https://basecola.demo/hooks/preview" onChange={() => undefined} /><label className="block text-sm font-medium">API key<span className="mt-1 flex h-11 items-center rounded-xl border px-3"><input value={apiDraft} onChange={event => setApiDraft(event.target.value)} placeholder="No key stored" autoComplete="off" className="w-full bg-transparent outline-none" aria-label="API key" /></span></label><Button type="submit" className="h-11 rounded-xl bg-[#6d4dff] hover:bg-[#6d4dff]/90">Save Changes</Button><p className="text-xs text-muted-foreground">No API key is stored and no external service is contacted.</p></form>}
         {tab === "notifications" && <section className="max-w-xl rounded-3xl bg-white p-5 shadow-sm"><h2 className="font-bold">Notifications</h2><FlagRow icon={Mail} label="Email Notifications" value="No email is sent" checked={flags.emailNotes} onChange={value => toggle("emailNotes", value)} /><FlagRow icon={MessageCircle} label="SMS Notifications" value="No SMS is sent" checked={flags.sms} onChange={value => toggle("sms", value)} /><FlagRow icon={Bell} label="In-app alerts" value="Shown in this admin preview" checked={flags.inApp} onChange={value => toggle("inApp", value)} /><Button type="button" className="mt-4 h-11 rounded-xl bg-[#6d4dff] hover:bg-[#6d4dff]/90" onClick={() => save()}>Save Changes</Button></section>}
         {tab === "website" && <section className="rounded-3xl bg-white p-5 shadow-sm"><h2 className="font-bold">Website & Content</h2><p className="mt-1 text-sm text-muted-foreground">Sample pages for this preview. Nothing is published.</p><ul className="mt-4 divide-y text-sm"><li className="flex justify-between py-3"><span className="font-semibold">Home</span><span className="text-muted-foreground">/</span></li><li className="flex justify-between py-3"><span className="font-semibold">Help</span><span className="text-muted-foreground">/help</span></li><li className="flex justify-between py-3"><span className="font-semibold">Referral</span><span className="text-muted-foreground">/referral</span></li></ul><label className="mt-3 block text-sm font-medium">SEO title<Input value={`${name} demo`} readOnly className="mt-1 h-11 bg-white" aria-label="SEO title" /></label></section>}
-        {tab === "system" && <section className="space-y-4 rounded-3xl bg-white p-5 shadow-sm"><h2 className="font-bold">System & Maintenance</h2><FlagRow icon={Wrench} label="Maintenance Mode" value="The customer app stays available" checked={flags.maintenance} onChange={value => toggle("maintenance", value)} /><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" className="h-10 rounded-xl" onClick={() => setNotice("Backup recorded in this preview. No data was copied off this browser.")}>Run sample backup</Button><Button type="button" className="h-10 rounded-xl bg-[#6d4dff] hover:bg-[#6d4dff]/90" onClick={() => save()}>Save Changes</Button></div><ul className="space-y-2 text-sm text-muted-foreground"><li>Nov 2, 2026, 03:09 PM — Preview settings opened</li><li>Nov 1, 2026, 11:42 AM — Sample rates marked as synced</li><li>Nov 1, 2026, 10:24 AM — Sample treasury note recorded</li></ul></section>}
+        {tab === "system" && <section className="space-y-4 rounded-3xl bg-white p-5 shadow-sm"><h2 className="font-bold">System & Maintenance</h2><FlagRow icon={Wrench} label="Maintenance Mode" value="The customer app stays available" checked={flags.maintenance} onChange={value => toggle("maintenance", value)} /><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" className="h-10 rounded-xl" onClick={() => setNotice("Backups are handled automatically by the database provider.")}>Backup info</Button><Button type="button" className="h-10 rounded-xl bg-[#6d4dff] hover:bg-[#6d4dff]/90" onClick={() => save()}>Save Changes</Button></div><div><h3 className="mb-2 text-sm font-bold">Recent setting changes</h3>{audit.length === 0 ? <p className="text-sm text-muted-foreground">No changes saved yet.</p> : <ul className="space-y-2 text-sm text-muted-foreground">{audit.map(row => <li key={row.id}>{new Date(row.created_at).toLocaleString()} — {row.section}{row.note ? ` · ${row.note}` : ""}</li>)}</ul>}</div></section>}
       </div>
     </div>
     {notice && <p role="status" className="text-sm text-muted-foreground">{notice}</p>}
-    <p className="text-xs leading-relaxed text-muted-foreground">Sample platform settings. Saving, uploads, and switches stay in this browser. Customer wallets, prices, and messages are unchanged.</p>
+    <p className="text-xs leading-relaxed text-muted-foreground">{!loaded ? "Loading saved settings…" : saving ? "Saving…" : "Settings are saved to the database and every change is logged. Logo uploads and API keys are not stored here."}</p>
     <Dialog open={previewing} onOpenChange={setPreviewing}><DialogContent className="max-w-md rounded-3xl"><DialogHeader><DialogTitle>Preview Site</DialogTitle><DialogDescription>This preview does not open a live site.</DialogDescription></DialogHeader><p className="break-all text-sm font-semibold">{siteUrl}</p><p className="text-sm text-muted-foreground">The address is sample copy for {name}. No page is published.</p></DialogContent></Dialog>
-    <Dialog open={!!editor} onOpenChange={open => { if (!open) setEditor(null); }}><DialogContent className="max-w-lg rounded-3xl">{editor && <form className="space-y-4" onSubmit={event => { event.preventDefault(); setPages(current => ({ ...current, [editor]: draft })); setEditor(null); setNotice("Page saved in this preview. It is not published."); }}><DialogHeader><DialogTitle>{POLICY_LABEL[editor]}</DialogTitle><DialogDescription>The text stays in this preview.</DialogDescription></DialogHeader><textarea value={draft} onChange={event => setDraft(event.target.value)} rows={5} className="w-full rounded-xl border bg-white p-3 text-sm outline-none" aria-label={POLICY_LABEL[editor]} /><Button type="submit" className="h-11 w-full">Save preview</Button></form>}</DialogContent></Dialog>
+    <Dialog open={!!editor} onOpenChange={open => { if (!open) setEditor(null); }}><DialogContent className="max-w-lg rounded-3xl">{editor && <form className="space-y-4" onSubmit={event => { event.preventDefault(); savePolicy(editor, draft); setEditor(null); }}><DialogHeader><DialogTitle>{POLICY_LABEL[editor]}</DialogTitle><DialogDescription>Saved for all admins and logged in the change history.</DialogDescription></DialogHeader><textarea value={draft} onChange={event => setDraft(event.target.value)} rows={5} className="w-full rounded-xl border bg-white p-3 text-sm outline-none" aria-label={POLICY_LABEL[editor]} /><Button type="submit" className="h-11 w-full">Save page</Button></form>}</DialogContent></Dialog>
   </section>;
 }
 

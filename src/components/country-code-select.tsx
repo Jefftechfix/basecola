@@ -73,8 +73,10 @@ export function CountryCodeSelect({
             className,
           )}
         >
-          <CountryFlag iso={selected.iso} />
-          <span className="whitespace-nowrap font-semibold">{countryOptionLabel(selected)}</span>
+          {selected ? <CountryFlag iso={selected.iso} /> : <Globe className="h-4 w-4 shrink-0 opacity-60" />}
+          <span className={cn("whitespace-nowrap", selected ? "font-semibold" : "font-normal text-muted-foreground")}>
+            {selected ? countryOptionLabel(selected) : placeholder}
+          </span>
           <ChevronDown
             className={cn("h-4 w-4 shrink-0 opacity-60 transition-transform", open && "rotate-180")}
           />
@@ -101,7 +103,7 @@ export function CountryCodeSelect({
                   <span className="w-12 shrink-0 text-muted-foreground">{item.dial}</span>
                   <span className="truncate">{item.name}</span>
                   <Check
-                    className={cn("ml-auto h-4 w-4", selected.iso === item.iso ? "opacity-100" : "opacity-0")}
+                    className={cn("ml-auto h-4 w-4", selected?.iso === item.iso ? "opacity-100" : "opacity-0")}
                   />
                 </CommandItem>
               ))}

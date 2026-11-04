@@ -22,3 +22,8 @@
 - [x] Add admin analytics ranking countries by number of member signups.
 - [x] Add a live Signups by Country card to the admin dashboard.
 - [x] Verify ranking, range switch, CSV export, and phone/tablet layouts.
+
+# Duplicate signup guard (Nov 4, 2026)
+- [x] Block emails and phone numbers that are already registered.
+- [x] Show "email is already registered" as soon as the email is typed.
+- [x] Verify against live accounts at desktop and phone widths.

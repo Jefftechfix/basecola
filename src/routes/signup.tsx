@@ -41,23 +41,27 @@ function Signup() {
   const [busy, setBusy] = useState(false);
   const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
   const checkedEmail = useRef("");
+  const askedEmail = useRef("");
   const emailCheckId = useRef(0);
 
-  // As soon as the member finishes typing an email, ask the server whether it
-  // is already registered so the warning appears before they hit Sign Up.
+  // Ask the server the instant the email looks complete — no waiting — so the
+  // answer lands while the member is still looking at the field.
   useEffect(() => {
     const value = email.trim();
-    const id = ++emailCheckId.current;
     if (!EMAIL_PATTERN.test(value)) {
       checkedEmail.current = "";
+      askedEmail.current = "";
       setEmailStatus("idle");
       return;
     }
-    if (value === checkedEmail.current) return;
+    if (value === checkedEmail.current || value === askedEmail.current) return;
+    const id = ++emailCheckId.current;
+    askedEmail.current = value;
     setEmailStatus("checking");
-    const timer = setTimeout(async () => {
+    void (async () => {
       const { data, error: checkError } = await supabase.rpc("check_signup_available", { _email: value, _phone: "" });
       if (id !== emailCheckId.current) return;
+      askedEmail.current = "";
       if (checkError) {
         setEmailStatus("idle");
         return;
@@ -65,8 +69,7 @@ function Signup() {
       checkedEmail.current = value;
       const taken = Boolean((data as { email_taken?: boolean } | null)?.email_taken);
       setEmailStatus(taken ? "taken" : "available");
-    }, 450);
-    return () => clearTimeout(timer);
+    })();
   }, [email]);
 
   const rules = [[pw.length >= 8, "At least 8 characters"], [/[A-Z]/.test(pw), "One uppercase letter"], [/\d/.test(pw), "One number"]] as const;

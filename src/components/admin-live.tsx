@@ -427,7 +427,7 @@ export function LiveTransactionsManagement() {
       </table></div>
       {isPending && <p className="text-sm text-muted-foreground">Loading transactions…</p>}
       {!isPending && rows.length === 0 && !error && <p className="text-sm text-muted-foreground">No transactions match these filters.</p>}
-      <p className="text-xs text-muted-foreground">Showing the latest {data.length} ledger records. Status reflects the transaction record in the platform ledger.</p>
+      <p className="text-xs text-muted-foreground">Showing the latest {data.length} ledger record{data.length === 1 ? "" : "s"}. Status reflects the transaction record in the platform ledger.</p>
     </section>
     <Dialog open={!!detail} onOpenChange={open => { if (!open) setDetail(null); }}>
       <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">

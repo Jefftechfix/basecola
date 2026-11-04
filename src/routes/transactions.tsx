@@ -92,7 +92,7 @@ function TransactionsPage() {
       </div>
       <div className="mb-3 flex justify-between text-sm">
         <h2 className="font-bold">Recent activity</h2>
-        <span className="text-muted-foreground">{filtered.length} transactions</span>
+        <span className="text-muted-foreground">{filtered.length} transaction{filtered.length === 1 ? "" : "s"}</span>
       </div>
       {isPending ? (
         <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>

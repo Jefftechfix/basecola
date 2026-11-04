@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
-import { User, Mail, Phone, Globe, UserPlus, Lock, Eye, EyeOff, CheckCircle2, ShieldCheck } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { User, Mail, Phone, Globe, UserPlus, Lock, Eye, EyeOff, CheckCircle2, ShieldCheck, Loader2 } from "lucide-react";
 import { AuthShell } from "@/components/brand";
 import { COUNTRY_DIALS, countryByName, countryOptionLabel } from "@/lib/countries";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,10 @@ export const Route = createFileRoute("/signup")({
 const field = "flex items-center gap-3 rounded-xl border border-input bg-card px-4 py-3 focus-within:ring-2 focus-within:ring-ring";
 const input = "w-full bg-transparent outline-none placeholder:text-muted-foreground";
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+type EmailStatus = "idle" | "checking" | "available" | "taken";
+
 function Signup() {
   const nav = useNavigate();
   const [pw, setPw] = useState("");
@@ -34,12 +38,46 @@ function Signup() {
   const [phoneIso, setPhoneIso] = useState("US");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
+  const checkedEmail = useRef("");
+  const emailCheckId = useRef(0);
+
+  // As soon as the member finishes typing an email, ask the server whether it
+  // is already registered so the warning appears before they hit Sign Up.
+  useEffect(() => {
+    const value = email.trim();
+    const id = ++emailCheckId.current;
+    if (!EMAIL_PATTERN.test(value)) {
+      checkedEmail.current = "";
+      setEmailStatus("idle");
+      return;
+    }
+    if (value === checkedEmail.current) return;
+    setEmailStatus("checking");
+    const timer = setTimeout(async () => {
+      const { data, error: checkError } = await supabase.rpc("check_signup_available", { _email: value, _phone: "" });
+      if (id !== emailCheckId.current) return;
+      if (checkError) {
+        setEmailStatus("idle");
+        return;
+      }
+      checkedEmail.current = value;
+      const taken = Boolean((data as { email_taken?: boolean } | null)?.email_taken);
+      setEmailStatus(taken ? "taken" : "available");
+    }, 450);
+    return () => clearTimeout(timer);
+  }, [email]);
+
   const rules = [[pw.length >= 8, "At least 8 characters"], [/[A-Z]/.test(pw), "One uppercase letter"], [/\d/.test(pw), "One number"]] as const;
   const ok = rules.every(([v]) => v);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!ok || busy) return;
+    if (emailStatus === "taken") {
+      setError("This email is already registered. Please log in or use a different email.");
+      return;
+    }
     setBusy(true); setError("");
     const dial = COUNTRY_DIALS.find(c => c.iso === phoneIso);
     const fullPhone = phone.trim() ? `${dial?.dial ?? ""} ${phone.trim()}`.trim() : "";
@@ -90,7 +128,17 @@ function Signup() {
       <p className="mt-2 text-center text-muted-foreground">Join Basecola and start trading, buying, and selling cryptocurrency securely.</p>
       <form className="mt-6 space-y-4" onSubmit={submit}>
         <L t="Full Name"><div className={field}><User className="h-5 w-5" /><input required value={name} onChange={e => setName(e.target.value)} className={input} placeholder="Enter your full name" /></div></L>
-        <L t="Email Address"><div className={field}><Mail className="h-5 w-5" /><input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={input} placeholder="Enter your email address" /></div></L>
+        <L t="Email Address">
+          <div className={`${field} ${emailStatus === "taken" ? "border-destructive focus-within:ring-destructive" : ""}`}>
+            <Mail className="h-5 w-5" />
+            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={input} placeholder="Enter your email address" aria-invalid={emailStatus === "taken"} aria-describedby="email-status" />
+          </div>
+          <p id="email-status" className="mt-1.5 min-h-5 text-sm">
+            {emailStatus === "checking" && <span className="flex items-center gap-1.5 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Checking this email…</span>}
+            {emailStatus === "available" && <span className="flex items-center gap-1.5 text-success"><CheckCircle2 className="h-4 w-4" />Email is available</span>}
+            {emailStatus === "taken" && <span role="alert" className="flex flex-wrap items-center gap-1 text-destructive">This email is already registered. <Link to="/login" className="font-bold underline">Log in</Link> or use a different email.</span>}
+          </p>
+        </L>
         <L t="Phone Number"><div className={field}><Phone className="h-5 w-5 shrink-0" /><select aria-label="Country code" value={phoneIso} onChange={event => setPhoneIso(event.target.value)} className="max-w-[46%] shrink-0 bg-transparent text-sm font-semibold outline-none">{COUNTRY_DIALS.map(item => <option key={item.iso} value={item.iso}>{countryOptionLabel(item)}</option>)}</select><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={input} placeholder="Enter your phone number" /></div></L>
         <L t="Country"><div className={field}><Globe className="h-5 w-5 shrink-0" /><select required aria-label="Country" value={country} onChange={event => { const next = event.target.value; setCountry(next); const match = countryByName(next); if (match) setPhoneIso(match.iso); }} className={input}><option value="" disabled>Select your country</option>{COUNTRY_DIALS.map(item => <option key={item.iso} value={item.name}>{item.name}</option>)}</select></div></L>
         <L t={<>Referral Code <span className="font-normal">(Optional)</span></>}><div className={field}><UserPlus className="h-5 w-5" /><input value={referral} onChange={e => setReferral(e.target.value)} className={input} placeholder="Enter referral code" /></div></L>

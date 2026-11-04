@@ -128,7 +128,17 @@ function Signup() {
       <p className="mt-2 text-center text-muted-foreground">Join Basecola and start trading, buying, and selling cryptocurrency securely.</p>
       <form className="mt-6 space-y-4" onSubmit={submit}>
         <L t="Full Name"><div className={field}><User className="h-5 w-5" /><input required value={name} onChange={e => setName(e.target.value)} className={input} placeholder="Enter your full name" /></div></L>
-        <L t="Email Address"><div className={field}><Mail className="h-5 w-5" /><input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={input} placeholder="Enter your email address" /></div></L>
+        <L t="Email Address">
+          <div className={`${field} ${emailStatus === "taken" ? "border-destructive focus-within:ring-destructive" : ""}`}>
+            <Mail className="h-5 w-5" />
+            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={input} placeholder="Enter your email address" aria-invalid={emailStatus === "taken"} aria-describedby="email-status" />
+          </div>
+          <p id="email-status" className="mt-1.5 min-h-5 text-sm">
+            {emailStatus === "checking" && <span className="flex items-center gap-1.5 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Checking this email…</span>}
+            {emailStatus === "available" && <span className="flex items-center gap-1.5 text-success"><CheckCircle2 className="h-4 w-4" />Email is available</span>}
+            {emailStatus === "taken" && <span role="alert" className="flex flex-wrap items-center gap-1 text-destructive">This email is already registered. <Link to="/login" className="font-bold underline">Log in</Link> or use a different email.</span>}
+          </p>
+        </L>
         <L t="Phone Number"><div className={field}><Phone className="h-5 w-5 shrink-0" /><select aria-label="Country code" value={phoneIso} onChange={event => setPhoneIso(event.target.value)} className="max-w-[46%] shrink-0 bg-transparent text-sm font-semibold outline-none">{COUNTRY_DIALS.map(item => <option key={item.iso} value={item.iso}>{countryOptionLabel(item)}</option>)}</select><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={input} placeholder="Enter your phone number" /></div></L>
         <L t="Country"><div className={field}><Globe className="h-5 w-5 shrink-0" /><select required aria-label="Country" value={country} onChange={event => { const next = event.target.value; setCountry(next); const match = countryByName(next); if (match) setPhoneIso(match.iso); }} className={input}><option value="" disabled>Select your country</option>{COUNTRY_DIALS.map(item => <option key={item.iso} value={item.name}>{item.name}</option>)}</select></div></L>
         <L t={<>Referral Code <span className="font-normal">(Optional)</span></>}><div className={field}><UserPlus className="h-5 w-5" /><input value={referral} onChange={e => setReferral(e.target.value)} className={input} placeholder="Enter referral code" /></div></L>

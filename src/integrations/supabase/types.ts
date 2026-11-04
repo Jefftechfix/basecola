@@ -253,6 +253,36 @@ export type Database = {
           },
         ]
       }
+      admin_settings_audit: {
+        Row: {
+          admin_id: string | null
+          created_at: string
+          id: string
+          next_value: Json
+          note: string | null
+          previous_value: Json | null
+          section: string
+        }
+        Insert: {
+          admin_id?: string | null
+          created_at?: string
+          id?: string
+          next_value: Json
+          note?: string | null
+          previous_value?: Json | null
+          section: string
+        }
+        Update: {
+          admin_id?: string | null
+          created_at?: string
+          id?: string
+          next_value?: Json
+          note?: string | null
+          previous_value?: Json | null
+          section?: string
+        }
+        Relationships: []
+      }
       admin_trade_settings_audit: {
         Row: {
           admin_id: string | null
@@ -790,6 +820,42 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_settings: {
+        Row: {
+          branding: Json
+          created_at: string
+          features: Json
+          general: Json
+          id: number
+          policies: Json
+          support: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          branding?: Json
+          created_at?: string
+          features?: Json
+          general?: Json
+          id?: number
+          policies?: Json
+          support?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          branding?: Json
+          created_at?: string
+          features?: Json
+          general?: Json
+          id?: number
+          policies?: Json
+          support?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           country: string | null
@@ -1249,6 +1315,15 @@ export type Database = {
           _network: string
           _note: string
           _required_confirmations: number
+        }
+        Returns: Json
+      }
+      admin_update_platform_settings: {
+        Args: {
+          _admin_id: string
+          _note: string
+          _section: string
+          _value: Json
         }
         Returns: Json
       }

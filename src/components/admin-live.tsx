@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowDownToLine, Check, CircleCheck, CircleX, Eye, Minus, Plus, Search, Trash2, X } from "lucide-react";
+import { ArrowDownToLine, Check, Copy, RefreshCw, CircleCheck, CircleX, Eye, Minus, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -581,7 +581,7 @@ export function LiveDepositsMonitoring() {
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
         <label className="text-xs font-semibold text-muted-foreground">Status<select aria-label="Filter deposit status" value={status} onChange={event => setStatus(event.target.value)} className="mt-1 block h-10 w-full rounded-md border bg-white px-2 text-sm font-normal text-foreground"><option value="all">All statuses</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="failed">Failed</option></select></label>
         <label className="text-xs font-semibold text-muted-foreground">Asset<select aria-label="Filter deposit asset" value={asset} onChange={event => setAsset(event.target.value)} className="mt-1 block h-10 w-full rounded-md border bg-white px-2 text-sm font-normal text-foreground"><option value="all">All assets</option>{assets.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
-        <label className="text-xs font-semibold text-muted-foreground">User<select aria-label="Filter deposit user" value={userId} onChange={event => setUserId(event.target.value)} className="mt-1 block h-10 w-full rounded-md border bg-white px-2 text-sm font-normal text-foreground"><option value="all">All users</option>{users.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>
+        <label className="text-xs font-semibold text-muted-foreground">User<select aria-label="Filter deposit user" value={userId} onChange={event => setUserId(event.target.value)} className="mt-1 block h-10 w-full rounded-md border bg-white px-2 text-sm font-normal text-foreground"><option value="all">All users</option>{users.map(([id, u]) => <option key={id} value={id}>{u.label}</option>)}</select></label>
         <label className="text-xs font-semibold text-muted-foreground">Network<select aria-label="Filter deposit network" value={network} onChange={event => setNetwork(event.target.value)} className="mt-1 block h-10 w-full rounded-md border bg-white px-2 text-sm font-normal text-foreground"><option value="all">All networks</option>{networks.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
       </div>
       {error && <p role="alert" className="text-sm text-destructive">{(error as Error).message}</p>}

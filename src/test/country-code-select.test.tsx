@@ -20,7 +20,6 @@ describe("Phone dial-code field", () => {
   });
 
   it("lets the member search and pick another country", async () => {
-    const onChange = vi.fn();
     render(<CountryCodeSelect value="US" onChange={onChange} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Country code" }));

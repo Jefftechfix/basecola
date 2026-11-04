@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { notifyVerificationDecision } from "@/lib/verification-email";
-import { isSignupRange, rangeStart, summarizeSignups, type SignupAnalytics, type SignupRange } from "@/lib/signup-analytics";
+import { isSignupRange, rangeStart, summarizeSignups, type SignupAnalytics } from "@/lib/signup-analytics";
 
 type AuthCtx = { supabase: { from: (t: "user_roles") => any }; userId: string };
 

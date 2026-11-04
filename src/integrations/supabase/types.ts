@@ -1356,6 +1356,7 @@ export type Database = {
         Returns: undefined
       }
       generate_referral_code: { Args: never; Returns: string }
+      get_platform_flags: { Args: never; Returns: Json }
       has_login_pin: { Args: never; Returns: boolean }
       has_role: {
         Args: {

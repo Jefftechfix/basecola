@@ -164,7 +164,7 @@ export function AdminDashboard({ onSection, periodId }: { onSection: (section: A
         </div>
       </section>
     </div>
-    <p className="mt-4 text-xs leading-relaxed text-muted-foreground">Sample platform figures for this preview. Actions here do not move customer funds or change live prices.</p>
+    <p className="mt-4 text-xs leading-relaxed text-muted-foreground">Sample platform figures for this preview, except the Signups by Country panel, which reads live member records. Actions here do not move customer funds or change live prices.</p>
     <Dialog open={!!prompt} onOpenChange={open => { if (!open) setAction(null); }}>
       <DialogContent className="max-w-sm rounded-3xl">
         {prompt && <form className="space-y-4" onSubmit={submitAction}>

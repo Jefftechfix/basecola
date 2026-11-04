@@ -529,6 +529,390 @@ export type Database = {
           },
         ]
       }
+      deposit_observations: {
+        Row: {
+          amount_usd: number | null
+          asset: string
+          block_hash: string | null
+          block_number: number | null
+          below_minimum: boolean
+          confirmed_at: string | null
+          confirmations: number
+          created_at: string
+          crypto_amount: number
+          deposit_address: string
+          destination_tag: number | null
+          event_index: number
+          failure_reason: string | null
+          id: string
+          network: string
+          observed_at: string
+          required_confirmations: number
+          status: string
+          tx_hash: string
+          updated_at: string
+          user_id: string | null
+          wallet_account_id: string | null
+        }
+        Insert: {
+          amount_usd?: number | null
+          asset: string
+          block_hash?: string | null
+          block_number?: number | null
+          below_minimum?: boolean
+          confirmed_at?: string | null
+          confirmations?: number
+          created_at?: string
+          crypto_amount: number
+          deposit_address: string
+          destination_tag?: number | null
+          event_index?: number
+          failure_reason?: string | null
+          id?: string
+          network: string
+          observed_at?: string
+          required_confirmations?: number
+          status?: string
+          tx_hash: string
+          updated_at?: string
+          user_id?: string | null
+          wallet_account_id?: string | null
+        }
+        Update: {
+          amount_usd?: number | null
+          asset?: string
+          block_hash?: string | null
+          block_number?: number | null
+          below_minimum?: boolean
+          confirmed_at?: string | null
+          confirmations?: number
+          created_at?: string
+          crypto_amount?: number
+          deposit_address?: string
+          destination_tag?: number | null
+          event_index?: number
+          failure_reason?: string | null
+          id?: string
+          network?: string
+          observed_at?: string
+          required_confirmations?: number
+          status?: string
+          tx_hash?: string
+          updated_at?: string
+          user_id?: string | null
+          wallet_account_id?: string | null
+        }
+        Relationships: []
+      }
+      platform_asset_networks: {
+        Row: {
+          asset: string
+          created_at: string
+          display_name: string
+          enabled: boolean
+          minimum_deposit: number
+          network: string
+          required_confirmations: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          asset: string
+          created_at?: string
+          display_name: string
+          enabled?: boolean
+          minimum_deposit?: number
+          network: string
+          required_confirmations?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          asset?: string
+          created_at?: string
+          display_name?: string
+          enabled?: boolean
+          minimum_deposit?: number
+          network?: string
+          required_confirmations?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      trade_asset_settings: {
+        Row: {
+          buy_enabled: boolean
+          buy_price_usd: number
+          coin: string
+          created_at: string
+          maximum_crypto_amount: number
+          minimum_crypto_amount: number
+          network: string
+          sell_enabled: boolean
+          sell_price_usd: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          buy_enabled?: boolean
+          buy_price_usd: number
+          coin: string
+          created_at?: string
+          maximum_crypto_amount: number
+          minimum_crypto_amount: number
+          network: string
+          sell_enabled?: boolean
+          sell_price_usd: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          buy_enabled?: boolean
+          buy_price_usd?: number
+          coin?: string
+          created_at?: string
+          maximum_crypto_amount?: number
+          minimum_crypto_amount?: number
+          network?: string
+          sell_enabled?: boolean
+          sell_price_usd?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      admin_trade_settings_audit: {
+        Row: {
+          admin_id: string | null
+          coin: string
+          created_at: string
+          id: string
+          network: string
+          next_buy_enabled: boolean
+          next_buy_price_usd: number
+          next_maximum_crypto_amount: number
+          next_minimum_crypto_amount: number
+          next_sell_enabled: boolean
+          next_sell_price_usd: number
+          note: string
+          previous_buy_enabled: boolean
+          previous_buy_price_usd: number
+          previous_maximum_crypto_amount: number
+          previous_minimum_crypto_amount: number
+          previous_sell_enabled: boolean
+          previous_sell_price_usd: number
+        }
+        Insert: {
+          admin_id?: string | null
+          coin: string
+          created_at?: string
+          id?: string
+          network: string
+          next_buy_enabled: boolean
+          next_buy_price_usd: number
+          next_maximum_crypto_amount: number
+          next_minimum_crypto_amount: number
+          next_sell_enabled: boolean
+          next_sell_price_usd: number
+          note: string
+          previous_buy_enabled: boolean
+          previous_buy_price_usd: number
+          previous_maximum_crypto_amount: number
+          previous_minimum_crypto_amount: number
+          previous_sell_enabled: boolean
+          previous_sell_price_usd: number
+        }
+        Update: {
+          admin_id?: string | null
+          coin?: string
+          created_at?: string
+          id?: string
+          network?: string
+          next_buy_enabled?: boolean
+          next_buy_price_usd?: number
+          next_maximum_crypto_amount?: number
+          next_minimum_crypto_amount?: number
+          next_sell_enabled?: boolean
+          next_sell_price_usd?: number
+          note?: string
+          previous_buy_enabled?: boolean
+          previous_buy_price_usd?: number
+          previous_maximum_crypto_amount?: number
+          previous_minimum_crypto_amount?: number
+          previous_sell_enabled?: boolean
+          previous_sell_price_usd?: number
+        }
+        Relationships: []
+      }
+      admin_asset_config_audit: {
+        Row: {
+          admin_id: string | null
+          asset: string
+          created_at: string
+          id: string
+          network: string
+          next_enabled: boolean
+          next_minimum_deposit: number
+          next_required_confirmations: number
+          note: string
+          previous_enabled: boolean | null
+          previous_minimum_deposit: number | null
+          previous_required_confirmations: number | null
+        }
+        Insert: {
+          admin_id?: string | null
+          asset: string
+          created_at?: string
+          id?: string
+          network: string
+          next_enabled: boolean
+          next_minimum_deposit: number
+          next_required_confirmations: number
+          note: string
+          previous_enabled?: boolean | null
+          previous_minimum_deposit?: number | null
+          previous_required_confirmations?: number | null
+        }
+        Update: {
+          admin_id?: string | null
+          asset?: string
+          created_at?: string
+          id?: string
+          network?: string
+          next_enabled?: boolean
+          next_minimum_deposit?: number
+          next_required_confirmations?: number
+          note?: string
+          previous_enabled?: boolean | null
+          previous_minimum_deposit?: number | null
+          previous_required_confirmations?: number | null
+        }
+        Relationships: []
+      }
+      treasury_wallet_accounts: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          label: string
+          network: string
+          status: string
+          updated_at: string
+          wallet_type: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          label: string
+          network: string
+          status?: string
+          updated_at?: string
+          wallet_type: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          label?: string
+          network?: string
+          status?: string
+          updated_at?: string
+          wallet_type?: string
+        }
+        Relationships: []
+      }
+      treasury_balance_observations: {
+        Row: {
+          amount_usd: number | null
+          asset: string
+          balance: number
+          block_hash: string | null
+          block_number: number | null
+          created_at: string
+          id: string
+          observation_ref: string
+          observed_at: string
+          wallet_account_id: string
+        }
+        Insert: {
+          amount_usd?: number | null
+          asset: string
+          balance: number
+          block_hash?: string | null
+          block_number?: number | null
+          created_at?: string
+          id?: string
+          observation_ref: string
+          observed_at: string
+          wallet_account_id: string
+        }
+        Update: {
+          amount_usd?: number | null
+          asset?: string
+          balance?: number
+          block_hash?: string | null
+          block_number?: number | null
+          created_at?: string
+          id?: string
+          observation_ref?: string
+          observed_at?: string
+          wallet_account_id?: string
+        }
+        Relationships: []
+      }
+      treasury_operation_requests: {
+        Row: {
+          amount: number
+          asset: string
+          cancelled_at: string | null
+          cancelled_by: string | null
+          destination_address: string | null
+          from_location: string
+          id: string
+          network: string
+          operation_type: string
+          reason: string
+          requested_at: string
+          requested_by: string | null
+          status: string
+          to_location: string
+        }
+        Insert: {
+          amount: number
+          asset: string
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          destination_address?: string | null
+          from_location: string
+          id?: string
+          network: string
+          operation_type: string
+          reason: string
+          requested_at?: string
+          requested_by?: string | null
+          status?: string
+          to_location: string
+        }
+        Update: {
+          amount?: number
+          asset?: string
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          destination_address?: string | null
+          from_location?: string
+          id?: string
+          network?: string
+          operation_type?: string
+          reason?: string
+          requested_at?: string
+          requested_by?: string | null
+          status?: string
+          to_location?: string
+        }
+        Relationships: []
+      }
       user_pins: {
         Row: {
           created_at: string
@@ -620,9 +1004,97 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      treasury_latest_balance_observations: {
+        Row: {
+          amount_usd: number | null
+          asset: string
+          balance: number
+          block_hash: string | null
+          block_number: number | null
+          id: string
+          observation_ref: string
+          observed_at: string
+          wallet_account_id: string
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      admin_update_trade_asset_settings: {
+        Args: {
+          _admin_id: string
+          _buy_enabled: boolean
+          _buy_price_usd: number
+          _coin: string
+          _maximum_crypto_amount: number
+          _minimum_crypto_amount: number
+          _network: string
+          _note: string
+          _sell_enabled: boolean
+          _sell_price_usd: number
+        }
+        Returns: Json
+      }
+      admin_update_asset_network: {
+        Args: {
+          _admin_id: string
+          _asset: string
+          _enabled: boolean
+          _minimum_deposit: number
+          _network: string
+          _note: string
+          _required_confirmations: number
+        }
+        Returns: Json
+      }
+      admin_adjust_user_balance: {
+        Args: {
+          _admin_id: string
+          _amount: number
+          _direction: string
+          _note: string
+          _target_user_id: string
+        }
+        Returns: Json
+      }
+      admin_get_user_balance: {
+        Args: { _admin_id: string; _target_user_id: string }
+        Returns: number
+      }
+      record_chain_deposit: {
+        Args: {
+          _amount_usd: number | null
+          _asset: string
+          _block_hash: string | null
+          _block_number: number | null
+          _confirmations: number
+          _crypto_amount: number
+          _deposit_address: string
+          _destination_tag: number | null
+          _event_index: number
+          _failure_reason?: string | null
+          _is_failed?: boolean
+          _network: string
+          _observed_at?: string
+          _required_confirmations: number
+          _tx_hash: string
+        }
+        Returns: string
+      }
+      record_treasury_balance_observation: {
+        Args: {
+          _address: string
+          _amount_usd: number | null
+          _asset: string
+          _balance: number
+          _block_hash: string | null
+          _block_number: number | null
+          _network: string
+          _observation_ref: string
+          _observed_at: string
+        }
+        Returns: string
+      }
       buy_crypto_with_balance: {
         Args: {
           _coin: string

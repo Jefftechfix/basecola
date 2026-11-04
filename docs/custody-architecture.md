@@ -28,6 +28,13 @@ Supabase Postgres
      transaction intents, approvals, and audit metadata; no secret key material
 ```
 
+## Deposit Observation Ingestion
+
+`deposit_observations` stores idempotent chain events keyed by `(network, tx_hash, event_index)`. The `record_chain_deposit` database function is executable only by `service_role`; a private chain-monitor worker must authenticate to Supabase with its server-only service credential and call it after verifying the event against the configured chain node/provider. The function associates an event with an active wallet address and matching destination tag. A database trigger applies the configured confirmation threshold and derives `pending`, `confirmed`, or `failed`; disabling a network does not stop monitoring already-issued addresses. Admin reads are available only through the server-side admin authorization check. This repository does not include or deploy a chain watcher, so the table remains empty until that worker is implemented and running; no UI status by itself proves an on-chain deposit.
+
+## Treasury Balance Ingestion
+
+`treasury_wallet_accounts` contains public treasury address metadata registered by the custody deployment. The private treasury monitor submits idempotent snapshots to `record_treasury_balance_observation`, which is executable only by `service_role`; each snapshot is keyed by the registered wallet, asset, and monitor observation reference. Admin views read the latest snapshot per wallet and asset. No admin UI or browser role can create wallet registrations, submit balance snapshots, or execute a treasury operation. `treasury_operation_requests` records requests for later private approval/execution; `requested` does not mean approved, signed, broadcast, or completed. This repository does not include a treasury wallet registry worker, balance monitor, approval service, or signer, so balances remain empty until those services are deployed.
 The public API must never be able to call an unrestricted `sign(bytes)` operation. The signer accepts typed, authenticated requests and independently validates the customer, asset/network, destination, amount, fee bounds, nonce/UTXO inputs, policy state, approval state, and replay/idempotency token. It constructs or validates the exact chain transaction before signing.
 
 ## Key Management
@@ -94,7 +101,7 @@ Do not connect this repository's signup or assets UI to mainnet custody until al
 
 ## Current Repository Boundary
 
-The current signup page calls Supabase Auth directly, and the auth trigger creates only a profile. The assets page and wallet helpers are demo-only. Keep that behavior clearly labeled as preview functionality until the custody services and launch gates above exist. This document is an architecture baseline, not evidence that custody has been implemented or audited.
+Signup still calls Supabase Auth directly. The migration `20261104120000_custody_provisioning_foundation.sql` extends the auth trigger to create pending wallet-account rows and idempotent provisioning jobs for Bitcoin testnet, Ethereum Sepolia, Solana devnet, and XRPL testnet. It stores no private key material and does not derive addresses. A separately deployed private provisioner and protected signing/derivation boundary must claim jobs, persist public addresses, and activate account rows before an address can be used. Admin Assets/Wallets reads configured test asset networks, provisioned public wallet accounts, and chain observations. Asset setting changes are audited. Admin Treasury reads monitor-submitted public treasury wallet snapshots and persisted operation requests; requests do not sign or move funds. The admin Buy/Sell screen reads persisted trade settlements and edits audited rates/limits/switches; settlement functions enforce those settings and ignore client-supplied prices. The order screen cannot create or alter trades. Customer asset displays and wallet receive helpers remain demo-only. This foundation is not evidence that custody has been implemented or audited.
 
 ## References
 

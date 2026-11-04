@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { accountInitials, loadAccountProfile, saveAccountProfile, type AccountProfile } from "@/lib/account-profile";
 import { getAccountVerification, subscribeAccountVerification } from "@/lib/account-verify";
-import { COUNTRY_DIALS, countryByIso, countryByName, countryOptionLabel, splitPhone } from "@/lib/countries";
+import { COUNTRY_DIALS, countryByIso, countryByName, splitPhone } from "@/lib/countries";
+import { CountryCodeSelect } from "@/components/country-code-select";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/profile")({
@@ -149,7 +150,7 @@ function AccountForm(props: { draft: AccountProfile; setDraft: (value: AccountPr
   return <form className="mt-5 space-y-4" onSubmit={save}>
     <label className="block space-y-2 text-sm font-medium"><span>Full name</span><Input required maxLength={60} value={props.draft.name} onChange={event => props.setDraft({ ...props.draft, name: event.target.value })} /></label>
     <label className="block space-y-2 text-sm font-medium"><span>Email address</span><Input required type="email" value={props.draft.email} onChange={event => props.setDraft({ ...props.draft, email: event.target.value })} /></label>
-    <label className="block space-y-2 text-sm font-medium"><span>Phone</span><span className="flex gap-2"><select aria-label="Country code" value={phoneIso} onChange={event => setPhoneIso(event.target.value)} className="h-9 max-w-[46%] shrink-0 rounded-md border border-input bg-transparent px-2 text-sm">{COUNTRY_DIALS.map(item => <option key={item.iso} value={item.iso}>{countryOptionLabel(item)}</option>)}</select><Input id="profile-phone" value={national} onChange={event => setNational(event.target.value)} inputMode="tel" autoComplete="tel-national" /></span></label>
+    <label className="block space-y-2 text-sm font-medium"><span>Phone</span><span className="flex gap-2"><CountryCodeSelect value={phoneIso} onChange={setPhoneIso} className="h-9 border border-input px-2 text-sm" /><Input id="profile-phone" value={national} onChange={event => setNational(event.target.value)} inputMode="tel" autoComplete="tel-national" /></span></label>
     <label className="block space-y-2 text-sm font-medium"><span>Country</span>
       <select aria-label="Country" value={props.draft.country} onChange={event => { const country = event.target.value; props.setDraft({ ...props.draft, country }); const match = countryByName(country); if (match) setPhoneIso(match.iso); }} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
         <option value="">Select a country</option>

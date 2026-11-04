@@ -210,8 +210,14 @@ export function countryByIso(iso: string) {
   return COUNTRY_DIALS.find(item => item.iso === iso);
 }
 
+/** Short label shown in the phone dial-code field, e.g. "US +1". */
 export function countryOptionLabel(item: CountryDial) {
-  return `${item.name} ${item.dial}`;
+  return `${item.iso} ${item.dial}`;
+}
+
+/** Real flag artwork for a country code. */
+export function flagUrl(iso: string, width = 40) {
+  return `https://flagcdn.com/w${width}/${iso.toLowerCase()}.png`;
 }
 
 export function splitPhone(value: string, fallbackIso = "US") {

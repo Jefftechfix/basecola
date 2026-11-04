@@ -2,7 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { User, Mail, Phone, Globe, UserPlus, Lock, Eye, EyeOff, CheckCircle2, ShieldCheck, Loader2 } from "lucide-react";
 import { AuthShell } from "@/components/brand";
-import { COUNTRY_DIALS, countryByName, countryOptionLabel } from "@/lib/countries";
+import { CountryCodeSelect } from "@/components/country-code-select";
+import { COUNTRY_DIALS, countryByName } from "@/lib/countries";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/signup")({
@@ -139,7 +140,7 @@ function Signup() {
             {emailStatus === "taken" && <span role="alert" className="flex flex-wrap items-center gap-1 text-destructive">This email is already registered. <Link to="/login" className="font-bold underline">Log in</Link> or use a different email.</span>}
           </p>
         </L>
-        <L t="Phone Number"><div className={field}><Phone className="h-5 w-5 shrink-0" /><select aria-label="Country code" value={phoneIso} onChange={event => setPhoneIso(event.target.value)} className="max-w-[46%] shrink-0 bg-transparent text-sm font-semibold outline-none">{COUNTRY_DIALS.map(item => <option key={item.iso} value={item.iso}>{countryOptionLabel(item)}</option>)}</select><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={input} placeholder="Enter your phone number" /></div></L>
+        <L t="Phone Number"><div className={field}><Phone className="h-5 w-5 shrink-0" /><CountryCodeSelect value={phoneIso} onChange={setPhoneIso} className="px-1 py-0.5 text-sm" /><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={input} placeholder="Enter your phone number" /></div></L>
         <L t="Country"><div className={field}><Globe className="h-5 w-5 shrink-0" /><select required aria-label="Country" value={country} onChange={event => { const next = event.target.value; setCountry(next); const match = countryByName(next); if (match) setPhoneIso(match.iso); }} className={input}><option value="" disabled>Select your country</option>{COUNTRY_DIALS.map(item => <option key={item.iso} value={item.name}>{item.name}</option>)}</select></div></L>
         <L t={<>Referral Code <span className="font-normal">(Optional)</span></>}><div className={field}><UserPlus className="h-5 w-5" /><input value={referral} onChange={e => setReferral(e.target.value)} className={input} placeholder="Enter referral code" /></div></L>
         <L t="Password">

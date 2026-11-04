@@ -16,6 +16,11 @@ Object.defineProperty(window, "scrollTo", {
   value: () => {},
 });
 
+// jsdom has no scrollIntoView; cmdk scrolls its highlighted item with it.
+if (typeof Element.prototype.scrollIntoView !== "function") {
+  Element.prototype.scrollIntoView = () => {};
+}
+
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: (query: string) => ({

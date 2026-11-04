@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatSsn, ID_DOCUMENTS, VERIFY_COUNTRIES, verifyDetailsError, verifyDocumentError } from "@/lib/account-verify";
 import { loadAccountProfile } from "@/lib/account-profile";
-import { COUNTRY_DIALS, countryByIso, countryByName, countryOptionLabel, splitPhone } from "@/lib/countries";
+import { countryByIso, countryByName, splitPhone } from "@/lib/countries";
+import { CountryCodeSelect } from "@/components/country-code-select";
 
 export const Route = createFileRoute("/verify-account")({
   head: () => ({ meta: [
@@ -162,7 +163,7 @@ function VerifyAccountPage() {
         <h2 className="text-2xl font-extrabold">Enter Your Details</h2>
         <p className="text-sm text-muted-foreground">Provide your personal information as it appears on your valid ID.</p>
         <Field icon={User} label="Full Name"><Input id="verify-name" value={name} onChange={event => { setName(event.target.value); setError(""); }} autoComplete="name" /></Field>
-        <Field icon={Phone} label="Phone Number"><span className="flex gap-2"><select aria-label="Country code" value={phoneIso} onChange={event => setPhoneIso(event.target.value)} className="h-9 max-w-[46%] shrink-0 rounded-md border border-input bg-transparent px-2 text-sm">{COUNTRY_DIALS.map(item => <option key={item.iso} value={item.iso}>{countryOptionLabel(item)}</option>)}</select><Input id="verify-phone" value={phone} onChange={event => { setPhone(event.target.value); setError(""); }} inputMode="tel" autoComplete="tel-national" /></span></Field>
+        <Field icon={Phone} label="Phone Number"><span className="flex gap-2"><CountryCodeSelect value={phoneIso} onChange={setPhoneIso} className="h-9 border border-input px-2 text-sm" /><Input id="verify-phone" value={phone} onChange={event => { setPhone(event.target.value); setError(""); }} inputMode="tel" autoComplete="tel-national" /></span></Field>
         <Field icon={Mail} label="Email Address"><Input id="verify-email" type="email" value={email} onChange={event => { setEmail(event.target.value); setError(""); }} autoComplete="email" /></Field>
         <Field icon={Globe} label="Country"><select id="verify-country" aria-label="Country" value={country} onChange={event => { const next = event.target.value; setCountry(next); setError(""); if (next !== "United States") setSsn(""); const match = countryByName(next); if (match) setPhoneIso(match.iso); }} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm">{VERIFY_COUNTRIES.map(item => <option key={item}>{item}</option>)}</select></Field>
         {country === "United States" && <Field icon={Lock} label="Social Security Number"><Input id="verify-ssn" value={ssn} onChange={event => { setSsn(formatSsn(event.target.value)); setError(""); }} inputMode="numeric" autoComplete="off" maxLength={11} placeholder="XXX-XX-XXXX" aria-describedby="ssn-note" /></Field>}

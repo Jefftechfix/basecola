@@ -151,7 +151,8 @@ export const listAdminTreasuryBalances = createServerFn({ method: "GET" })
     if (walletError || snapshotError) throw new Error(walletError?.message ?? snapshotError?.message ?? "Could not load treasury balance observations.");
     const accounts = new Map((wallets ?? []).map(wallet => [wallet.id, wallet]));
     return (snapshots ?? []).flatMap(snapshot => {
-      if (!snapshot.wallet_account_id || !snapshot.asset) return [];
+      if (!snapshot.wallet_account_id || !snapshot.asset || !snapshot.observed_at) return [];
+      const observed_at: string = snapshot.observed_at;
       const wallet = accounts.get(snapshot.wallet_account_id);
       if (!wallet) return [];
       const asset: string = snapshot.asset;
@@ -167,7 +168,7 @@ export const listAdminTreasuryBalances = createServerFn({ method: "GET" })
         amount_usd: snapshot.amount_usd == null ? null : Number(snapshot.amount_usd),
         block_number: snapshot.block_number,
         block_hash: snapshot.block_hash,
-        observed_at: snapshot.observed_at,
+        observed_at,
       }];
     });
   });
@@ -705,7 +706,7 @@ export const exportAccountDataForDeletionRequest = createServerFn({ method: "GET
     if (requestError || !request) throw new Error("Deletion request not found.");
     const userId = request.user_id;
     const tables = [
-      ["profile", "profiles", "id" as "user_id"],
+      ["profile", "profiles", "id"],
       ["verifications", "account_verifications", "user_id"],
       ["verification_reviews", "admin_verification_reviews", "user_id"],
       ["transactions", "transactions", "user_id"],
@@ -717,7 +718,8 @@ export const exportAccountDataForDeletionRequest = createServerFn({ method: "GET
       ["wallet_accounts", "wallet_accounts", "user_id"],
     ] as const;
     const entries = await Promise.all(tables.map(async ([key, table, column]) => {
-      const { data: rows, error } = await db.from(table).select("*").eq(column, userId);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: rows, error } = await (db as any).from(table).select("*").eq(column, userId);
       if (error) throw new Error(`Could not export ${key}: ${error.message}`);
       return [key, rows ?? []] as const;
     }));

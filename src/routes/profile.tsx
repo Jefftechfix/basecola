@@ -131,7 +131,7 @@ function MenuButton({ icon: Icon, tint, title, detail, extra, onClick }: { icon:
 }
 
 function AccountForm(props: { draft: AccountProfile; setDraft: (value: AccountProfile) => void; onSave: (next: AccountProfile) => Promise<void>; saved: string }) {
-  const initial = splitPhone(props.draft.phone, countryByName(props.draft.country)?.iso ?? "US");
+  const initial = splitPhone(props.draft.phone, countryByName(props.draft.country)?.iso ?? "");
   const [phoneIso, setPhoneIso] = useState(initial.iso);
   const [national, setNational] = useState(initial.national);
   const [saveError, setSaveError] = useState("");
@@ -150,7 +150,7 @@ function AccountForm(props: { draft: AccountProfile; setDraft: (value: AccountPr
   return <form className="mt-5 space-y-4" onSubmit={save}>
     <label className="block space-y-2 text-sm font-medium"><span>Full name</span><Input required maxLength={60} value={props.draft.name} onChange={event => props.setDraft({ ...props.draft, name: event.target.value })} /></label>
     <label className="block space-y-2 text-sm font-medium"><span>Email address</span><Input required type="email" value={props.draft.email} onChange={event => props.setDraft({ ...props.draft, email: event.target.value })} /></label>
-    <label className="block space-y-2 text-sm font-medium"><span>Phone</span><span className="flex gap-2"><CountryCodeSelect value={phoneIso} onChange={setPhoneIso} className="h-9 border border-input px-2 text-sm" /><Input id="profile-phone" value={national} onChange={event => setNational(event.target.value)} inputMode="tel" autoComplete="tel-national" /></span></label>
+    <label className="block space-y-2 text-sm font-medium"><span>Phone</span><span className="flex gap-2"><CountryCodeSelect value={phoneIso} onChange={setPhoneIso} className="h-9 border border-input px-2 text-sm" placeholder="Code" /><Input id="profile-phone" value={national} onChange={event => setNational(event.target.value)} inputMode="tel" autoComplete="tel-national" /></span></label>
     <label className="block space-y-2 text-sm font-medium"><span>Country</span>
       <select aria-label="Country" value={props.draft.country} onChange={event => { const country = event.target.value; props.setDraft({ ...props.draft, country }); const match = countryByName(country); if (match) setPhoneIso(match.iso); }} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
         <option value="">Select a country</option>

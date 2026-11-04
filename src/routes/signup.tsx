@@ -36,7 +36,7 @@ function Signup() {
   const [phone, setPhone] = useState("");
   const [referral, setReferral] = useState("");
   const [country, setCountry] = useState("");
-  const [phoneIso, setPhoneIso] = useState("US");
+  const [phoneIso, setPhoneIso] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
@@ -140,8 +140,11 @@ function Signup() {
             {emailStatus === "taken" && <span role="alert" className="flex flex-wrap items-center gap-1 text-destructive">This email is already registered. <Link to="/login" className="font-bold underline">Log in</Link> or use a different email.</span>}
           </p>
         </L>
-        <L t="Phone Number"><div className={field}><Phone className="h-5 w-5 shrink-0" /><CountryCodeSelect value={phoneIso} onChange={setPhoneIso} className="px-1 py-0.5 text-sm" /><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={input} placeholder="Enter your phone number" /></div></L>
         <L t="Country"><div className={field}><Globe className="h-5 w-5 shrink-0" /><select required aria-label="Country" value={country} onChange={event => { const next = event.target.value; setCountry(next); const match = countryByName(next); if (match) setPhoneIso(match.iso); }} className={input}><option value="" disabled>Select your country</option>{COUNTRY_DIALS.map(item => <option key={item.iso} value={item.name}>{item.name}</option>)}</select></div></L>
+        <L t="Phone Number">
+          <div className={field}><Phone className="h-5 w-5 shrink-0" /><CountryCodeSelect value={phoneIso} onChange={setPhoneIso} className="px-1 py-0.5 text-sm" placeholder="Code" /><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={input} placeholder="Enter your phone number" /></div>
+          <p className="mt-1.5 text-xs text-muted-foreground">Basecola is open in every country — pick yours and the dial code fills in automatically.</p>
+        </L>
         <L t={<>Referral Code <span className="font-normal">(Optional)</span></>}><div className={field}><UserPlus className="h-5 w-5" /><input value={referral} onChange={e => setReferral(e.target.value)} className={input} placeholder="Enter referral code" /></div></L>
         <L t="Password">
           <div className={field}><Lock className="h-5 w-5" /><input type={show ? "text" : "password"} autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} className={input} placeholder="Create a strong password" />

@@ -11,6 +11,15 @@ describe("Phone dial-code field", () => {
     expect(countryOptionLabel({ name: "United Kingdom", iso: "GB", dial: "+44" })).toBe("GB +44");
   });
 
+  it("starts with no country preselected so every country is offered", () => {
+    render(<CountryCodeSelect value="" onChange={vi.fn()} />);
+
+    const trigger = screen.getByRole("button", { name: "Country code" });
+    expect(trigger).toHaveTextContent("Code");
+    expect(trigger).not.toHaveTextContent("US +1");
+    expect(trigger.querySelector("img")).toBeNull();
+  });
+
   it("shows the country flag next to the selected code", () => {
     render(<CountryCodeSelect value="US" onChange={vi.fn()} />);
 

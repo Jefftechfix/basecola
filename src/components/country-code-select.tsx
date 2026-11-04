@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Globe } from "lucide-react";
 
 import {
   Command,
@@ -35,26 +35,30 @@ export function CountryFlag({ iso, className }: { iso: string; className?: strin
 }
 
 type CountryCodeSelectProps = {
-  /** ISO country code, e.g. "US". */
+  /** ISO country code, e.g. "US". Empty means nothing picked yet. */
   value: string;
   onChange: (iso: string) => void;
   /** Extra styling for the closed control. */
   className?: string;
   ariaLabel?: string;
+  /** Shown until the member picks their own country. */
+  placeholder?: string;
 };
 
 /**
  * Phone dial-code picker: shows the flag with a short code such as "US +1"
  * and opens a searchable list so members can find their country quickly.
+ * Nothing is preselected — every country is offered, not just the US.
  */
 export function CountryCodeSelect({
   value,
   onChange,
   className,
   ariaLabel = "Country code",
+  placeholder = "Code",
 }: CountryCodeSelectProps) {
   const [open, setOpen] = useState(false);
-  const selected = countryByIso(value) ?? COUNTRY_DIALS[0];
+  const selected = countryByIso(value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -69,8 +73,10 @@ export function CountryCodeSelect({
             className,
           )}
         >
-          <CountryFlag iso={selected.iso} />
-          <span className="whitespace-nowrap font-semibold">{countryOptionLabel(selected)}</span>
+          {selected ? <CountryFlag iso={selected.iso} /> : <Globe className="h-4 w-4 shrink-0 opacity-60" />}
+          <span className={cn("whitespace-nowrap", selected ? "font-semibold" : "font-normal text-muted-foreground")}>
+            {selected ? countryOptionLabel(selected) : placeholder}
+          </span>
           <ChevronDown
             className={cn("h-4 w-4 shrink-0 opacity-60 transition-transform", open && "rotate-180")}
           />
@@ -97,7 +103,7 @@ export function CountryCodeSelect({
                   <span className="w-12 shrink-0 text-muted-foreground">{item.dial}</span>
                   <span className="truncate">{item.name}</span>
                   <Check
-                    className={cn("ml-auto h-4 w-4", selected.iso === item.iso ? "opacity-100" : "opacity-0")}
+                    className={cn("ml-auto h-4 w-4", selected?.iso === item.iso ? "opacity-100" : "opacity-0")}
                   />
                 </CommandItem>
               ))}

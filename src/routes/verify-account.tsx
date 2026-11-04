@@ -38,7 +38,7 @@ function VerifyAccountPage() {
   const { data: profile } = useQuery({ queryKey: ["account-profile"], queryFn: loadAccountProfile });
   const seeded = useRef(false);
   const [name, setName] = useState("");
-  const [phoneIso, setPhoneIso] = useState("US");
+  const [phoneIso, setPhoneIso] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [country, setCountry] = useState("");
@@ -54,7 +54,7 @@ function VerifyAccountPage() {
   useEffect(() => {
     if (!profile || seeded.current) return;
     seeded.current = true;
-    const parsed = splitPhone(profile.phone, countryByName(profile.country)?.iso ?? "US");
+    const parsed = splitPhone(profile.phone, countryByName(profile.country)?.iso ?? "");
     setName(profile.name);
     setEmail(profile.email);
     setCountry(profile.country);
@@ -163,9 +163,9 @@ function VerifyAccountPage() {
         <h2 className="text-2xl font-extrabold">Enter Your Details</h2>
         <p className="text-sm text-muted-foreground">Provide your personal information as it appears on your valid ID.</p>
         <Field icon={User} label="Full Name"><Input id="verify-name" value={name} onChange={event => { setName(event.target.value); setError(""); }} autoComplete="name" /></Field>
-        <Field icon={Phone} label="Phone Number"><span className="flex gap-2"><CountryCodeSelect value={phoneIso} onChange={setPhoneIso} className="h-9 border border-input px-2 text-sm" /><Input id="verify-phone" value={phone} onChange={event => { setPhone(event.target.value); setError(""); }} inputMode="tel" autoComplete="tel-national" /></span></Field>
-        <Field icon={Mail} label="Email Address"><Input id="verify-email" type="email" value={email} onChange={event => { setEmail(event.target.value); setError(""); }} autoComplete="email" /></Field>
         <Field icon={Globe} label="Country"><select id="verify-country" aria-label="Country" value={country} onChange={event => { const next = event.target.value; setCountry(next); setError(""); if (next !== "United States") setSsn(""); const match = countryByName(next); if (match) setPhoneIso(match.iso); }} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm">{VERIFY_COUNTRIES.map(item => <option key={item}>{item}</option>)}</select></Field>
+        <Field icon={Phone} label="Phone Number"><span className="flex gap-2"><CountryCodeSelect value={phoneIso} onChange={setPhoneIso} className="h-9 border border-input px-2 text-sm" placeholder="Code" /><Input id="verify-phone" value={phone} onChange={event => { setPhone(event.target.value); setError(""); }} inputMode="tel" autoComplete="tel-national" /></span></Field>
+        <Field icon={Mail} label="Email Address"><Input id="verify-email" type="email" value={email} onChange={event => { setEmail(event.target.value); setError(""); }} autoComplete="email" /></Field>
         {country === "United States" && <Field icon={Lock} label="Social Security Number"><Input id="verify-ssn" value={ssn} onChange={event => { setSsn(formatSsn(event.target.value)); setError(""); }} inputMode="numeric" autoComplete="off" maxLength={11} placeholder="XXX-XX-XXXX" aria-describedby="ssn-note" /></Field>}
         {country === "United States" && <p id="ssn-note" className="text-xs text-muted-foreground">This sample number is cleared when you submit. It is not saved.</p>}
         <Field icon={MapPin} label="Residential Address"><Input id="verify-address" value={address} onChange={event => { setAddress(event.target.value); setError(""); }} autoComplete="street-address" /></Field>

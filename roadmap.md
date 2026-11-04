@@ -9,3 +9,11 @@
 - [x] Connect dashboard wallet actions and verify all three flows.
 - [x] Add individual crypto details pages linked from Assets.
 - [x] Verify asset navigation, balances, recent activity, and unknown coins.
+
+# Live data checks (Nov 4, 2026)
+- [x] Open all admin sections signed in as admin; capture errors and screenshots.
+- [x] Fix long Stripe reference clipping the outcome badge in Transactions Management.
+- [x] Fix singular/plural transaction counts on member and admin transaction lists.
+- [x] Re-check member pages at phone width for overflow and console errors.
+- [ ] Decide: show a friendlier reference than the raw Stripe `cs_live_...` id in member receipts.
+- [ ] Decide: clarify Assets showing $0.00 crypto holdings while Dashboard shows the $5.00 wallet balance.

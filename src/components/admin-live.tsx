@@ -111,7 +111,7 @@ export function LiveUsersManagement() {
               </section>
               <section className="space-y-2 border-t pt-4">
                 <h3 className="font-bold">Recent transactions</h3>
-                {details.transactions.length ? <div className="max-h-48 overflow-auto"><table className="w-full text-left text-xs"><thead className="text-muted-foreground"><tr><th className="p-2">Date</th><th className="p-2">Activity</th><th className="p-2">Reference</th><th className="p-2">Amount</th><th className="p-2">Status</th></tr></thead><tbody>{details.transactions.slice(0, 20).map(transaction => <tr key={transaction.id} className="border-t"><td className="p-2">{date(transaction.created_at)}</td><td className="p-2 capitalize">{transaction.kind} · {transaction.direction}</td><td className="p-2 font-mono">{transaction.reference || "—"}</td><td className="p-2">${Number(transaction.usd_amount).toFixed(2)}</td><td className="p-2 capitalize">{transaction.status}</td></tr>)}</tbody></table></div> : <p className="text-sm text-muted-foreground">No transactions.</p>}
+                {details.transactions.length ? <div className="max-h-48 overflow-auto"><table className="w-full text-left text-xs"><thead className="text-muted-foreground"><tr><th className="p-2">Date</th><th className="p-2">Activity</th><th className="p-2">Reference</th><th className="p-2">Amount</th><th className="p-2">Status</th></tr></thead><tbody>{details.transactions.slice(0, 20).map(transaction => <tr key={transaction.id} className="border-t"><td className="p-2">{date(transaction.created_at)}</td><td className="p-2 capitalize">{transaction.kind} · {transaction.direction}</td><td className="max-w-56 truncate p-2 font-mono" title={transaction.reference || "—"}>{transaction.reference || "—"}</td><td className="p-2">${Number(transaction.usd_amount).toFixed(2)}</td><td className="p-2 capitalize">{transaction.status}</td></tr>)}</tbody></table></div> : <p className="text-sm text-muted-foreground">No transactions.</p>}
               </section>
               <section className="space-y-3 border-t border-destructive/30 pt-4">
                 <h3 className="font-bold text-destructive">Delete account access</h3>
@@ -414,7 +414,7 @@ export function LiveTransactionsManagement() {
         <tbody>{rows.map(row => {
           const outcome = transactionOutcome(row.status);
           return <tr key={row.id} className="border-t">
-            <td className="p-2 font-mono text-xs">{row.reference || row.id.slice(0, 8)}</td>
+            <td className="max-w-56 truncate p-2 font-mono text-xs" title={row.reference || row.id}>{row.reference || row.id.slice(0, 8)}</td>
             <td className="p-2"><p className="font-semibold">{row.user.full_name || "—"}</p><p className="text-xs text-muted-foreground">{row.user.email}</p></td>
             <td className="p-2 capitalize">{row.kind} · {row.direction}</td>
             <td className="p-2">{row.coin || "USD"}<span className="block text-xs text-muted-foreground">{row.network || "—"}</span></td>
@@ -427,7 +427,7 @@ export function LiveTransactionsManagement() {
       </table></div>
       {isPending && <p className="text-sm text-muted-foreground">Loading transactions…</p>}
       {!isPending && rows.length === 0 && !error && <p className="text-sm text-muted-foreground">No transactions match these filters.</p>}
-      <p className="text-xs text-muted-foreground">Showing the latest {data.length} ledger records. Status reflects the transaction record in the platform ledger.</p>
+      <p className="text-xs text-muted-foreground">Showing the latest {data.length} ledger record{data.length === 1 ? "" : "s"}. Status reflects the transaction record in the platform ledger.</p>
     </section>
     <Dialog open={!!detail} onOpenChange={open => { if (!open) setDetail(null); }}>
       <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">

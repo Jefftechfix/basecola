@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatSsn, ID_DOCUMENTS, VERIFY_COUNTRIES, verifyDetailsError, verifyDocumentError } from "@/lib/account-verify";
 import { loadAccountProfile } from "@/lib/account-profile";
-import { COUNTRY_DIALS, countryByIso, countryByName, splitPhone } from "@/lib/countries";
+import { countryByIso, countryByName, splitPhone } from "@/lib/countries";
 import { CountryCodeSelect } from "@/components/country-code-select";
 
 export const Route = createFileRoute("/verify-account")({

@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { notifyVerificationDecision } from "@/lib/verification-email";
+import { isSignupRange, rangeStart, summarizeSignups, type SignupRange } from "@/lib/signup-analytics";
 
 type AuthCtx = { supabase: { from: (t: "user_roles") => any }; userId: string };
 
@@ -828,4 +829,57 @@ export const updateAdminReferral = createServerFn({ method: "POST" })
       if (txError) throw new Error(txError.message);
     }
     return { ok: true };
+  });
+
+export type AdminSignupCountryRow = {
+  country: string;
+  signups: number;
+  share: number;
+  first_signup: string;
+  last_signup: string;
+  untracked: boolean;
+};
+
+export type AdminSignupAnalytics = {
+  range: SignupRange;
+  since: string | null;
+  total: number;
+  countries: AdminSignupCountryRow[];
+};
+
+export const listAdminSignupAnalytics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { range?: unknown }) => {
+    const range = d?.range ?? "all";
+    if (!isSignupRange(range)) throw new Error("Choose a valid reporting range.");
+    return { range };
+  })
+  .handler(async ({ data, context }): Promise<AdminSignupAnalytics> => {
+    await assertAdmin(context as AuthCtx);
+    const db = await admin();
+    const now = new Date();
+    const since = rangeStart(data.range, now);
+    const source = since
+      ? db.from("profiles").select("country, created_at").gte("created_at", since)
+      : db.from("profiles").select("country, created_at");
+    const { data: rows, error } = await source.order("created_at", { ascending: false }).limit(20000);
+    if (error) throw new Error(error.message);
+    const summary = summarizeSignups(
+      (rows ?? []).map(row => ({ country: row.country ?? null, created_at: row.created_at })),
+      data.range,
+      now,
+    );
+    return {
+      range: summary.range,
+      since: summary.since,
+      total: summary.total,
+      countries: summary.countries.map(country => ({
+        country: country.country,
+        signups: country.signups,
+        share: country.share,
+        first_signup: country.firstSignup,
+        last_signup: country.lastSignup,
+        untracked: country.untracked,
+      })),
+    };
   });

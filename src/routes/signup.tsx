@@ -22,6 +22,10 @@ export const Route = createFileRoute("/signup")({
 const field = "flex items-center gap-3 rounded-xl border border-input bg-card px-4 py-3 focus-within:ring-2 focus-within:ring-ring";
 const input = "w-full bg-transparent outline-none placeholder:text-muted-foreground";
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+type EmailStatus = "idle" | "checking" | "available" | "taken";
+
 function Signup() {
   const nav = useNavigate();
   const [pw, setPw] = useState("");
@@ -70,6 +74,10 @@ function Signup() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!ok || busy) return;
+    if (emailStatus === "taken") {
+      setError("This email is already registered. Please log in or use a different email.");
+      return;
+    }
     setBusy(true); setError("");
     const dial = COUNTRY_DIALS.find(c => c.iso === phoneIso);
     const fullPhone = phone.trim() ? `${dial?.dial ?? ""} ${phone.trim()}`.trim() : "";

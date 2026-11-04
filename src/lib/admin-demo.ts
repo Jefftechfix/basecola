@@ -788,8 +788,10 @@ const weekPoints = [
 ];
 
 export const ADMIN_PERIODS = [
-  { id: "week", label: "Oct 25, 2026 – Nov 1, 2026", volume: 1_284_560_320, volumeChange: 21.7, transactions: 24_980_341, transactionChange: 18.4, points: weekPoints },
-  { id: "recent", label: "Oct 29, 2026 – Nov 1, 2026", volume: 742_110_450, volumeChange: 14.2, transactions: 11_420_880, transactionChange: 9.6, points: weekPoints.slice(4) },
+  { id: "week", label: "Last 7 days", days: 7 },
+  { id: "recent", label: "Last 4 days", days: 4 },
+  { id: "today", label: "Today", days: 1 },
+  { id: "month", label: "Last 30 days", days: 30 },
 ] as const;
 
 export const ADMIN_NOTICES = [

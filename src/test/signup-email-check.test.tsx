@@ -33,7 +33,7 @@ async function openSignup() {
 
 describe("Signup email availability", () => {
   it("warns that the email is registered as soon as it is typed", async () => {
-    rpc.mockResolvedValueOnce({ data: { email_taken: true, phone_taken: false }, error: null });
+    state.emailTaken = true;
     const email = await openSignup();
 
     fireEvent.change(email, { target: { value: "taken@example.com" } });
@@ -44,7 +44,7 @@ describe("Signup email availability", () => {
   });
 
   it("confirms a free email without anyone pressing Sign Up", async () => {
-    rpc.mockResolvedValueOnce({ data: { email_taken: false, phone_taken: false }, error: null });
+    state.emailTaken = false;
     const email = await openSignup();
 
     fireEvent.change(email, { target: { value: "fresh@example.com" } });
@@ -54,24 +54,25 @@ describe("Signup email availability", () => {
   });
 
   it("does not ask the server until the email looks complete", async () => {
+    state.emailTaken = false;
     rpc.mockClear();
     const email = await openSignup();
 
     fireEvent.change(email, { target: { value: "not-an-email" } });
     await new Promise(resolve => setTimeout(resolve, 700));
 
-    expect(rpc).not.toHaveBeenCalled();
+    expect(availabilityCalls()).toHaveLength(0);
     expect(screen.queryByText(/This email is already registered/)).toBeNull();
   });
 
   it("re-checks when the member edits the email", async () => {
-    rpc.mockResolvedValueOnce({ data: { email_taken: true, phone_taken: false }, error: null });
+    state.emailTaken = true;
     const email = await openSignup();
 
     fireEvent.change(email, { target: { value: "taken@example.com" } });
     await screen.findByText(/This email is already registered/);
 
-    rpc.mockResolvedValueOnce({ data: { email_taken: false, phone_taken: false }, error: null });
+    state.emailTaken = false;
     fireEvent.change(email, { target: { value: "taken2@example.com" } });
 
     await waitFor(() => expect(rpc).toHaveBeenLastCalledWith("check_signup_available", { _email: "taken2@example.com", _phone: "" }));

@@ -5,11 +5,20 @@ import { describe, expect, it, vi } from "vitest";
 
 import { routeTree } from "@/routeTree.gen";
 
-const { rpc } = vi.hoisted(() => ({ rpc: vi.fn(async () => ({ data: { email_taken: true, phone_taken: false }, error: null })) }));
+const { rpc, state } = vi.hoisted(() => {
+  const state = { emailTaken: true };
+  const rpc = vi.fn(async (fn: string, args?: { _email?: string }) => {
+    if (fn !== "check_signup_available") return { data: null, error: null };
+    return { data: { email_taken: state.emailTaken, phone_taken: false }, error: null };
+  });
+  return { rpc, state };
+});
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: { rpc, auth: { signUp: vi.fn(async () => ({ data: null, error: null })) } },
 }));
+
+const availabilityCalls = () => rpc.mock.calls.filter(call => call[0] === "check_signup_available");
 
 async function openSignup() {
   (routeTree as unknown as { options: { shellComponent?: unknown } }).options.shellComponent = undefined;

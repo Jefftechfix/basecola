@@ -919,7 +919,7 @@ export const getAdminDashboardOverview = createServerFn({ method: "GET" })
         joinedToday: people.filter(p => at(p.created_at) >= today.getTime()).length,
       },
       points,
-      recent: (recent ?? []).map(t => ({ id: t.id, reference: t.reference, user: names.get(t.user_id) ?? "Member", kind: t.kind, coin: t.coin, amount: Number(t.crypto_amount ?? 0), usd: Number(t.usd_amount ?? 0), status: t.status, created_at: t.created_at })),
+      recent: (recent ?? []).map(t => ({ id: t.id, reference: t.reference ?? t.id.slice(0, 8).toUpperCase(), user: names.get(t.user_id) ?? "Member", kind: t.kind, coin: t.coin ?? "USD", amount: Number(t.crypto_amount ?? 0), usd: Number(t.usd_amount ?? 0), status: t.status, created_at: t.created_at })),
       market: (market ?? []).map(m => ({ coin: m.coin, buy: Number(m.buy_price_usd), sell: Number(m.sell_price_usd) })),
     };
   });

@@ -1,6 +1,7 @@
 import { LiveAccountDeletionManagement, LiveAssetsWalletManagement, LiveDepositsMonitoring, LiveReferralManagement, LiveTradeManagement, LiveTransactionsManagement, LiveTreasuryManagement, LiveUsersManagement, LiveVerificationManagement } from "@/components/admin-live";
+import { LiveSignupAnalytics, SignupCountryCard } from "@/components/admin-signup-analytics";
 import { useState, type FormEvent, type ReactNode } from "react";
-import { ArrowDownToLine, BadgeCheck, BarChart3, Bell, Calendar, ChevronDown, CircleDollarSign, Home, Info, Landmark, Menu, RefreshCw, Settings, SlidersHorizontal, Ticket, Trash2, UserPlus, Users, Wallet, X, type LucideIcon } from "lucide-react";
+import { ArrowDownToLine, BadgeCheck, BarChart3, Bell, Calendar, ChevronDown, CircleDollarSign, Globe2, Home, Info, Landmark, Menu, RefreshCw, Settings, SlidersHorizontal, Ticket, Trash2, UserPlus, Users, Wallet, X, type LucideIcon } from "lucide-react";
 import { COINS, CoinIcon } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,11 +13,12 @@ import { ReportsManagement, SettingsManagement, UsersManagement } from "@/compon
 import { VerificationManagement } from "@/components/admin-verifications";
 import { ADMIN_ACTIVITY, ADMIN_MARKET, ADMIN_NOTICES, ADMIN_PERIODS, ADMIN_QUICK_ACTIONS, ADMIN_STATS, ADMIN_USERS, adminCount, adminMoney } from "@/lib/admin-demo";
 
-export type AdminSection = "dashboard" | "users" | "verifications" | "deletions" | "transactions" | "deposits" | "assets" | "trade" | "earn" | "pricing" | "treasury" | "reports" | "referrals" | "settings";
+export type AdminSection = "dashboard" | "users" | "signup-analytics" | "verifications" | "deletions" | "transactions" | "deposits" | "assets" | "trade" | "earn" | "pricing" | "treasury" | "reports" | "referrals" | "settings";
 
 const NAV: { id: AdminSection; label: string; icon: typeof Home }[] = [
   { id: "dashboard", label: "Dashboard", icon: Home },
   { id: "users", label: "Users", icon: Users },
+  { id: "signup-analytics", label: "Signups by Country", icon: Globe2 },
   { id: "verifications", label: "Verification Management", icon: BadgeCheck },
   { id: "deletions", label: "Deletion Requests", icon: Trash2 },
   { id: "transactions", label: "Transactions", icon: RefreshCw },
@@ -73,7 +75,7 @@ export function AdminShell({ section, onSection, onSignOut, periodId, onPeriod, 
     <div className="min-w-0">
       <header className="flex flex-wrap items-center xl:flex-nowrap gap-3 border-b bg-white/80 px-4 py-4 sm:px-6">
         <button type="button" className="grid h-10 w-10 place-items-center rounded-xl border lg:hidden" aria-label="Open admin menu" onClick={() => setOpen(true)}><Menu className="h-5 w-5" /></button>
-        <div className="mr-auto min-w-0 flex-1"><h1 className="text-2xl font-extrabold">{section === "users" ? "Users Management" : section === "transactions" ? "Transactions Management" : section === "assets" ? "Assets / Wallet Management" : section === "trade" ? "Buy & Sell Management" : section === "pricing" ? "Pricing & Rate Management" : section === "treasury" ? "Treasury Management" : section === "reports" ? "Reports & Analytics" : section === "referrals" ? "Referral Management" : section === "settings" ? "Settings Management" : NAV.find(item => item.id === section)?.label}</h1><p className="text-sm text-muted-foreground">{section === "users" ? "View, manage, and monitor all platform users" : section === "transactions" ? "Monitor, search, and manage all platform transactions" : section === "assets" ? "Configure supported networks, view customer wallet addresses, and request treasury operations" : section === "trade" ? "Review settled trades and configure enforced customer rates and limits" : section === "pricing" ? "Configure persisted buy/sell prices, trading availability, and order limits" : section === "treasury" ? "Review trusted balance observations and manage unexecuted operation requests" : section === "reports" ? "Insights, performance, and detailed reports across the platform" : section === "referrals" ? "Manage referrals, commissions, rewards, and promo programs" : section === "deposits" ? "Monitor, verify, and manage all user crypto deposits in real time" : section === "deletions" ? "Review account closure requests and download member data" : section === "verifications" ? "Review and manage user identity verification submissions." : section === "settings" ? "Configure platform policies, support, communications, security, and system features" : "Welcome back, Admin 👋"}</p></div>
+        <div className="mr-auto min-w-0 flex-1"><h1 className="text-2xl font-extrabold">{section === "users" ? "Users Management" : section === "transactions" ? "Transactions Management" : section === "assets" ? "Assets / Wallet Management" : section === "trade" ? "Buy & Sell Management" : section === "pricing" ? "Pricing & Rate Management" : section === "treasury" ? "Treasury Management" : section === "signup-analytics" ? "Signup Analytics" : section === "reports" ? "Reports & Analytics" : section === "referrals" ? "Referral Management" : section === "settings" ? "Settings Management" : NAV.find(item => item.id === section)?.label}</h1><p className="text-sm text-muted-foreground">{section === "users" ? "View, manage, and monitor all platform users" : section === "transactions" ? "Monitor, search, and manage all platform transactions" : section === "assets" ? "Configure supported networks, view customer wallet addresses, and request treasury operations" : section === "trade" ? "Review settled trades and configure enforced customer rates and limits" : section === "pricing" ? "Configure persisted buy/sell prices, trading availability, and order limits" : section === "treasury" ? "Review trusted balance observations and manage unexecuted operation requests" : section === "signup-analytics" ? "See which countries bring in the most new member signups" : section === "reports" ? "Insights, performance, and detailed reports across the platform" : section === "referrals" ? "Manage referrals, commissions, rewards, and promo programs" : section === "deposits" ? "Monitor, verify, and manage all user crypto deposits in real time" : section === "deletions" ? "Review account closure requests and download member data" : section === "verifications" ? "Review and manage user identity verification submissions." : section === "settings" ? "Configure platform policies, support, communications, security, and system features" : "Welcome back, Admin 👋"}</p></div>
         {(section === "dashboard" || section === "transactions" || section === "assets" || section === "trade" || section === "pricing" || section === "treasury" || section === "reports" || section === "referrals" || section === "deposits" || section === "settings") && <label className="flex h-10 items-center gap-2 rounded-xl border bg-white px-3 text-sm"><Calendar className="h-4 w-4 text-muted-foreground" /><span className="sr-only">Reporting dates</span><select aria-label="Reporting dates" value={periodId} onChange={event => onPeriod(event.target.value as (typeof ADMIN_PERIODS)[number]["id"])} className="bg-transparent outline-none">{ADMIN_PERIODS.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>}
         <Popover>
           <PopoverTrigger asChild><Button variant="ghost" size="icon" className="rounded-full bg-white" aria-label="Admin notifications"><Bell /></Button></PopoverTrigger>
@@ -146,6 +148,7 @@ export function AdminDashboard({ onSection, periodId }: { onSection: (section: A
         </dl>
         <Button type="button" variant="outline" className="mt-5 h-11 w-full rounded-xl border-[#6d4dff] text-[#6d4dff]" onClick={() => onSection("users")}>View All Users</Button>
       </section>
+      <SignupCountryCard onViewAll={() => onSection("signup-analytics")} />
       <section className="rounded-3xl bg-white p-5 shadow-sm">
         <h2 className="font-bold">Crypto Market (USD)</h2>
         <ul className="mt-3 space-y-3">{ADMIN_MARKET.map(asset => <li key={asset.sym} className="flex items-center gap-2 text-sm"><AssetMark symbol={asset.sym} /><span className="font-semibold">{asset.sym}</span><span className="ml-auto font-semibold">{adminMoney(asset.price, 2)}</span><Change value={asset.change} /></li>)}</ul>
@@ -177,6 +180,7 @@ export function AdminDashboard({ onSection, periodId }: { onSection: (section: A
 
 export function AdminPanel({ section }: { section: Exclude<AdminSection, "dashboard"> }) {
   if (section === "users") return <LiveUsersManagement />;
+  if (section === "signup-analytics") return <LiveSignupAnalytics />;
   if (section === "transactions") return <LiveTransactionsManagement />;
   if (section === "assets") return <LiveAssetsWalletManagement />;
   if (section === "trade") return <LiveTradeManagement />;

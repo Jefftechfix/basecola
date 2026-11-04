@@ -151,8 +151,11 @@ export const listAdminTreasuryBalances = createServerFn({ method: "GET" })
     if (walletError || snapshotError) throw new Error(walletError?.message ?? snapshotError?.message ?? "Could not load treasury balance observations.");
     const accounts = new Map((wallets ?? []).map(wallet => [wallet.id, wallet]));
     return (snapshots ?? []).flatMap(snapshot => {
+      if (!snapshot.wallet_account_id || !snapshot.asset || !snapshot.observed_at) return [];
+      const observed_at: string = snapshot.observed_at;
       const wallet = accounts.get(snapshot.wallet_account_id);
       if (!wallet) return [];
+      const asset: string = snapshot.asset;
       return [{
         wallet_account_id: wallet.id,
         label: wallet.label,
@@ -160,12 +163,12 @@ export const listAdminTreasuryBalances = createServerFn({ method: "GET" })
         address: wallet.address,
         wallet_type: wallet.wallet_type,
         wallet_status: wallet.status,
-        asset: snapshot.asset,
+        asset,
         balance: Number(snapshot.balance),
         amount_usd: snapshot.amount_usd == null ? null : Number(snapshot.amount_usd),
         block_number: snapshot.block_number,
         block_hash: snapshot.block_hash,
-        observed_at: snapshot.observed_at,
+        observed_at,
       }];
     });
   });
@@ -292,7 +295,7 @@ export const listAdminTradeOrders = createServerFn({ method: "GET" })
     ]);
     if (buyError || sellError || profileError) throw new Error(buyError?.message ?? sellError?.message ?? profileError?.message ?? "Could not load buy/sell orders.");
     const users = new Map((profiles ?? []).map(profile => [profile.id, profile]));
-    const orders: AdminTradeOrderRow[] = [
+    const orders: Omit<AdminTradeOrderRow, "user">[] = [
       ...(buys ?? []).map(row => ({
         id: row.id, user_id: row.user_id, type: "Buy" as const, coin: row.coin, network: row.network,
         crypto_amount: Number(row.crypto_amount), usd_amount: Number(row.usd_amount), fee_usd: Number(row.fee_usd),
@@ -499,6 +502,7 @@ export const listAdminDeposits = createServerFn({ method: "GET" })
     const users = new Map((profiles ?? []).map(profile => [profile.id, profile]));
     return (deposits ?? []).map(deposit => ({
       ...deposit,
+      status: deposit.status as AdminDepositRow["status"],
       user: deposit.user_id ? {
         full_name: users.get(deposit.user_id)?.full_name ?? null,
         email: users.get(deposit.user_id)?.email ?? null,
@@ -714,7 +718,8 @@ export const exportAccountDataForDeletionRequest = createServerFn({ method: "GET
       ["wallet_accounts", "wallet_accounts", "user_id"],
     ] as const;
     const entries = await Promise.all(tables.map(async ([key, table, column]) => {
-      const { data: rows, error } = await db.from(table).select("*").eq(column, userId);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: rows, error } = await (db as any).from(table).select("*").eq(column, userId);
       if (error) throw new Error(`Could not export ${key}: ${error.message}`);
       return [key, rows ?? []] as const;
     }));

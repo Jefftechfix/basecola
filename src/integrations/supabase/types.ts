@@ -1355,6 +1355,10 @@ export type Database = {
         Args: { _current_pin: string; _new_pin: string }
         Returns: undefined
       }
+      check_signup_available: {
+        Args: { _email: string; _phone: string }
+        Returns: Json
+      }
       generate_referral_code: { Args: never; Returns: string }
       get_platform_flags: { Args: never; Returns: Json }
       has_login_pin: { Args: never; Returns: boolean }
@@ -1365,6 +1369,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      normalize_phone: { Args: { _phone: string }; Returns: string }
       record_chain_deposit: {
         Args: {
           _amount_usd: number

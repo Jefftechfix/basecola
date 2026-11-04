@@ -38,7 +38,7 @@ function VerifyAccountPage() {
   const { data: profile } = useQuery({ queryKey: ["account-profile"], queryFn: loadAccountProfile });
   const seeded = useRef(false);
   const [name, setName] = useState("");
-  const [phoneIso, setPhoneIso] = useState("US");
+  const [phoneIso, setPhoneIso] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [country, setCountry] = useState("");
@@ -54,7 +54,7 @@ function VerifyAccountPage() {
   useEffect(() => {
     if (!profile || seeded.current) return;
     seeded.current = true;
-    const parsed = splitPhone(profile.phone, countryByName(profile.country)?.iso ?? "US");
+    const parsed = splitPhone(profile.phone, countryByName(profile.country)?.iso ?? "");
     setName(profile.name);
     setEmail(profile.email);
     setCountry(profile.country);

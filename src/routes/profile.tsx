@@ -131,7 +131,7 @@ function MenuButton({ icon: Icon, tint, title, detail, extra, onClick }: { icon:
 }
 
 function AccountForm(props: { draft: AccountProfile; setDraft: (value: AccountProfile) => void; onSave: (next: AccountProfile) => Promise<void>; saved: string }) {
-  const initial = splitPhone(props.draft.phone, countryByName(props.draft.country)?.iso ?? "US");
+  const initial = splitPhone(props.draft.phone, countryByName(props.draft.country)?.iso ?? "");
   const [phoneIso, setPhoneIso] = useState(initial.iso);
   const [national, setNational] = useState(initial.national);
   const [saveError, setSaveError] = useState("");

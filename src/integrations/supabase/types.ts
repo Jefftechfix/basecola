@@ -1298,6 +1298,14 @@ export type Database = {
       }
     }
     Functions: {
+      admin_platform_revenue_summary: {
+        Args: { _period_end: string; _period_start: string }
+        Returns: {
+          lifetime_revenue: number
+          period_revenue: number
+          transaction_kind: string
+        }[]
+      }
       admin_adjust_user_balance: {
         Args: {
           _admin_id: string

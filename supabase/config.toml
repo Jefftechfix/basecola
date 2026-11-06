@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.crypto-deposit-ingestion]
 verify_jwt = false
+
+[functions.alchemy-market-prices]
+verify_jwt = false
+
+[functions.crypto-withdrawal-execution]
+verify_jwt = true

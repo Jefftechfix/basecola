@@ -1,16 +1,19 @@
 import { LiveAccountDeletionManagement, LiveAssetsWalletManagement, LiveDepositsMonitoring, LiveReferralManagement, LiveTradeManagement, LiveTransactionsManagement, LiveTreasuryManagement, LiveUsersManagement, LiveVerificationManagement } from "@/components/admin-live";
-import { useState, type FormEvent, type ReactNode } from "react";
-import { ArrowDownToLine, BadgeCheck, BarChart3, Bell, Calendar, ChevronDown, CircleDollarSign, Home, Info, Landmark, Menu, RefreshCw, Settings, SlidersHorizontal, Ticket, Trash2, UserPlus, Users, Wallet, X, type LucideIcon } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { ArrowDownToLine, BadgeCheck, BarChart3, Bell, Calendar, ChevronDown, CircleDollarSign, Home, Landmark, Menu, RefreshCw, Settings, SlidersHorizontal, Trash2, UserPlus, Users, Wallet, X, type LucideIcon } from "lucide-react";
 import { COINS, CoinIcon } from "@/components/brand";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ReportsManagement, SettingsManagement, UsersManagement } from "@/components/admin-management";
 import { VerificationManagement } from "@/components/admin-verifications";
-import { ADMIN_ACTIVITY, ADMIN_MARKET, ADMIN_NOTICES, ADMIN_PERIODS, ADMIN_QUICK_ACTIONS, ADMIN_STATS, ADMIN_USERS, adminCount, adminMoney } from "@/lib/admin-demo";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useAlchemyMarketPrices } from "@/components/market-prices";
+import { getAdminDashboardSummary } from "@/lib/admin.functions";
+import { ADMIN_PERIODS, type AdminDashboardRecentTransaction } from "@/lib/admin-dashboard-data";
+import { adminCount, adminMoney } from "@/lib/admin-demo";
+import { MARKET_SYMBOLS } from "@/lib/market-prices";
 
 export type AdminSection = "dashboard" | "users" | "verifications" | "deletions" | "transactions" | "deposits" | "assets" | "trade" | "earn" | "pricing" | "treasury" | "reports" | "referrals" | "settings";
 
@@ -30,13 +33,6 @@ const NAV: { id: AdminSection; label: string; icon: typeof Home }[] = [
   { id: "referrals", label: "Referral Management", icon: UserPlus },
   { id: "settings", label: "Settings", icon: Settings },
 ];
-
-const ACTION_COPY: Record<string, { title: string; detail: string; fields: string[] }> = {
-  "add-user": { title: "Add User", detail: "This adds a name only inside the preview.", fields: ["Name", "Email"] },
-  "fund-wallet": { title: "Fund Wallet", detail: "This sample does not credit a customer wallet.", fields: ["Username", "Amount (USD)"] },
-  "adjust-rates": { title: "Adjust Rates", detail: "This sample does not change customer prices.", fields: ["Asset", "Rate"] },
-  "create-promo": { title: "Create Promo", detail: "This sample code is not issued to customers.", fields: ["Promo code", "Reward (USD)"] },
-};
 
 export function AdminShell({ section, onSection, onSignOut, periodId, onPeriod, children }: { section: AdminSection; onSection: (section: AdminSection) => void; onSignOut: () => void; periodId: (typeof ADMIN_PERIODS)[number]["id"]; onPeriod: (id: (typeof ADMIN_PERIODS)[number]["id"]) => void; children: ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -79,7 +75,7 @@ export function AdminShell({ section, onSection, onSignOut, periodId, onPeriod, 
           <PopoverTrigger asChild><Button variant="ghost" size="icon" className="rounded-full bg-white" aria-label="Admin notifications"><Bell /></Button></PopoverTrigger>
           <PopoverContent align="end" className="w-72 p-0">
             <p className="border-b px-4 py-3 text-sm font-bold">Notifications</p>
-            <ul>{ADMIN_NOTICES.map(item => <li key={item.id} className="border-b px-4 py-3 text-sm last:border-0"><p className="font-semibold">{item.title}</p><p className="text-xs text-muted-foreground">{item.detail}</p></li>)}</ul>
+            <p className="px-4 py-3 text-sm text-muted-foreground">Dashboard metrics are loaded from live platform records.</p>
           </PopoverContent>
         </Popover>
         <DropdownMenu>
@@ -92,86 +88,126 @@ export function AdminShell({ section, onSection, onSignOut, periodId, onPeriod, 
   </div>;
 }
 
-const QUICK_ICONS: Record<(typeof ADMIN_QUICK_ACTIONS)[number]["id"], LucideIcon> = {
-  "add-user": UserPlus,
-  "fund-wallet": Wallet,
-  "adjust-rates": SlidersHorizontal,
-  "create-promo": Ticket,
-  "view-reports": BarChart3,
-  settings: Settings,
-};
+const QUICK_ACTIONS: { label: string; section: AdminSection; icon: LucideIcon }[] = [
+  { label: "Manage users", section: "users", icon: Users },
+  { label: "Review verification", section: "verifications", icon: BadgeCheck },
+  { label: "Transactions", section: "transactions", icon: RefreshCw },
+  { label: "Deposits", section: "deposits", icon: ArrowDownToLine },
+  { label: "Treasury", section: "treasury", icon: Landmark },
+  { label: "Reports", section: "reports", icon: BarChart3 },
+];
 
 export function AdminDashboard({ onSection, periodId }: { onSection: (section: AdminSection) => void; periodId: (typeof ADMIN_PERIODS)[number]["id"] }) {
   const [metric, setMetric] = useState<"volume" | "transactions">("volume");
-  const [action, setAction] = useState<string | null>(null);
-  const [saved, setSaved] = useState("");
   const period = ADMIN_PERIODS.find(item => item.id === periodId) ?? ADMIN_PERIODS[0];
-  const prompt = action ? ACTION_COPY[action] : null;
-
-  function runAction(id: string) {
-    if (id === "view-reports") onSection("reports");
-    else if (id === "settings") onSection("settings");
-    else { setSaved(""); setAction(id); }
-  }
-
-  function submitAction(event: FormEvent) {
-    event.preventDefault();
-    setSaved("Saved in this preview only. Customer wallets and prices are unchanged.");
-  }
+  const loadSummary = useServerFn(getAdminDashboardSummary);
+  const summaryQuery = useQuery({
+    queryKey: ["admin-dashboard-summary", periodId],
+    queryFn: () => loadSummary({ data: { periodId } }),
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+  const { data: marketQuotes, isPending: marketPending } = useAlchemyMarketPrices();
+  const summary = summaryQuery.data;
+  const stats = [
+    { id: "users", label: "Total Users", value: summary ? adminCount(summary.users.total) : "—", change: null, note: "Registered profiles" },
+    { id: "transactions", label: `Transactions · ${period.label}`, value: summary ? adminCount(summary.period.transactions) : "—", change: summary?.period.transactionChange ?? null, note: `vs previous ${period.label.toLowerCase()}` },
+    { id: "volume", label: `Completed Volume · ${period.label}`, value: summary ? adminMoney(summary.period.volume) : "—", change: summary?.period.volumeChange ?? null, note: `vs previous ${period.label.toLowerCase()}` },
+    { id: "revenue", label: `Platform Revenue · ${period.label}`, value: summary ? adminMoney(summary.revenue.periodTotal) : "—", change: null, note: "Recorded completed-transaction fees" },
+  ];
 
   return <>
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {ADMIN_STATS.map(stat => <StatCard key={stat.id} label={stat.label} value={stat.kind === "money" ? adminMoney(stat.value) : adminCount(stat.value)} change={stat.change} tone={stat.id} />)}
+      {stats.map(stat => <StatCard key={stat.id} label={stat.label} value={stat.value} change={stat.change} note={stat.note} tone={stat.id} />)}
     </div>
+    {summaryQuery.error && <p role="alert" className="mt-4 rounded-xl border border-destructive/30 bg-white p-4 text-sm text-destructive">{summaryQuery.error.message}</p>}
+    <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+      <span>Live platform records · Updated {summaryQuery.dataUpdatedAt ? new Date(summaryQuery.dataUpdatedAt).toLocaleTimeString() : "—"}</span>
+      <Button type="button" size="sm" variant="outline" disabled={summaryQuery.isFetching} onClick={() => void summaryQuery.refetch()}>
+        <RefreshCw className={`h-4 w-4 ${summaryQuery.isFetching ? "animate-spin" : ""}`} />Refresh data
+      </Button>
+    </div>
+    <section className="mt-4 rounded-3xl bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-bold">Platform Revenue</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Completed platform fees · lifetime and {period.label.toLowerCase()}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-muted-foreground">Lifetime total</p>
+          <p className="text-2xl font-extrabold">
+            {summary ? adminMoney(summary.revenue.lifetimeTotal, 2) : "—"}
+          </p>
+        </div>
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {summary?.revenue.byKind.map(({ kind, lifetime, period: periodRevenue }) => (
+          <article key={kind} className="rounded-2xl bg-[#f4f5fb] p-4">
+            <p className="text-sm font-semibold capitalize">{kind}</p>
+            <p className="mt-2 text-lg font-bold">{adminMoney(lifetime, 2)}</p>
+            <p className="text-xs text-muted-foreground">Lifetime</p>
+            <p className="mt-3 text-sm font-semibold">{adminMoney(periodRevenue, 2)}</p>
+            <p className="text-xs text-muted-foreground">{period.label}</p>
+          </article>
+        ))}
+        {!summary && !summaryQuery.error && (
+          <p className="text-sm text-muted-foreground">Loading revenue data…</p>
+        )}
+      </div>
+      <p className="mt-4 text-xs text-muted-foreground">
+        Revenue is the recorded fee on completed transactions, not the transferred amount.
+        Funding currently records no platform fee; demo send fees are network estimates and
+        are not platform revenue.
+      </p>
+    </section>
     <div className="mt-4 grid gap-4 xl:grid-cols-4">
       <section className="rounded-3xl bg-white p-5 shadow-sm xl:col-span-2">
-        <div className="flex flex-wrap items-center gap-3"><h2 className="flex items-center gap-2 font-bold">Transaction Volume <Info className="h-4 w-4 text-muted-foreground" aria-label="Sample volume for the selected dates" /></h2>
+        <div className="flex flex-wrap items-center gap-3"><h2 className="flex items-center gap-2 font-bold">{metric === "volume" ? "Transaction Volume" : "Transaction Count"}</h2>
           <div className="ml-auto flex rounded-full bg-[#f4f5fb] p-1 text-sm">
             <button type="button" className={`rounded-full px-3 py-1 font-semibold ${metric === "volume" ? "bg-[#6d4dff] text-white" : "text-muted-foreground"}`} aria-pressed={metric === "volume"} onClick={() => setMetric("volume")}>Volume</button>
             <button type="button" className={`rounded-full px-3 py-1 font-semibold ${metric === "transactions" ? "bg-[#6d4dff] text-white" : "text-muted-foreground"}`} aria-pressed={metric === "transactions"} onClick={() => setMetric("transactions")}>Transactions</button>
           </div>
         </div>
-        <p className="mt-4 text-3xl font-extrabold">{metric === "volume" ? adminMoney(period.volume) : adminCount(period.transactions)}</p>
-        <p className="mt-1 text-sm font-semibold text-emerald-600">↑ +{(metric === "volume" ? period.volumeChange : period.transactionChange).toFixed(1)}% <span className="font-medium text-muted-foreground">vs last 7 days</span></p>
-        <VolumeChart points={period.points} metric={metric} />
+        <p className="mt-4 text-3xl font-extrabold">{summary ? metric === "volume" ? adminMoney(summary.period.volume) : adminCount(summary.period.transactions) : "—"}</p>
+        <p className="mt-1 text-sm text-muted-foreground">Current period compared with the previous matching period</p>
+        {summary && <VolumeChart points={summary.period.points} metric={metric} />}
+        {!summary && !summaryQuery.error && <p className="mt-6 text-sm text-muted-foreground">Loading transaction data…</p>}
       </section>
       <section className="rounded-3xl bg-white p-5 shadow-sm">
         <h2 className="flex items-center gap-2 font-bold"><Users className="h-4 w-4 text-[#6d4dff]" />Users Overview</h2>
         <dl className="mt-4 space-y-3 text-sm">
-          <Row label="Total Users" value={adminCount(ADMIN_USERS.total)} />
-          <Row label="Verified Users" value={adminCount(ADMIN_USERS.verified)} mark="text-emerald-600" />
-          <Row label="Unverified Users" value={adminCount(ADMIN_USERS.unverified)} mark="text-amber-500" />
-          <Row label="Active (30 days)" value={adminCount(ADMIN_USERS.active)} mark="text-emerald-600" />
-          <Row label="New Users (Today)" value={adminCount(ADMIN_USERS.joinedToday)} mark="text-[#6d4dff]" />
+          <Row label="Total Users" value={summary ? adminCount(summary.users.total) : "—"} />
+          <Row label="Verified Users" value={summary ? adminCount(summary.users.verified) : "—"} mark="text-emerald-600" />
+          <Row label="Pending Verification" value={summary ? adminCount(summary.users.pending) : "—"} mark="text-amber-500" />
+          <Row label="Rejected Verification" value={summary ? adminCount(summary.users.rejected) : "—"} mark="text-rose-600" />
+          <Row label="No Verification Submitted" value={summary ? adminCount(summary.users.notSubmitted) : "—"} />
+          <Row label="New Users (Today)" value={summary ? adminCount(summary.users.joinedToday) : "—"} mark="text-[#6d4dff]" />
         </dl>
         <Button type="button" variant="outline" className="mt-5 h-11 w-full rounded-xl border-[#6d4dff] text-[#6d4dff]" onClick={() => onSection("users")}>View All Users</Button>
       </section>
       <section className="rounded-3xl bg-white p-5 shadow-sm">
         <h2 className="font-bold">Crypto Market (USD)</h2>
-        <ul className="mt-3 space-y-3">{ADMIN_MARKET.map(asset => <li key={asset.sym} className="flex items-center gap-2 text-sm"><AssetMark symbol={asset.sym} /><span className="font-semibold">{asset.sym}</span><span className="ml-auto font-semibold">{adminMoney(asset.price, 2)}</span><Change value={asset.change} /></li>)}</ul>
+        <p className="mt-1 text-xs text-muted-foreground">{marketQuotes?.length ? "Live · Alchemy" : "Live prices unavailable"}</p>
+        {marketPending && <p className="mt-3 text-sm text-muted-foreground">Loading market prices…</p>}
+        {!marketPending && marketQuotes?.length ? <ul className="mt-3 space-y-3">{MARKET_SYMBOLS.map(symbol => {
+          const quote = marketQuotes.find(item => item.symbol === symbol);
+          if (!quote) return null;
+          return <li key={symbol} className="flex items-center gap-2 text-sm"><AssetMark symbol={symbol} /><span className="font-semibold">{symbol}</span><span className="ml-auto font-semibold">{adminMoney(quote.priceUsd, 2)}</span></li>;
+        })}</ul> : !marketPending && <p className="mt-3 text-sm text-muted-foreground">No live market quotes are available.</p>}
       </section>
       <section className="rounded-3xl bg-white p-5 shadow-sm xl:col-span-3">
-        <div className="mb-3 flex items-center justify-between"><h2 className="font-bold">Recent Transactions</h2><button type="button" className="text-sm font-semibold text-[#6d4dff]" onClick={() => onSection("transactions")}>View All</button></div>
-        <div className="overflow-x-auto"><ActivityTable /></div>
+        <div className="mb-3 flex items-center justify-between"><h2 className="font-bold">Recent Transactions · {period.label}</h2><button type="button" className="text-sm font-semibold text-[#6d4dff]" onClick={() => onSection("transactions")}>View All</button></div>
+        {summary?.recentTransactions.length ? <div className="overflow-x-auto"><ActivityTable rows={summary.recentTransactions} /></div> : <p className="py-6 text-sm text-muted-foreground">{summaryQuery.isPending ? "Loading recent transactions…" : "No transactions in this reporting period."}</p>}
       </section>
       <section className="rounded-3xl bg-white p-5 shadow-sm">
         <h2 className="font-bold">Quick Actions</h2>
         <div className="mt-4 grid grid-cols-2 gap-3">
-          {ADMIN_QUICK_ACTIONS.map(item => { const Icon = QUICK_ICONS[item.id]; return <button key={item.id} type="button" className="flex flex-col items-center gap-2 rounded-2xl bg-[#f4f5fb] px-3 py-4 text-sm font-semibold" onClick={() => runAction(item.id)}><Icon className="h-5 w-5 text-[#6d4dff]" />{item.label}</button>; })}
+          {QUICK_ACTIONS.map(item => { const Icon = item.icon; return <button key={item.section} type="button" className="flex flex-col items-center gap-2 rounded-2xl bg-[#f4f5fb] px-3 py-4 text-sm font-semibold" onClick={() => onSection(item.section)}><Icon className="h-5 w-5 text-[#6d4dff]" />{item.label}</button>; })}
         </div>
       </section>
     </div>
-    <p className="mt-4 text-xs leading-relaxed text-muted-foreground">Sample platform figures for this preview. Actions here do not move customer funds or change live prices.</p>
-    <Dialog open={!!prompt} onOpenChange={open => { if (!open) setAction(null); }}>
-      <DialogContent className="max-w-sm rounded-3xl">
-        {prompt && <form className="space-y-4" onSubmit={submitAction}>
-          <DialogHeader><DialogTitle>{prompt.title}</DialogTitle><DialogDescription>{prompt.detail}</DialogDescription></DialogHeader>
-          {prompt.fields.map(field => <div key={field} className="space-y-2"><Label htmlFor={`admin-${field}`}>{field}</Label><Input id={`admin-${field}`} required className="h-11 bg-card" /></div>)}
-          {saved && <p role="status" className="text-sm text-muted-foreground">{saved}</p>}
-          <Button type="submit" className="h-11 w-full">Save preview</Button>
-        </form>}
-      </DialogContent>
-    </Dialog>
   </>;
 }
 
@@ -197,18 +233,21 @@ function Panel({ title, text, children }: { title: string; text: string; childre
   return <section><h2 className="text-xl font-extrabold">{title}</h2><p className="mb-4 mt-1 text-sm text-muted-foreground">{text}</p>{children}</section>;
 }
 
-function StatCard({ label, value, change, tone }: { label: string; value: string; change: number; tone: string }) {
+function StatCard({ label, value, change, note, tone }: { label: string; value: string; change: number | null; note: string; tone: string }) {
   const toneClass = tone === "users" ? "bg-gradient-to-br from-[#6d4dff] to-[#8b5cff] text-white" : tone === "transactions" ? "bg-[#eef0fb]" : tone === "volume" ? "bg-[#e7f8ef]" : "bg-[#f3eefe]";
-  return <article className={`rounded-3xl p-5 ${toneClass}`}><p className="text-sm opacity-80">{label}</p><p className="mt-2 text-2xl font-extrabold">{value}</p><p className={`mt-3 inline-flex rounded-full px-2 py-1 text-xs font-bold ${tone === "users" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700"}`}>↑ +{change.toFixed(1)}%</p></article>;
+  const trend = change === null
+    ? note
+    : `${change > 0 ? "↑ +" : change < 0 ? "↓ " : ""}${change.toFixed(1)}% ${note}`;
+  const trendClass = tone === "users"
+    ? "bg-white/20 text-white"
+    : change !== null && change < 0
+      ? "bg-rose-100 text-rose-700"
+      : "bg-emerald-100 text-emerald-700";
+  return <article className={`rounded-3xl p-5 ${toneClass}`}><p className="text-sm opacity-80">{label}</p><p className="mt-2 text-2xl font-extrabold">{value}</p><p className={`mt-3 inline-flex rounded-full px-2 py-1 text-xs font-bold ${trendClass}`}>{trend}</p></article>;
 }
 
 function Row({ label, value, mark = "text-foreground" }: { label: string; value: string; mark?: string }) {
   return <div className="flex items-center justify-between gap-3"><dt className="text-muted-foreground">{label}</dt><dd className={`font-bold ${mark}`}>{value}</dd></div>;
-}
-
-function Change({ value }: { value: number }) {
-  const text = `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
-  return <span className={`text-xs font-semibold ${value > 0 ? "text-emerald-600" : value < 0 ? "text-destructive" : "text-muted-foreground"}`}>{text}</span>;
 }
 
 function AssetMark({ symbol }: { symbol: string }) {
@@ -217,13 +256,18 @@ function AssetMark({ symbol }: { symbol: string }) {
   return <CoinIcon coin={coin} size="h-6 w-6" />;
 }
 
-function ActivityTable({ rows = ADMIN_ACTIVITY }: { rows?: readonly (typeof ADMIN_ACTIVITY)[number][] }) {
-  return <table className="w-full min-w-[760px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr>{["Tx ID", "User", "Type", "Asset", "Amount", "Value (USD)", "Status", "Date"].map(heading => <th key={heading} className="px-2 py-2 font-medium">{heading}</th>)}</tr></thead><tbody>{rows.map(item => <tr key={item.id} className="border-t"><td className="px-2 py-3 font-medium">{item.id}</td><td className="px-2 py-3">{item.user}</td><td className={`px-2 py-3 font-semibold ${item.type === "Sell" ? "text-orange-500" : item.type === "Transfer" ? "text-sky-600" : item.type === "Invest" ? "text-violet-600" : "text-emerald-600"}`}>{item.type}</td><td className="px-2 py-3"><span className="inline-flex items-center gap-2"><AssetMark symbol={item.asset} />{item.asset}</span></td><td className="px-2 py-3">{item.amount}</td><td className="px-2 py-3">{adminMoney(item.value, 2)}</td><td className="px-2 py-3"><span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">{item.status}</span></td><td className="px-2 py-3 text-muted-foreground">{item.date}</td></tr>)}</tbody></table>;
+function ActivityTable({ rows }: { rows: readonly AdminDashboardRecentTransaction[] }) {
+  return <table className="w-full min-w-[760px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr>{["Tx ID", "User", "Type", "Asset", "Amount", "Value (USD)", "Status", "Date"].map(heading => <th key={heading} className="px-2 py-2 font-medium">{heading}</th>)}</tr></thead><tbody>{rows.map(item => {
+    const status = item.status.toLowerCase();
+    const statusClass = status === "completed" ? "bg-emerald-100 text-emerald-700" : status === "failed" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700";
+    return <tr key={item.id} className="border-t"><td className="px-2 py-3 font-medium">{item.id}</td><td className="px-2 py-3">{item.user}</td><td className="px-2 py-3 font-semibold">{item.type}</td><td className="px-2 py-3"><span className="inline-flex items-center gap-2"><AssetMark symbol={item.asset} />{item.asset}</span></td><td className="px-2 py-3">{item.amount}</td><td className="px-2 py-3">{adminMoney(item.value, 2)}</td><td className="px-2 py-3"><span className={`rounded-full px-2 py-1 text-xs font-semibold ${statusClass}`}>{item.status}</span></td><td className="px-2 py-3 text-muted-foreground">{item.date}</td></tr>;
+  })}</tbody></table>;
 }
 
 function VolumeChart({ points, metric }: { points: readonly { label: string; volume: number; transactions: number }[]; metric: "volume" | "transactions" }) {
   const values = points.map(point => metric === "volume" ? point.volume : point.transactions);
-  const max = metric === "volume" ? 300 : 6;
+  const max = Math.max(...values, 1);
+  const ticks = Array.from({ length: 5 }, (_, index) => (max * (4 - index)) / 4);
   const width = 640;
   const height = 220;
   const pad = 36;
@@ -234,16 +278,16 @@ function VolumeChart({ points, metric }: { points: readonly { label: string; vol
   });
   const line = coords.map(point => point.join(",")).join(" ");
   const area = coords.length ? `M ${coords[0][0]},${height - pad} L ${line} L ${coords[coords.length - 1][0]},${height - pad} Z` : "";
-  const ticks = metric === "volume" ? [300, 250, 200, 150, 100, 50, 0] : [6, 5, 4, 3, 2, 1, 0];
-  return <div className="mt-4 overflow-x-auto"><svg viewBox={`0 0 ${width} ${height}`} className="h-56 min-w-[520px] w-full" role="img" aria-label={metric === "volume" ? "Sample volume chart" : "Sample transaction count chart"}>
+  return <div className="mt-4 overflow-x-auto"><svg viewBox={`0 0 ${width} ${height}`} className="h-56 min-w-[520px] w-full" role="img" aria-label={metric === "volume" ? "Completed transaction volume chart" : "Transaction count chart"}>
     <defs><linearGradient id="admin-volume" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6d4dff" stopOpacity="0.35" /><stop offset="100%" stopColor="#6d4dff" stopOpacity="0.02" /></linearGradient></defs>
     {ticks.map(tick => {
       const y = height - pad - (tick / max) * (height - pad * 2);
-      const axis = tick === 0 ? (metric === "volume" ? "$0" : "0") : metric === "volume" ? `$${tick}M` : `${tick}M`;
+      const axis = metric === "volume"
+        ? tick >= 1_000_000 ? `$${(tick / 1_000_000).toFixed(1)}M` : tick >= 1_000 ? `$${(tick / 1_000).toFixed(1)}K` : adminMoney(tick)
+        : adminCount(Math.round(tick));
       return <g key={tick}><line x1={pad} x2={width - 8} y1={y} y2={y} stroke="#eceef5" /><text x="0" y={y + 4} className="fill-muted-foreground" fontSize="11">{axis}</text></g>;
     })}
     <path d={area} fill="url(#admin-volume)" /><polyline points={line} fill="none" stroke="#6d4dff" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
     {coords.map((point, index) => <text key={points[index].label} x={point[0]} y={height - 8} textAnchor="middle" fontSize="10" className="fill-muted-foreground">{points[index].label}</text>)}
   </svg></div>;
 }
-

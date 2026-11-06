@@ -1,23 +1,48 @@
-import { createTtlCache, MARKET_SYMBOLS, parseAlchemyPriceResponse, type MarketQuote } from "./market-prices";
+import {
+  createTtlCache,
+  MARKET_SYMBOLS,
+  parseAlchemyPriceResponse,
+  type MarketQuote,
+} from "./market-prices";
 
 const MARKET_PRICE_CACHE_TTL_MS = 60_000;
 const cachedPrices = createTtlCache<MarketQuote[]>(MARKET_PRICE_CACHE_TTL_MS);
 
 export async function loadAlchemyMarketPrices(): Promise<MarketQuote[]> {
-  const apiKey = process.env["ALCHEMY_API_KEY"]?.trim();
-  if (!apiKey) return [];
+  const supabaseUrl = process.env["SUPABASE_URL"]?.trim();
+  const supabaseApiKey =
+    process.env["SUPABASE_PUBLISHABLE_KEY"]?.trim() || process.env["SUPABASE_ANON_KEY"]?.trim();
+  if (!supabaseUrl || !supabaseApiKey) {
+    throw new Error("Live market prices are temporarily unavailable.");
+  }
 
   return cachedPrices(async () => {
-    const url = new URL(`https://api.g.alchemy.com/prices/v1/${encodeURIComponent(apiKey)}/tokens/by-symbol`);
-    for (const symbol of MARKET_SYMBOLS) url.searchParams.append("symbols", symbol);
-
-    const response = await fetch(url, { headers: { Accept: "application/json" } });
+    const url = new URL("/functions/v1/alchemy-market-prices", supabaseUrl);
+    const response = await fetch(url, {
+      headers: { Accept: "application/json", apikey: supabaseApiKey },
+      signal: AbortSignal.timeout(10_000),
+    });
     if (!response.ok) {
-      const body = await response.text();
-      console.error(`Alchemy market-price request failed [${response.status}]: ${body.slice(0, 500)}`);
+      console.error(`Market-price function request failed [${response.status}].`);
       throw new Error("Live market prices are temporarily unavailable.");
     }
 
-    return parseAlchemyPriceResponse(await response.json(), MARKET_SYMBOLS);
+    const payload: unknown = await response.json();
+    if (!Array.isArray(payload)) {
+      throw new Error("Live market prices are temporarily unavailable.");
+    }
+
+    return payload.filter((quote): quote is MarketQuote => {
+      if (!quote || typeof quote !== "object") return false;
+      const candidate = quote as Partial<MarketQuote>;
+      return (
+        typeof candidate.symbol === "string" &&
+        MARKET_SYMBOLS.includes(candidate.symbol as (typeof MARKET_SYMBOLS)[number]) &&
+        typeof candidate.priceUsd === "number" &&
+        Number.isFinite(candidate.priceUsd) &&
+        candidate.priceUsd > 0 &&
+        typeof candidate.updatedAt === "string"
+      );
+    });
   });
 }

@@ -6,8 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [
-    { title: "Admin Dashboard — Basecola" }, { name: "description", content: "Preview the Basecola admin dashboard with sample users, volume, and activity." },
-    { property: "og:title", content: "Admin Dashboard — Basecola" }, { property: "og:description", content: "Sample admin dashboard. No customer funds are moved." },
+    { title: "Admin Dashboard — Basecola" }, { name: "description", content: "Live Basecola platform metrics, users, transactions, and market prices." },
+    { property: "og:title", content: "Admin Dashboard — Basecola" }, { property: "og:description", content: "Live Basecola platform metrics and activity." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }), component: AdminPage,
 });

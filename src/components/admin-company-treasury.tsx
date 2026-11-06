@@ -17,6 +17,7 @@ import {
   syncAdminCompanyTreasuryWallets,
   type AdminCompanyTreasuryWalletRow,
 } from "@/lib/admin.functions";
+import { COMPANY_TREASURY_ADDRESSES } from "@/lib/company-treasury-addresses";
 
 function explorerUrl(network: string, address: string): string | null {
   const encoded = encodeURIComponent(address);
@@ -73,7 +74,7 @@ export function AdminCompanyTreasuryWallets() {
     onSuccess: async (result) => {
       setActionError("");
       setActionMessage(
-        `Verified and synchronized ${result.synchronized} existing Turnkey wallets.`,
+        `Verified and synchronized ${result.synchronized} Turnkey wallets. Addresses matched the configured company treasury addresses.`,
       );
       setDiscoveredWallets([]);
       setSelectedWalletIds([]);
@@ -131,7 +132,8 @@ export function AdminCompanyTreasuryWallets() {
           <h2 className="text-lg font-bold">Company Treasury Wallets</h2>
           <p className="text-sm text-muted-foreground">
             Existing Turnkey wallets only. Sync verifies the configured IDs against the Turnkey
-            organization and never creates wallets.
+            organization and requires exact matches with the configured company treasury addresses.
+            No wallets are created.
           </p>
         </div>
         <Button
@@ -186,9 +188,17 @@ export function AdminCompanyTreasuryWallets() {
           </legend>
           <p className="text-sm text-muted-foreground">
             Select the BaseCola treasury wallets by their existing Turnkey names. Sync verifies
-            their organization, public addresses, and that they cover four distinct supported
-            networks. No wallets are created.
+            their organization, public addresses against the expected values below, and that they
+            cover four distinct supported networks. No wallets are created.
           </p>
+          <dl className="grid gap-2 rounded-lg bg-muted/50 p-3 text-xs sm:grid-cols-2">
+            {Object.entries(COMPANY_TREASURY_ADDRESSES).map(([network, address]) => (
+              <div key={network}>
+                <dt className="font-semibold">{network}</dt>
+                <dd className="break-all font-mono">{address}</dd>
+              </div>
+            ))}
+          </dl>
           <div className="max-h-72 space-y-2 overflow-y-auto">
             {discoveredWallets.map((wallet) => {
               const checked = selectedWalletIds.includes(wallet.walletId);

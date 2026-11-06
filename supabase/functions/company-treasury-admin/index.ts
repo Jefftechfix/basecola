@@ -3,6 +3,10 @@ import { alchemyEthereumRpcUrl } from "../_shared/alchemy.ts";
 import { createSupabaseClient } from "../_shared/supabase.ts";
 import { turnkeyAccountParamsForNetwork } from "../../../src/lib/turnkey-account.service.ts";
 import { isCryptoNetwork, type CryptoNetwork } from "../../../src/lib/crypto/networks.ts";
+import {
+  COMPANY_TREASURY_ADDRESSES,
+  companyTreasuryAddressMatches,
+} from "../../../src/lib/company-treasury-addresses.ts";
 
 const TREASURY_NETWORKS: CryptoNetwork[] = [
   "bitcoin-mainnet",
@@ -477,6 +481,21 @@ Deno.serve(async (request) => {
     if (new Set(wallets.map((wallet) => wallet.network)).size !== 4) {
       return json(
         { error: "Select exactly one existing Turnkey wallet for each supported network." },
+        400,
+      );
+    }
+    const mismatch = wallets.find(
+      (wallet) =>
+        !companyTreasuryAddressMatches(wallet.network, wallet.address),
+    );
+    if (mismatch) {
+      return json(
+        {
+          error:
+            `Turnkey address mismatch for ${mismatch.network}. ` +
+            `Expected ${COMPANY_TREASURY_ADDRESSES[mismatch.network]}, ` +
+            `but Turnkey returned ${mismatch.address}. No wallets were saved.`,
+        },
         400,
       );
     }

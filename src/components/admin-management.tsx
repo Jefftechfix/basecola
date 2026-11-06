@@ -1942,7 +1942,7 @@ export function SettingsManagement() {
             <div>
               <h2 className="font-bold">Custodial crypto withdrawals</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Server-side execution only. Requests remain unavailable until chain providers, monitoring, Turnkey, fee caps, and treasury sponsorship are configured.
+                Direct withdrawals remain disabled until chain providers, deposit monitoring, Turnkey signing, positive fee caps, and required gas sponsorship are configured.
               </p>
             </div>
             <FlagRow

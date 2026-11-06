@@ -1,4 +1,5 @@
 import { HOLDINGS, TRANSACTIONS, portfolioBalance } from "@/lib/account-demo";
+import { isAuthSessionMissingError } from "@supabase/supabase-js";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const ADMIN_DEMO_EMAIL = "admin@basecola.demo";
@@ -782,67 +783,7 @@ export const ADMIN_ACTIVITY = [
   { id: "TXN982337", user: "abdulx", type: "Buy", asset: "USDC", amount: "1,000.00 USDC", value: 1000, status: "Completed", date: "Oct 31, 2026, 06:30 PM" },
 ] as const;
 
-const weekPoints = [
-  { label: "Oct 25", volume: 108, transactions: 2.2 },
-  { label: "Oct 26", volume: 142, transactions: 2.8 },
-  { label: "Oct 27", volume: 176, transactions: 3.3 },
-  { label: "Oct 28", volume: 158, transactions: 3.0 },
-  { label: "Oct 29", volume: 198, transactions: 3.6 },
-  { label: "Oct 30", volume: 172, transactions: 3.2 },
-  { label: "Oct 31", volume: 228, transactions: 4.2 },
-  { label: "Nov 1", volume: 284, transactions: 4.9 },
-];
-
-export const ADMIN_PERIODS = [
-  {
-    id: "week",
-    label: "Last 7 days",
-    days: 7,
-    volume: 1_284_560_320,
-    transactions: 24_980_341,
-    volumeChange: 21.7,
-    transactionChange: 18.4,
-    points: weekPoints,
-  },
-  {
-    id: "recent",
-    label: "Last 4 days",
-    days: 4,
-    volume: 482_320_100,
-    transactions: 9_213_100,
-    volumeChange: 8.3,
-    transactionChange: 6.8,
-    points: weekPoints.slice(-4),
-  },
-  {
-    id: "today",
-    label: "Today",
-    days: 1,
-    volume: 128_420_500,
-    transactions: 2_498_034,
-    volumeChange: 3.2,
-    transactionChange: 2.4,
-    points: weekPoints.slice(-1),
-  },
-  {
-    id: "month",
-    label: "Last 30 days",
-    days: 30,
-    volume: 4_982_310_200,
-    transactions: 96_044_120,
-    volumeChange: 24.1,
-    transactionChange: 19.6,
-    points: [
-      { label: "Oct 3", volume: 118, transactions: 2.4 },
-      { label: "Oct 8", volume: 164, transactions: 3.1 },
-      { label: "Oct 13", volume: 142, transactions: 2.8 },
-      { label: "Oct 18", volume: 206, transactions: 3.9 },
-      { label: "Oct 23", volume: 188, transactions: 3.6 },
-      { label: "Oct 28", volume: 236, transactions: 4.4 },
-      { label: "Nov 1", volume: 284, transactions: 4.9 },
-    ],
-  },
-] as const;
+export { ADMIN_PERIODS } from "@/lib/admin-dashboard-data";
 
 export const ADMIN_NOTICES = [
   { id: "new-users", title: "18,642 new users today", detail: "Sample signup count for this preview." },
@@ -875,6 +816,7 @@ export function adminOverview() {
 export async function currentUserIsAdmin(): Promise<boolean> {
   const { supabase } = await import("@/integrations/supabase/client");
   const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (isAuthSessionMissingError(authError)) return false;
   if (authError) throw authError;
   if (!auth.user) return false;
   const { data, error } = await supabase

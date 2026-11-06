@@ -2,6 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { notifyVerificationDecision } from "@/lib/verification-email";
 import { isSignupRange, summarizeSignups, type SignupRange } from "@/lib/signup-analytics";
+import {
+  ADMIN_PERIODS,
+  summarizeAdminDashboard,
+  summarizePlatformRevenue,
+  summarizeAdminUsers,
+  type AdminDashboardSummary,
+  type AdminPeriodId,
+  type DashboardTransaction,
+} from "@/lib/admin-dashboard-data";
 
 type AuthCtx = { supabase: { from: (t: "user_roles") => any }; userId: string };
 
@@ -18,6 +27,139 @@ async function assertAdmin(context: AuthCtx) {
 async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin;
 }
+
+export const getAdminDashboardSummary = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { periodId: string }) => {
+    if (!ADMIN_PERIODS.some((period) => period.id === input.periodId)) {
+      throw new Error("Choose a valid dashboard reporting period.");
+    }
+    return { periodId: input.periodId as AdminPeriodId };
+  })
+  .handler(async ({ data, context }): Promise<AdminDashboardSummary> => {
+    await assertAdmin(context as AuthCtx);
+    const db = await admin();
+    const now = new Date();
+    const period = ADMIN_PERIODS.find((item) => item.id === data.periodId);
+    if (!period) throw new Error("Choose a valid dashboard reporting period.");
+
+    const today = new Date(now);
+    today.setUTCHours(0, 0, 0, 0);
+    const currentStart = today.getTime() - (period.days - 1) * 24 * 60 * 60 * 1000;
+    const previousStart = currentStart - period.days * 24 * 60 * 60 * 1000;
+    const currentStartIso = new Date(currentStart).toISOString();
+    const previousStartIso = new Date(previousStart).toISOString();
+    const todayIso = today.toISOString();
+
+    const [
+      { count: totalUsers, error: totalUsersError },
+      { count: joinedToday, error: joinedTodayError },
+      { data: revenueRows, error: revenueError },
+    ] = await Promise.all([
+      db.from("profiles").select("id", { count: "exact", head: true }),
+      db
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", todayIso)
+        .lte("created_at", now.toISOString()),
+      db.rpc("admin_platform_revenue_summary", {
+        _period_start: currentStartIso,
+        _period_end: now.toISOString(),
+      }),
+    ]);
+    if (totalUsersError || joinedTodayError) {
+      throw new Error(
+        totalUsersError?.message ??
+          joinedTodayError?.message ??
+          "Could not load dashboard user totals.",
+      );
+    }
+    if (revenueError) {
+      throw new Error(`Could not load platform revenue: ${revenueError.message}`);
+    }
+    const revenue = summarizePlatformRevenue(revenueRows ?? []);
+
+    const latestVerificationByUser = new Map<string, string>();
+    for (let offset = 0; ; offset += 500) {
+      const { data: verifications, error } = await db
+        .from("account_verifications")
+        .select("user_id, status, updated_at")
+        .order("updated_at", { ascending: false })
+        .range(offset, offset + 499);
+      if (error) throw new Error(`Could not load verification totals: ${error.message}`);
+      for (const verification of verifications ?? []) {
+        if (!latestVerificationByUser.has(verification.user_id)) {
+          latestVerificationByUser.set(verification.user_id, verification.status);
+        }
+      }
+      if (!verifications || verifications.length < 500) break;
+    }
+    const transactions: DashboardTransaction[] = [];
+    for (let offset = 0; ; offset += 500) {
+      const { data: rows, error } = await db
+        .from("transactions")
+        .select("id, user_id, kind, coin, crypto_amount, usd_amount, fee_usd, status, created_at")
+        .gte("created_at", previousStartIso)
+        .lte("created_at", now.toISOString())
+        .order("created_at", { ascending: true })
+        .range(offset, offset + 499);
+      if (error) throw new Error(`Could not load dashboard transactions: ${error.message}`);
+      transactions.push(...(rows ?? []));
+      if (!rows || rows.length < 500) break;
+    }
+
+    const summaryPeriod = summarizeAdminDashboard(
+      transactions,
+      data.periodId,
+      now,
+      new Map(),
+    );
+    const recentUserIds = [
+      ...new Set(
+        summaryPeriod.recentTransactions
+          .map((transaction) => transactions.find((row) => row.id === transaction.id)?.user_id)
+          .filter((userId): userId is string => Boolean(userId)),
+      ),
+    ];
+    let userNames = new Map<string, string>();
+    if (recentUserIds.length > 0) {
+      const { data: profiles, error } = await db
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", recentUserIds);
+      if (error) throw new Error(`Could not load recent transaction users: ${error.message}`);
+      userNames = new Map(
+        (profiles ?? []).map((profile) => [
+          profile.id,
+          profile.full_name?.trim() || profile.email || profile.id.slice(0, 8),
+        ]),
+      );
+    }
+    const periodSummary = summarizeAdminDashboard(
+      transactions,
+      data.periodId,
+      now,
+      userNames,
+    );
+    return {
+      period: {
+        transactions: periodSummary.transactions,
+        volume: periodSummary.volume,
+        fees: periodSummary.fees,
+        transactionChange: periodSummary.transactionChange,
+        volumeChange: periodSummary.volumeChange,
+        feeChange: periodSummary.feeChange,
+        points: periodSummary.points,
+      },
+      revenue,
+      users: summarizeAdminUsers(
+        totalUsers ?? 0,
+        [...latestVerificationByUser.values()],
+        joinedToday ?? 0,
+      ),
+      recentTransactions: periodSummary.recentTransactions,
+    };
+  });
 
 export const listAdminSignupAnalytics = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

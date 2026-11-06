@@ -1,9 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ArrowUpRight, ShieldCheck } from "lucide-react";
 import { WalletLayout, WalletCoinSelect } from "@/components/wallet-layout";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,8 +18,8 @@ export const Route = createFileRoute("/crypto-withdrawal")({
     if (!data.user) throw redirect({ to: "/login", replace: true });
   },
   head: () => ({ meta: [
-    { title: "Crypto Withdrawal — Basecola" },
-    { name: "description", content: "Request a crypto withdrawal from your confirmed Basecola crypto balance." },
+    { title: "Withdraw Crypto — Basecola" },
+    { name: "description", content: "Withdraw crypto from your confirmed Basecola balance." },
   ] }),
   component: CryptoWithdrawalPage,
 });
@@ -31,14 +32,23 @@ function CryptoWithdrawalPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+  const [retryingSameWithdrawal, setRetryingSameWithdrawal] = useState(false);
+  const idempotencyKey = useRef<string | null>(null);
   const submitWithdrawal = useServerFn(requestCryptoWithdrawal);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!confirmed) {
+      setError("Confirm the destination address and network before withdrawing.");
+      return;
+    }
     setBusy(true);
     setError("");
     setStatus("");
     try {
+      const key = idempotencyKey.current ?? crypto.randomUUID();
+      idempotencyKey.current = key;
       const result = await submitWithdrawal({
         data: {
           asset,
@@ -48,16 +58,30 @@ function CryptoWithdrawalPage() {
             ? Number(destinationTag)
             : null,
           amount: amount.trim(),
-          idempotencyKey: crypto.randomUUID(),
+          idempotencyKey: key,
         },
       });
-      if (!result) throw new Error("Withdrawal request was not recorded.");
-      setStatus("Withdrawal request recorded and funds reserved. No blockchain transaction has been signed or broadcast yet.");
+      if (result.status === "failed" || result.status === "cancelled") {
+        setError(`Withdrawal ${result.withdrawalId} was not sent (status: ${result.status}). Check your transaction history before trying again.`);
+      } else if (result.status === "confirmed") {
+        setStatus(
+          `Withdrawal confirmed.${result.networkFee ? ` Network fee: ${result.networkFee} ${asset}${result.networkFeeUsd ? ` (~$${result.networkFeeUsd})` : ""}.` : ""} Reference: ${result.withdrawalId}.`,
+        );
+      } else {
+        setStatus(
+          result.status === "broadcast" && result.transactionHash
+            ? `Withdrawal broadcast.${result.networkFee ? ` Network fee: ${result.networkFee} ${asset}${result.networkFeeUsd ? ` (~$${result.networkFeeUsd})` : ""}.` : ""} Transaction: ${result.transactionHash}`
+            : `Withdrawal is being processed or reconciled (status: ${result.status}).${result.networkFee ? ` Network fee: ${result.networkFee} ${asset}${result.networkFeeUsd ? ` (~$${result.networkFeeUsd})` : ""}.` : ""} Do not submit it again. Reference: ${result.withdrawalId}.`,
+        );
+      }
       setDestinationAddress("");
       setDestinationTag("");
       setAmount("");
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Could not submit withdrawal request.");
+      idempotencyKey.current = null;
+      setRetryingSameWithdrawal(false);
+    } catch (withdrawalError) {
+      setError(withdrawalError instanceof Error ? withdrawalError.message : "Could not complete the withdrawal.");
+      setRetryingSameWithdrawal(true);
     } finally {
       setBusy(false);
     }
@@ -65,59 +89,72 @@ function CryptoWithdrawalPage() {
 
   return (
     <WalletLayout
-      title="Crypto Withdrawal"
-      notice="Withdrawal requests are automatically approved under your configured policy and reserve confirmed crypto balance. This app does not yet sign or broadcast withdrawals; funds remain reserved until execution/reconciliation is deployed."
+      title="Withdraw Crypto"
+      notice="Withdrawals are sent after server-side validation and network-fee checks. Crypto transfers are irreversible; verify the destination address and network. A private transaction record is kept for account history and reconciliation."
     >
       <form className="space-y-5" onSubmit={submit}>
-        <WalletCoinSelect
-          symbol={asset}
-          onChange={(symbol) => {
-            setAsset(symbol as CryptoAsset);
-            setError("");
-          }}
-        />
-        <div className="space-y-2">
-          <Label htmlFor="withdrawal-address">Destination address</Label>
-          <Input
-            id="withdrawal-address"
-            autoComplete="off"
-            value={destinationAddress}
-            onChange={(event) => setDestinationAddress(event.target.value)}
-            placeholder="Paste the destination address"
-            className="h-12 bg-card font-mono text-sm"
+        <fieldset disabled={busy || retryingSameWithdrawal} className="space-y-5">
+          <WalletCoinSelect
+            symbol={asset}
+            onChange={(symbol) => {
+              setAsset(symbol as CryptoAsset);
+              setError("");
+            }}
           />
-        </div>
-        {asset === "XRP" && (
           <div className="space-y-2">
-            <Label htmlFor="withdrawal-tag">Destination tag (optional)</Label>
+            <Label htmlFor="withdrawal-address">Destination address</Label>
             <Input
-              id="withdrawal-tag"
-              inputMode="numeric"
-              value={destinationTag}
-              onChange={(event) => setDestinationTag(event.target.value.replace(/\D/g, "").slice(0, 10))}
-              placeholder="Enter if required by the recipient"
+              id="withdrawal-address"
+              autoComplete="off"
+              value={destinationAddress}
+              onChange={(event) => setDestinationAddress(event.target.value)}
+              placeholder="Paste the destination address"
+              className="h-12 bg-card font-mono text-sm"
+            />
+          </div>
+          {asset === "XRP" && (
+            <div className="space-y-2">
+              <Label htmlFor="withdrawal-tag">Destination tag (optional)</Label>
+              <Input
+                id="withdrawal-tag"
+                inputMode="numeric"
+                value={destinationTag}
+                onChange={(event) => setDestinationTag(event.target.value.replace(/\D/g, "").slice(0, 10))}
+                placeholder="Enter if required by the recipient"
+                className="h-12 bg-card"
+              />
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="withdrawal-amount">Amount ({asset})</Label>
+            <Input
+              id="withdrawal-amount"
+              inputMode="decimal"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+              placeholder="0.00"
               className="h-12 bg-card"
             />
           </div>
-        )}
-        <div className="space-y-2">
-          <Label htmlFor="withdrawal-amount">Amount ({asset})</Label>
-          <Input
-            id="withdrawal-amount"
-            inputMode="decimal"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-            placeholder="0.00"
-            className="h-12 bg-card"
-          />
-        </div>
-        <div className="rounded-xl border bg-muted/50 p-4 text-sm">
-          <p>Network: <span className="font-semibold">{CRYPTO_NETWORKS[asset]}</span></p>
-          <p className="mt-1">Limit: <span className="font-semibold">$5,000 per withdrawal and rolling 24 hours</span></p>
-          <p className="mt-2 text-xs text-muted-foreground">The USD limit uses the admin-configured sell price. A network fee quote will be applied when transaction execution is implemented.</p>
-        </div>
-        <Button type="submit" className="h-12 w-full" disabled={busy}>
-          {busy ? "Submitting request…" : "Request withdrawal"}<ArrowUpRight />
+          <div className="rounded-xl border bg-muted/50 p-4 text-sm">
+            <p>Network: <span className="font-semibold">{CRYPTO_NETWORKS[asset]}</span></p>
+            <p className="mt-1">Limit: <span className="font-semibold">$5,000 per withdrawal and rolling 24 hours</span></p>
+            <p className="mt-2 text-xs text-muted-foreground">The network fee is calculated at submission and must be within the configured fee cap. The exact fee is shown with the withdrawal status.</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="withdrawal-confirmation"
+              checked={confirmed}
+              onCheckedChange={(checked) => setConfirmed(checked === true)}
+              aria-required="true"
+            />
+            <Label htmlFor="withdrawal-confirmation" className="text-sm leading-5">
+              I verified the destination address and network, and understand this transfer cannot be reversed.
+            </Label>
+          </div>
+        </fieldset>
+        <Button type="submit" className="h-12 w-full" disabled={busy || !confirmed}>
+          {busy ? "Sending withdrawal…" : retryingSameWithdrawal ? "Retry same withdrawal" : "Withdraw now"}<ArrowUpRight />
         </Button>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         {status && (

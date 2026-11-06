@@ -576,10 +576,17 @@ async function processWithdrawal(
   if (rowError || !row) throw new Error("Withdrawal request was not found.");
   const withdrawal = row as Withdrawal;
   if (withdrawal.status !== "requested") {
-    return { withdrawal_id: withdrawal.id, status: withdrawal.status, replayed: true };
+    return {
+      withdrawal_id: withdrawal.id,
+      status: withdrawal.status,
+      network_fee: withdrawal.network_fee,
+      network_fee_usd: withdrawal.network_fee_usd,
+      replayed: true,
+    };
   }
 
   let signingStarted = false;
+  let feeQuote: FeeQuote | null = null;
   try {
     const policy = await getPolicy(admin);
     const { data: walletRow, error: walletError } = await admin
@@ -599,6 +606,7 @@ async function processWithdrawal(
     }
 
     const quote = await getFeeQuote(withdrawal, wallet, admin);
+    feeQuote = quote;
     const cap = await feeCap(policy, withdrawal.network);
     if (decimalUsdCents(quote.feeUsd) > decimalUsdCents(cap)) {
       throw new Error("The current network fee exceeds the configured fee cap.");
@@ -653,7 +661,12 @@ async function processWithdrawal(
         _turnkey_status_id: result.sendTransactionStatusId,
       });
       if (error) throw new Error("Could not save Turnkey's Ethereum submission reference.");
-      return { withdrawal_id: withdrawal.id, status: "broadcast_unknown" };
+      return {
+        withdrawal_id: withdrawal.id,
+        status: "broadcast_unknown",
+        network_fee: quote.fee,
+        network_fee_usd: quote.feeUsd,
+      };
     }
     if (withdrawal.network === "solana-mainnet") {
       if (!quote.solana) throw new Error("Solana fee quote is unavailable.");
@@ -677,7 +690,12 @@ async function processWithdrawal(
         _turnkey_status_id: result.sendTransactionStatusId,
       });
       if (error) throw new Error("Could not save Turnkey's Solana submission reference.");
-      return { withdrawal_id: withdrawal.id, status: "broadcast_unknown" };
+      return {
+        withdrawal_id: withdrawal.id,
+        status: "broadcast_unknown",
+        network_fee: quote.fee,
+        network_fee_usd: quote.feeUsd,
+      };
     }
     if (withdrawal.network === "bitcoin-mainnet") {
       if (!quote.bitcoin) throw new Error("Bitcoin fee quote is unavailable.");
@@ -700,7 +718,13 @@ async function processWithdrawal(
         _turnkey_status_id: null,
       });
       if (error) throw new Error("Bitcoin broadcast succeeded but the transaction reference could not be saved.");
-      return { withdrawal_id: withdrawal.id, status: "broadcast", transaction_hash: hash };
+      return {
+        withdrawal_id: withdrawal.id,
+        status: "broadcast",
+        transaction_hash: hash,
+        network_fee: quote.fee,
+        network_fee_usd: quote.feeUsd,
+      };
     }
     if (withdrawal.network === "xrpl-mainnet") {
       signingStarted = true;
@@ -716,7 +740,13 @@ async function processWithdrawal(
         _turnkey_status_id: null,
       });
       if (error) throw new Error("XRP Ledger broadcast succeeded but the transaction reference could not be saved.");
-      return { withdrawal_id: withdrawal.id, status: "broadcast", transaction_hash: hash };
+      return {
+        withdrawal_id: withdrawal.id,
+        status: "broadcast",
+        transaction_hash: hash,
+        network_fee: quote.fee,
+        network_fee_usd: quote.feeUsd,
+      };
     }
     throw new Error("Unsupported withdrawal network.");
   } catch (error) {
@@ -730,7 +760,12 @@ async function processWithdrawal(
           withdrawalId: withdrawal.id,
         });
       }
-      return { withdrawal_id: withdrawal.id, status: "broadcast_unknown" };
+      return {
+        withdrawal_id: withdrawal.id,
+        status: "broadcast_unknown",
+        network_fee: feeQuote?.fee ?? withdrawal.network_fee,
+        network_fee_usd: feeQuote?.feeUsd ?? withdrawal.network_fee_usd,
+      };
     }
     const { data: latest } = await admin
       .from("crypto_withdrawals")
@@ -1101,6 +1136,19 @@ Deno.serve(async request => {
       auth.user.id,
       body.withdrawal_id,
     );
+    const { data: feeDetails, error: feeError } = await admin
+      .from("crypto_withdrawals")
+      .select("network_fee, network_fee_usd")
+      .eq("id", body.withdrawal_id)
+      .eq("user_id", auth.user.id)
+      .maybeSingle();
+    if (feeError || !feeDetails) {
+      throw new Error("Could not verify the withdrawal fee and status.");
+    }
+    Object.assign(result, {
+      network_fee: feeDetails.network_fee,
+      network_fee_usd: feeDetails.network_fee_usd,
+    });
     return json(result);
   } catch (error) {
     console.error("Crypto withdrawal execution failed.", {

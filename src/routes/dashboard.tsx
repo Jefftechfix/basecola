@@ -1,7 +1,8 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { Eye, EyeOff, PlusCircle, Download, ArrowUp, ArrowRight, Bitcoin, RefreshCw, BarChart3 } from "lucide-react";
+import { Eye, EyeOff, PlusCircle, Download, ArrowUp, ArrowRight, Bitcoin, RefreshCw, BarChart3, Copy, Check } from "lucide-react";
 import { Logo, COINS, CoinIcon, Change } from "@/components/brand";
 import { NotificationBell } from "@/components/notification-bell";
 import coins from "@/assets/coins.png";
@@ -11,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { accountFirstName, accountInitials, loadAccountProfile } from "@/lib/account-profile";
 import { money } from "@/lib/account-demo";
 import { loadWalletBalance } from "@/lib/wallet-balance";
+import { ASSET_NAMES, CRYPTO_ASSETS, CRYPTO_NETWORKS } from "@/lib/crypto/networks";
+import { ensureCustomerCryptoWallets } from "@/lib/crypto-provisioning.functions";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
@@ -49,8 +52,14 @@ function Spark({ up, seed }: { up: boolean; seed: number }) {
 function Dashboard() {
   const nav = useNavigate();
   const [hide, setHide] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<{ asset: string; copied: boolean } | null>(null);
   const { data: profile, isPending, isError, error: profileError } = useQuery({ queryKey: ["account-profile"], queryFn: loadAccountProfile });
   const { data: balance, isPending: balancePending, error: balanceError } = useQuery({ queryKey: ["wallet-balance"], queryFn: loadWalletBalance });
+  const provisionWallets = useServerFn(ensureCustomerCryptoWallets);
+  const { data: cryptoWallets, isPending: cryptoWalletsPending, error: cryptoWalletsError } = useQuery({
+    queryKey: ["crypto-wallets"],
+    queryFn: () => provisionWallets(),
+  });
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") nav({ to: "/login", replace: true });
@@ -100,6 +109,76 @@ function Dashboard() {
             return "to" in action ? <Link key={action.t} to={action.to} className={`${action.bg} rounded-2xl p-3 text-left`}>{body}</Link> : <button key={action.t} className={`${action.bg} rounded-2xl p-3 text-left`}>{body}</button>;
           })}
         </div>
+
+        <section className="mt-7 rounded-2xl border bg-card p-4">
+          <h2 className="text-xl font-extrabold">Crypto deposit wallets</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Send only the listed asset on its matching network.</p>
+          {cryptoWalletsPending && <p className="mt-4 text-sm text-muted-foreground">Checking wallet setup…</p>}
+          {cryptoWalletsError && <p role="alert" className="mt-4 text-sm text-destructive">{cryptoWalletsError.message}</p>}
+          {!cryptoWalletsPending && !cryptoWalletsError && (
+            <div className="mt-3 divide-y">
+              {CRYPTO_ASSETS.map((asset) => {
+                const wallet = cryptoWallets?.find((item) => item.network === CRYPTO_NETWORKS[asset]);
+                const address = wallet?.status === "active" ? wallet.address : null;
+                const active = Boolean(address);
+                return (
+                  <div key={asset} className="py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-semibold">{ASSET_NAMES[asset]} ({asset})</p>
+                        <p className="text-xs text-muted-foreground">{CRYPTO_NETWORKS[asset]}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {active ? "Ready" : wallet?.status === "monitoring_not_ready" ? "Unavailable" : "Setup pending"}
+                      </span>
+                    </div>
+                    {active && address && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <input
+                          readOnly
+                          value={address}
+                          aria-label={`${asset} deposit address`}
+                          onFocus={(event) => event.currentTarget.select()}
+                          className="min-w-0 flex-1 rounded-lg bg-muted px-2 py-2 font-mono text-xs"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          aria-label={`Copy ${asset} deposit address`}
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(address);
+                              setCopyStatus({ asset, copied: true });
+                            } catch {
+                              setCopyStatus({ asset, copied: false });
+                            }
+                          }}
+                        >
+                          {copyStatus?.asset === asset && copyStatus.copied ? <Check /> : <Copy />}
+                        </Button>
+                      </div>
+                    )}
+                    {asset === "XRP" && wallet?.destination_tag !== null && wallet?.destination_tag !== undefined && (
+                      <p className="mt-2 text-xs">Destination tag: <code>{wallet.destination_tag}</code></p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {copyStatus && (
+            <p role="status" className="mt-2 text-xs text-muted-foreground">
+              {copyStatus.copied
+                ? `${copyStatus.asset} address copied.`
+                : `Copy unavailable. Focus and select the ${copyStatus.asset} address to copy it manually.`}
+            </p>
+          )}
+          <p className="mt-3 text-xs text-muted-foreground">ETH and ERC-20 USDT use the same Ethereum address. The demo Receive screen remains separate from live deposit addresses.</p>
+          <Button asChild variant="outline" className="mt-4 w-full">
+            <Link to="/crypto-withdrawal">Request crypto withdrawal</Link>
+          </Button>
+        </section>
 
         <Head t="Market" l="See All" />
         <div className="divide-y rounded-2xl border bg-card px-4">

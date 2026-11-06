@@ -1,12 +1,13 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowDownToLine, Check, Copy, RefreshCw, CircleCheck, CircleX, Eye, Minus, Plus, Search, Trash2, X } from "lucide-react";
+import { ArrowDownToLine, Check, CircleCheck, CircleX, Copy, Eye, Minus, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { adjustAdminUserBalance, cancelAdminTreasuryOperation, deleteAdminUser, exportAccountDataForDeletionRequest, getAdminUserDetails, listAccountDeletionRequests, listAdminAssetNetworks, listAdminDeposits, listAdminReferrals, listAdminTradeOrders, listAdminTradeSettings, listAdminTradeSettingsAudit, listAdminTransactions, listAdminTreasuryBalances, listAdminUsers, listAdminVerifications, listAdminWalletAccounts, listAdminTreasuryOperationRequests, requestAdminTreasuryOperation, reviewVerification, setAdminUserStatus, updateAdminAssetNetwork, updateAdminReferral, updateAdminTradeSettings, type AdminAssetNetworkRow, type AdminDepositRow, type AdminTradeOrderRow, type AdminTradeSettingRow, type AdminTradeSettingsAuditRow, type AdminTransactionRow, type AdminTreasuryBalanceRow, type AdminVerificationRow } from "@/lib/admin.functions";
+import { AdminCompanyTreasuryWallets } from "@/components/admin-company-treasury";
 
 const pill: Record<string, string> = {
   active: "bg-emerald-100 text-emerald-700", approved: "bg-emerald-100 text-emerald-700",
@@ -111,7 +112,7 @@ export function LiveUsersManagement() {
               </section>
               <section className="space-y-2 border-t pt-4">
                 <h3 className="font-bold">Recent transactions</h3>
-                {details.transactions.length ? <div className="max-h-48 overflow-auto"><table className="w-full text-left text-xs"><thead className="text-muted-foreground"><tr><th className="p-2">Date</th><th className="p-2">Activity</th><th className="p-2">Reference</th><th className="p-2">Amount</th><th className="p-2">Status</th></tr></thead><tbody>{details.transactions.slice(0, 20).map(transaction => <tr key={transaction.id} className="border-t"><td className="p-2">{date(transaction.created_at)}</td><td className="p-2 capitalize">{transaction.kind} · {transaction.direction}</td><td className="max-w-56 truncate p-2 font-mono" title={transaction.reference || "—"}>{transaction.reference || "—"}</td><td className="p-2">${Number(transaction.usd_amount).toFixed(2)}</td><td className="p-2 capitalize">{transaction.status}</td></tr>)}</tbody></table></div> : <p className="text-sm text-muted-foreground">No transactions.</p>}
+                {details.transactions.length ? <div className="max-h-48 overflow-auto"><table className="w-full text-left text-xs"><thead className="text-muted-foreground"><tr><th className="p-2">Date</th><th className="p-2">Activity</th><th className="p-2">Reference</th><th className="p-2">Amount</th><th className="p-2">Status</th></tr></thead><tbody>{details.transactions.slice(0, 20).map(transaction => <tr key={transaction.id} className="border-t"><td className="p-2">{date(transaction.created_at)}</td><td className="p-2 capitalize">{transaction.kind} · {transaction.direction}</td><td className="p-2 font-mono">{transaction.reference || "—"}</td><td className="p-2">${Number(transaction.usd_amount).toFixed(2)}</td><td className="p-2 capitalize">{transaction.status}</td></tr>)}</tbody></table></div> : <p className="text-sm text-muted-foreground">No transactions.</p>}
               </section>
               <section className="space-y-3 border-t border-destructive/30 pt-4">
                 <h3 className="font-bold text-destructive">Delete account access</h3>
@@ -356,6 +357,7 @@ export function LiveTreasuryManagement() {
   }
 
   return <section className="space-y-4">
+    <AdminCompanyTreasuryWallets />
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <article className="rounded-xl bg-white p-4 shadow-sm"><p className="text-xs text-muted-foreground">Registered treasury wallets</p><p className="mt-1 text-xl font-bold">{accountCount}</p></article>
       <article className="rounded-xl bg-emerald-50 p-4"><p className="text-xs text-muted-foreground">Latest valued observations</p><p className="mt-1 text-lg font-bold">{moneyOrUnknown(totalValued, balances)}</p><p className="mt-1 text-xs text-muted-foreground">{valuedRows.length} of {balances.length} asset balances valued</p></article>
@@ -414,7 +416,7 @@ export function LiveTransactionsManagement() {
         <tbody>{rows.map(row => {
           const outcome = transactionOutcome(row.status);
           return <tr key={row.id} className="border-t">
-            <td className="max-w-56 truncate p-2 font-mono text-xs" title={row.reference || row.id}>{row.reference || row.id.slice(0, 8)}</td>
+            <td className="p-2 font-mono text-xs">{row.reference || row.id.slice(0, 8)}</td>
             <td className="p-2"><p className="font-semibold">{row.user.full_name || "—"}</p><p className="text-xs text-muted-foreground">{row.user.email}</p></td>
             <td className="p-2 capitalize">{row.kind} · {row.direction}</td>
             <td className="p-2">{row.coin || "USD"}<span className="block text-xs text-muted-foreground">{row.network || "—"}</span></td>
@@ -427,7 +429,7 @@ export function LiveTransactionsManagement() {
       </table></div>
       {isPending && <p className="text-sm text-muted-foreground">Loading transactions…</p>}
       {!isPending && rows.length === 0 && !error && <p className="text-sm text-muted-foreground">No transactions match these filters.</p>}
-      <p className="text-xs text-muted-foreground">Showing the latest {data.length} ledger record{data.length === 1 ? "" : "s"}. Status reflects the transaction record in the platform ledger.</p>
+      <p className="text-xs text-muted-foreground">Showing the latest {data.length} ledger records. Status reflects the transaction record in the platform ledger.</p>
     </section>
     <Dialog open={!!detail} onOpenChange={open => { if (!open) setDetail(null); }}>
       <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
@@ -581,7 +583,7 @@ export function LiveDepositsMonitoring() {
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
         <label className="text-xs font-semibold text-muted-foreground">Status<select aria-label="Filter deposit status" value={status} onChange={event => setStatus(event.target.value)} className="mt-1 block h-10 w-full rounded-md border bg-white px-2 text-sm font-normal text-foreground"><option value="all">All statuses</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="failed">Failed</option></select></label>
         <label className="text-xs font-semibold text-muted-foreground">Asset<select aria-label="Filter deposit asset" value={asset} onChange={event => setAsset(event.target.value)} className="mt-1 block h-10 w-full rounded-md border bg-white px-2 text-sm font-normal text-foreground"><option value="all">All assets</option>{assets.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
-        <label className="text-xs font-semibold text-muted-foreground">User<select aria-label="Filter deposit user" value={userId} onChange={event => setUserId(event.target.value)} className="mt-1 block h-10 w-full rounded-md border bg-white px-2 text-sm font-normal text-foreground"><option value="all">All users</option>{users.map(([id, u]) => <option key={id} value={id}>{u.label}</option>)}</select></label>
+        <label className="text-xs font-semibold text-muted-foreground">User<select aria-label="Filter deposit user" value={userId} onChange={event => setUserId(event.target.value)} className="mt-1 block h-10 w-full rounded-md border bg-white px-2 text-sm font-normal text-foreground"><option value="all">All users</option>{users.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>
         <label className="text-xs font-semibold text-muted-foreground">Network<select aria-label="Filter deposit network" value={network} onChange={event => setNetwork(event.target.value)} className="mt-1 block h-10 w-full rounded-md border bg-white px-2 text-sm font-normal text-foreground"><option value="all">All networks</option>{networks.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
       </div>
       {error && <p role="alert" className="text-sm text-destructive">{(error as Error).message}</p>}

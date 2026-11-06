@@ -1,7 +1,6 @@
 import { LiveAccountDeletionManagement, LiveAssetsWalletManagement, LiveDepositsMonitoring, LiveReferralManagement, LiveTradeManagement, LiveTransactionsManagement, LiveTreasuryManagement, LiveUsersManagement, LiveVerificationManagement } from "@/components/admin-live";
-import { LiveSignupAnalytics, SignupCountryCard } from "@/components/admin-signup-analytics";
-import { useState, type ReactNode } from "react";
-import { ArrowDownToLine, BadgeCheck, BarChart3, Bell, Calendar, ChevronDown, CircleDollarSign, Globe2, Home, Info, Landmark, Menu, RefreshCw, Settings, SlidersHorizontal, Ticket, Trash2, UserPlus, Users, Wallet, X, type LucideIcon } from "lucide-react";
+import { useState, type FormEvent, type ReactNode } from "react";
+import { ArrowDownToLine, BadgeCheck, BarChart3, Bell, Calendar, ChevronDown, CircleDollarSign, Home, Info, Landmark, Menu, RefreshCw, Settings, SlidersHorizontal, Ticket, Trash2, UserPlus, Users, Wallet, X, type LucideIcon } from "lucide-react";
 import { COINS, CoinIcon } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,17 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ReportsManagement, SettingsManagement, UsersManagement } from "@/components/admin-management";
 import { VerificationManagement } from "@/components/admin-verifications";
-import { ADMIN_NOTICES, ADMIN_PERIODS, ADMIN_QUICK_ACTIONS, adminCount, adminMoney } from "@/lib/admin-demo";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { getAdminDashboardOverview, type AdminDashboardOverview } from "@/lib/admin.functions";
+import { ADMIN_ACTIVITY, ADMIN_MARKET, ADMIN_NOTICES, ADMIN_PERIODS, ADMIN_QUICK_ACTIONS, ADMIN_STATS, ADMIN_USERS, adminCount, adminMoney } from "@/lib/admin-demo";
 
-export type AdminSection = "dashboard" | "users" | "signup-analytics" | "verifications" | "deletions" | "transactions" | "deposits" | "assets" | "trade" | "earn" | "pricing" | "treasury" | "reports" | "referrals" | "settings";
+export type AdminSection = "dashboard" | "users" | "verifications" | "deletions" | "transactions" | "deposits" | "assets" | "trade" | "earn" | "pricing" | "treasury" | "reports" | "referrals" | "settings";
 
 const NAV: { id: AdminSection; label: string; icon: typeof Home }[] = [
   { id: "dashboard", label: "Dashboard", icon: Home },
   { id: "users", label: "Users", icon: Users },
-  { id: "signup-analytics", label: "Signups by Country", icon: Globe2 },
   { id: "verifications", label: "Verification Management", icon: BadgeCheck },
   { id: "deletions", label: "Deletion Requests", icon: Trash2 },
   { id: "transactions", label: "Transactions", icon: RefreshCw },
@@ -76,9 +71,9 @@ export function AdminShell({ section, onSection, onSignOut, periodId, onPeriod, 
     </aside>
     {open && <div className="fixed inset-0 z-40 lg:hidden"><button type="button" aria-label="Close menu" className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} /><aside className="relative flex h-full w-72 flex-col bg-[#1b1240] text-white"><div className="flex items-center justify-between px-5 py-5"><img src="/logo.png" alt="Basecola" className="h-12 w-auto rounded-lg bg-white" /><button type="button" aria-label="Close menu" onClick={() => setOpen(false)}><X /></button></div>{nav}</aside></div>}
     <div className="min-w-0">
-      <header className="flex flex-wrap items-center xl:flex-nowrap gap-3 border-b bg-white/80 px-4 py-4 sm:px-6">
+      <header className="flex flex-wrap items-center gap-3 border-b bg-white/80 px-4 py-4 sm:px-6">
         <button type="button" className="grid h-10 w-10 place-items-center rounded-xl border lg:hidden" aria-label="Open admin menu" onClick={() => setOpen(true)}><Menu className="h-5 w-5" /></button>
-        <div className="mr-auto min-w-0 flex-1"><h1 className="text-2xl font-extrabold">{section === "users" ? "Users Management" : section === "transactions" ? "Transactions Management" : section === "assets" ? "Assets / Wallet Management" : section === "trade" ? "Buy & Sell Management" : section === "pricing" ? "Pricing & Rate Management" : section === "treasury" ? "Treasury Management" : section === "signup-analytics" ? "Signup Analytics" : section === "reports" ? "Reports & Analytics" : section === "referrals" ? "Referral Management" : section === "settings" ? "Settings Management" : NAV.find(item => item.id === section)?.label}</h1><p className="text-sm text-muted-foreground">{section === "users" ? "View, manage, and monitor all platform users" : section === "transactions" ? "Monitor, search, and manage all platform transactions" : section === "assets" ? "Configure supported networks, view customer wallet addresses, and request treasury operations" : section === "trade" ? "Review settled trades and configure enforced customer rates and limits" : section === "pricing" ? "Configure persisted buy/sell prices, trading availability, and order limits" : section === "treasury" ? "Review trusted balance observations and manage unexecuted operation requests" : section === "signup-analytics" ? "See which countries bring in the most new member signups" : section === "reports" ? "Insights, performance, and detailed reports across the platform" : section === "referrals" ? "Manage referrals, commissions, rewards, and promo programs" : section === "deposits" ? "Monitor, verify, and manage all user crypto deposits in real time" : section === "deletions" ? "Review account closure requests and download member data" : section === "verifications" ? "Review and manage user identity verification submissions." : section === "settings" ? "Configure platform policies, support, communications, security, and system features" : "Welcome back, Admin 👋"}</p></div>
+        <div className="mr-auto"><h1 className="text-2xl font-extrabold">{section === "users" ? "Users Management" : section === "transactions" ? "Transactions Management" : section === "assets" ? "Assets / Wallet Management" : section === "trade" ? "Buy & Sell Management" : section === "pricing" ? "Pricing & Rate Management" : section === "treasury" ? "Treasury Management" : section === "reports" ? "Reports & Analytics" : section === "referrals" ? "Referral Management" : section === "settings" ? "Settings Management" : NAV.find(item => item.id === section)?.label}</h1><p className="text-sm text-muted-foreground">{section === "users" ? "View, manage, and monitor all platform users" : section === "transactions" ? "Monitor, search, and manage all platform transactions" : section === "assets" ? "Configure supported networks, view customer wallet addresses, and request treasury operations" : section === "trade" ? "Review settled trades and configure enforced customer rates and limits" : section === "pricing" ? "Configure persisted buy/sell prices, trading availability, and order limits" : section === "treasury" ? "Review trusted balance observations and manage unexecuted operation requests" : section === "reports" ? "Insights, performance, and detailed reports across the platform" : section === "referrals" ? "Manage referrals, commissions, rewards, and promo programs" : section === "deposits" ? "Monitor, verify, and manage all user crypto deposits in real time" : section === "deletions" ? "Review account closure requests and download member data" : section === "verifications" ? "Review and manage user identity verification submissions." : section === "settings" ? "Configure platform policies, support, communications, security, and system features" : "Welcome back, Admin 👋"}</p></div>
         {(section === "dashboard" || section === "transactions" || section === "assets" || section === "trade" || section === "pricing" || section === "treasury" || section === "reports" || section === "referrals" || section === "deposits" || section === "settings") && <label className="flex h-10 items-center gap-2 rounded-xl border bg-white px-3 text-sm"><Calendar className="h-4 w-4 text-muted-foreground" /><span className="sr-only">Reporting dates</span><select aria-label="Reporting dates" value={periodId} onChange={event => onPeriod(event.target.value as (typeof ADMIN_PERIODS)[number]["id"])} className="bg-transparent outline-none">{ADMIN_PERIODS.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>}
         <Popover>
           <PopoverTrigger asChild><Button variant="ghost" size="icon" className="rounded-full bg-white" aria-label="Admin notifications"><Bell /></Button></PopoverTrigger>
@@ -106,81 +101,82 @@ const QUICK_ICONS: Record<(typeof ADMIN_QUICK_ACTIONS)[number]["id"], LucideIcon
   settings: Settings,
 };
 
-const QUICK_TARGET: Record<string, AdminSection> = { "add-user": "users", "fund-wallet": "users", "adjust-rates": "pricing", "create-promo": "referrals", "view-reports": "reports", settings: "settings" };
-
 export function AdminDashboard({ onSection, periodId }: { onSection: (section: AdminSection) => void; periodId: (typeof ADMIN_PERIODS)[number]["id"] }) {
   const [metric, setMetric] = useState<"volume" | "transactions">("volume");
+  const [action, setAction] = useState<string | null>(null);
+  const [saved, setSaved] = useState("");
   const period = ADMIN_PERIODS.find(item => item.id === periodId) ?? ADMIN_PERIODS[0];
-  const fetchOverview = useServerFn(getAdminDashboardOverview);
-  const { data, isPending, error } = useQuery({ queryKey: ["admin-dashboard-overview", period.days], queryFn: () => fetchOverview({ data: { days: period.days } }), refetchInterval: 60_000 });
-  const s = data?.stats;
-  const u = data?.users;
-  const dash = isPending ? "…" : "—";
-  const stats = [
-    { id: "users", label: "Total Users", value: s ? adminCount(s.users) : dash, change: s?.usersChange ?? 0 },
-    { id: "transactions", label: `Transactions (${period.label})`, value: s ? adminCount(s.transactions) : dash, change: s?.transactionsChange ?? 0 },
-    { id: "volume", label: "Completed Volume (USD)", value: s ? adminMoney(s.volume, 2) : dash, change: s?.volumeChange ?? 0 },
-    { id: "revenue", label: "Fees Earned", value: s ? adminMoney(s.fees, 2) : dash, change: s?.feesChange ?? 0 },
-  ];
+  const prompt = action ? ACTION_COPY[action] : null;
+
+  function runAction(id: string) {
+    if (id === "view-reports") onSection("reports");
+    else if (id === "settings") onSection("settings");
+    else { setSaved(""); setAction(id); }
+  }
+
+  function submitAction(event: FormEvent) {
+    event.preventDefault();
+    setSaved("Saved in this preview only. Customer wallets and prices are unchanged.");
+  }
 
   return <>
-    {error && <p role="alert" className="mb-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">Could not load dashboard figures: {error.message}</p>}
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {stats.map(stat => <StatCard key={stat.id} label={stat.label} value={stat.value} change={stat.change} tone={stat.id} />)}
+      {ADMIN_STATS.map(stat => <StatCard key={stat.id} label={stat.label} value={stat.kind === "money" ? adminMoney(stat.value) : adminCount(stat.value)} change={stat.change} tone={stat.id} />)}
     </div>
     <div className="mt-4 grid gap-4 xl:grid-cols-4">
       <section className="rounded-3xl bg-white p-5 shadow-sm xl:col-span-2">
-        <div className="flex flex-wrap items-center gap-3"><h2 className="flex items-center gap-2 font-bold">Transaction Volume <Info className="h-4 w-4 text-muted-foreground" aria-label="Live totals for the selected dates" /></h2>
+        <div className="flex flex-wrap items-center gap-3"><h2 className="flex items-center gap-2 font-bold">Transaction Volume <Info className="h-4 w-4 text-muted-foreground" aria-label="Sample volume for the selected dates" /></h2>
           <div className="ml-auto flex rounded-full bg-[#f4f5fb] p-1 text-sm">
             <button type="button" className={`rounded-full px-3 py-1 font-semibold ${metric === "volume" ? "bg-[#6d4dff] text-white" : "text-muted-foreground"}`} aria-pressed={metric === "volume"} onClick={() => setMetric("volume")}>Volume</button>
             <button type="button" className={`rounded-full px-3 py-1 font-semibold ${metric === "transactions" ? "bg-[#6d4dff] text-white" : "text-muted-foreground"}`} aria-pressed={metric === "transactions"} onClick={() => setMetric("transactions")}>Transactions</button>
           </div>
         </div>
-        <p className="mt-4 text-3xl font-extrabold">{s ? (metric === "volume" ? adminMoney(s.volume, 2) : adminCount(s.transactions)) : dash}</p>
-        {s && <ChangeLine value={metric === "volume" ? s.volumeChange : s.transactionsChange} label={`vs previous ${period.days === 1 ? "day" : `${period.days} days`}`} />}
-        <VolumeChart points={data?.points ?? []} metric={metric} />
+        <p className="mt-4 text-3xl font-extrabold">{metric === "volume" ? adminMoney(period.volume) : adminCount(period.transactions)}</p>
+        <p className="mt-1 text-sm font-semibold text-emerald-600">↑ +{(metric === "volume" ? period.volumeChange : period.transactionChange).toFixed(1)}% <span className="font-medium text-muted-foreground">vs last 7 days</span></p>
+        <VolumeChart points={period.points} metric={metric} />
       </section>
       <section className="rounded-3xl bg-white p-5 shadow-sm">
         <h2 className="flex items-center gap-2 font-bold"><Users className="h-4 w-4 text-[#6d4dff]" />Users Overview</h2>
         <dl className="mt-4 space-y-3 text-sm">
-          <Row label="Total Users" value={u ? adminCount(u.total) : dash} />
-          <Row label="Verified Users" value={u ? adminCount(u.verified) : dash} mark="text-emerald-600" />
-          <Row label="Unverified Users" value={u ? adminCount(u.unverified) : dash} mark="text-amber-500" />
-          <Row label="Active (30 days)" value={u ? adminCount(u.active) : dash} mark="text-emerald-600" />
-          <Row label="New Users (Today)" value={u ? adminCount(u.joinedToday) : dash} mark="text-[#6d4dff]" />
+          <Row label="Total Users" value={adminCount(ADMIN_USERS.total)} />
+          <Row label="Verified Users" value={adminCount(ADMIN_USERS.verified)} mark="text-emerald-600" />
+          <Row label="Unverified Users" value={adminCount(ADMIN_USERS.unverified)} mark="text-amber-500" />
+          <Row label="Active (30 days)" value={adminCount(ADMIN_USERS.active)} mark="text-emerald-600" />
+          <Row label="New Users (Today)" value={adminCount(ADMIN_USERS.joinedToday)} mark="text-[#6d4dff]" />
         </dl>
         <Button type="button" variant="outline" className="mt-5 h-11 w-full rounded-xl border-[#6d4dff] text-[#6d4dff]" onClick={() => onSection("users")}>View All Users</Button>
       </section>
-      <SignupCountryCard onViewAll={() => onSection("signup-analytics")} />
       <section className="rounded-3xl bg-white p-5 shadow-sm">
-        <div className="flex items-center justify-between"><h2 className="font-bold">Platform Rates (USD)</h2><button type="button" className="text-sm font-semibold text-[#6d4dff]" onClick={() => onSection("pricing")}>Edit</button></div>
-        <p className="mt-1 text-xs text-muted-foreground">Buy / sell prices members currently get</p>
-        {data && !data.market.length && <p className="mt-3 text-sm text-muted-foreground">No rates configured yet.</p>}
-        <ul className="mt-3 space-y-3">{(data?.market ?? []).map(asset => <li key={asset.coin} className="flex items-center gap-2 text-sm"><AssetMark symbol={asset.coin} /><span className="font-semibold">{asset.coin}</span><span className="ml-auto text-right"><span className="block font-semibold">{adminMoney(asset.buy, 2)}</span><span className="block text-xs text-muted-foreground">Sell {adminMoney(asset.sell, 2)}</span></span></li>)}</ul>
+        <h2 className="font-bold">Crypto Market (USD)</h2>
+        <ul className="mt-3 space-y-3">{ADMIN_MARKET.map(asset => <li key={asset.sym} className="flex items-center gap-2 text-sm"><AssetMark symbol={asset.sym} /><span className="font-semibold">{asset.sym}</span><span className="ml-auto font-semibold">{adminMoney(asset.price, 2)}</span><Change value={asset.change} /></li>)}</ul>
       </section>
       <section className="rounded-3xl bg-white p-5 shadow-sm xl:col-span-3">
         <div className="mb-3 flex items-center justify-between"><h2 className="font-bold">Recent Transactions</h2><button type="button" className="text-sm font-semibold text-[#6d4dff]" onClick={() => onSection("transactions")}>View All</button></div>
-        {data && !data.recent.length ? <p className="py-6 text-center text-sm text-muted-foreground">No transactions yet.</p> : <div className="overflow-x-auto"><ActivityTable rows={data?.recent ?? []} /></div>}
+        <div className="overflow-x-auto"><ActivityTable /></div>
       </section>
       <section className="rounded-3xl bg-white p-5 shadow-sm">
         <h2 className="font-bold">Quick Actions</h2>
         <div className="mt-4 grid grid-cols-2 gap-3">
-          {ADMIN_QUICK_ACTIONS.map(item => { const Icon = QUICK_ICONS[item.id]; return <button key={item.id} type="button" className="flex flex-col items-center gap-2 rounded-2xl bg-[#f4f5fb] px-3 py-4 text-sm font-semibold" onClick={() => onSection(QUICK_TARGET[item.id] ?? "dashboard")}><Icon className="h-5 w-5 text-[#6d4dff]" />{item.label}</button>; })}
+          {ADMIN_QUICK_ACTIONS.map(item => { const Icon = QUICK_ICONS[item.id]; return <button key={item.id} type="button" className="flex flex-col items-center gap-2 rounded-2xl bg-[#f4f5fb] px-3 py-4 text-sm font-semibold" onClick={() => runAction(item.id)}><Icon className="h-5 w-5 text-[#6d4dff]" />{item.label}</button>; })}
         </div>
       </section>
     </div>
-    <p className="mt-4 text-xs leading-relaxed text-muted-foreground">Live figures from member accounts and transactions. Updates every minute.</p>
+    <p className="mt-4 text-xs leading-relaxed text-muted-foreground">Sample platform figures for this preview. Actions here do not move customer funds or change live prices.</p>
+    <Dialog open={!!prompt} onOpenChange={open => { if (!open) setAction(null); }}>
+      <DialogContent className="max-w-sm rounded-3xl">
+        {prompt && <form className="space-y-4" onSubmit={submitAction}>
+          <DialogHeader><DialogTitle>{prompt.title}</DialogTitle><DialogDescription>{prompt.detail}</DialogDescription></DialogHeader>
+          {prompt.fields.map(field => <div key={field} className="space-y-2"><Label htmlFor={`admin-${field}`}>{field}</Label><Input id={`admin-${field}`} required className="h-11 bg-card" /></div>)}
+          {saved && <p role="status" className="text-sm text-muted-foreground">{saved}</p>}
+          <Button type="submit" className="h-11 w-full">Save preview</Button>
+        </form>}
+      </DialogContent>
+    </Dialog>
   </>;
-}
-
-function ChangeLine({ value, label }: { value: number; label: string }) {
-  const up = value >= 0;
-  return <p className={`mt-1 text-sm font-semibold ${up ? "text-emerald-600" : "text-destructive"}`}>{up ? "↑ +" : "↓ "}{value.toFixed(1)}% <span className="font-medium text-muted-foreground">{label}</span></p>;
 }
 
 export function AdminPanel({ section }: { section: Exclude<AdminSection, "dashboard"> }) {
   if (section === "users") return <LiveUsersManagement />;
-  if (section === "signup-analytics") return <LiveSignupAnalytics />;
   if (section === "transactions") return <LiveTransactionsManagement />;
   if (section === "assets") return <LiveAssetsWalletManagement />;
   if (section === "trade") return <LiveTradeManagement />;
@@ -203,7 +199,7 @@ function Panel({ title, text, children }: { title: string; text: string; childre
 
 function StatCard({ label, value, change, tone }: { label: string; value: string; change: number; tone: string }) {
   const toneClass = tone === "users" ? "bg-gradient-to-br from-[#6d4dff] to-[#8b5cff] text-white" : tone === "transactions" ? "bg-[#eef0fb]" : tone === "volume" ? "bg-[#e7f8ef]" : "bg-[#f3eefe]";
-  return <article className={`rounded-3xl p-5 ${toneClass}`}><p className="text-sm opacity-80">{label}</p><p className="mt-2 text-2xl font-extrabold">{value}</p><p className={`mt-3 inline-flex rounded-full px-2 py-1 text-xs font-bold ${tone === "users" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700"}`}>{change >= 0 ? "↑ +" : "↓ "}{change.toFixed(1)}%</p></article>;
+  return <article className={`rounded-3xl p-5 ${toneClass}`}><p className="text-sm opacity-80">{label}</p><p className="mt-2 text-2xl font-extrabold">{value}</p><p className={`mt-3 inline-flex rounded-full px-2 py-1 text-xs font-bold ${tone === "users" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700"}`}>↑ +{change.toFixed(1)}%</p></article>;
 }
 
 function Row({ label, value, mark = "text-foreground" }: { label: string; value: string; mark?: string }) {
@@ -221,18 +217,13 @@ function AssetMark({ symbol }: { symbol: string }) {
   return <CoinIcon coin={coin} size="h-6 w-6" />;
 }
 
-type RecentRow = AdminDashboardOverview["recent"][number];
-const KIND_TONE: Record<string, string> = { sell: "text-orange-500", send: "text-sky-600", receive: "text-sky-600", funding: "text-violet-600" };
-const STATUS_TONE: Record<string, string> = { completed: "bg-emerald-100 text-emerald-700", pending: "bg-amber-100 text-amber-700", failed: "bg-destructive/10 text-destructive" };
-
-function ActivityTable({ rows }: { rows: RecentRow[] }) {
-  return <table className="w-full min-w-[760px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr>{["Reference", "User", "Type", "Asset", "Amount", "Value (USD)", "Status", "Date"].map(heading => <th key={heading} className="px-2 py-2 font-medium">{heading}</th>)}</tr></thead><tbody>{rows.map(item => <tr key={item.id} className="border-t"><td className="max-w-[140px] truncate px-2 py-3 font-medium" title={item.reference}>{item.reference}</td><td className="max-w-[160px] truncate px-2 py-3">{item.user}</td><td className={`px-2 py-3 font-semibold capitalize ${KIND_TONE[item.kind] ?? "text-emerald-600"}`}>{item.kind}</td><td className="px-2 py-3"><span className="inline-flex items-center gap-2"><AssetMark symbol={item.coin} />{item.coin}</span></td><td className="px-2 py-3">{item.amount ? item.amount.toLocaleString("en-US", { maximumFractionDigits: 8 }) : "—"}</td><td className="px-2 py-3">{adminMoney(item.usd, 2)}</td><td className="px-2 py-3"><span className={`rounded-full px-2 py-1 text-xs font-semibold capitalize ${STATUS_TONE[item.status] ?? "bg-muted text-muted-foreground"}`}>{item.status}</span></td><td className="px-2 py-3 text-muted-foreground">{new Date(item.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</td></tr>)}</tbody></table>;
+function ActivityTable({ rows = ADMIN_ACTIVITY }: { rows?: readonly (typeof ADMIN_ACTIVITY)[number][] }) {
+  return <table className="w-full min-w-[760px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr>{["Tx ID", "User", "Type", "Asset", "Amount", "Value (USD)", "Status", "Date"].map(heading => <th key={heading} className="px-2 py-2 font-medium">{heading}</th>)}</tr></thead><tbody>{rows.map(item => <tr key={item.id} className="border-t"><td className="px-2 py-3 font-medium">{item.id}</td><td className="px-2 py-3">{item.user}</td><td className={`px-2 py-3 font-semibold ${item.type === "Sell" ? "text-orange-500" : item.type === "Transfer" ? "text-sky-600" : item.type === "Invest" ? "text-violet-600" : "text-emerald-600"}`}>{item.type}</td><td className="px-2 py-3"><span className="inline-flex items-center gap-2"><AssetMark symbol={item.asset} />{item.asset}</span></td><td className="px-2 py-3">{item.amount}</td><td className="px-2 py-3">{adminMoney(item.value, 2)}</td><td className="px-2 py-3"><span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">{item.status}</span></td><td className="px-2 py-3 text-muted-foreground">{item.date}</td></tr>)}</tbody></table>;
 }
 
 function VolumeChart({ points, metric }: { points: readonly { label: string; volume: number; transactions: number }[]; metric: "volume" | "transactions" }) {
   const values = points.map(point => metric === "volume" ? point.volume : point.transactions);
-  const top = Math.max(...values, 0);
-  const max = top <= 0 ? 6 : Math.ceil(top / 6) * 6 || 6;
+  const max = metric === "volume" ? 300 : 6;
   const width = 640;
   const height = 220;
   const pad = 36;
@@ -243,16 +234,16 @@ function VolumeChart({ points, metric }: { points: readonly { label: string; vol
   });
   const line = coords.map(point => point.join(",")).join(" ");
   const area = coords.length ? `M ${coords[0][0]},${height - pad} L ${line} L ${coords[coords.length - 1][0]},${height - pad} Z` : "";
-  const ticks = [6, 5, 4, 3, 2, 1, 0].map(step => (max / 6) * step);
-  return <div className="mt-4 overflow-x-auto"><svg viewBox={`0 0 ${width} ${height}`} className="h-56 min-w-[520px] w-full" role="img" aria-label={metric === "volume" ? "Daily completed volume chart" : "Daily transaction count chart"}>
+  const ticks = metric === "volume" ? [300, 250, 200, 150, 100, 50, 0] : [6, 5, 4, 3, 2, 1, 0];
+  return <div className="mt-4 overflow-x-auto"><svg viewBox={`0 0 ${width} ${height}`} className="h-56 min-w-[520px] w-full" role="img" aria-label={metric === "volume" ? "Sample volume chart" : "Sample transaction count chart"}>
     <defs><linearGradient id="admin-volume" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6d4dff" stopOpacity="0.35" /><stop offset="100%" stopColor="#6d4dff" stopOpacity="0.02" /></linearGradient></defs>
     {ticks.map(tick => {
       const y = height - pad - (tick / max) * (height - pad * 2);
-      const axis = metric === "volume" ? `$${Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(tick)}` : Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(tick);
+      const axis = tick === 0 ? (metric === "volume" ? "$0" : "0") : metric === "volume" ? `$${tick}M` : `${tick}M`;
       return <g key={tick}><line x1={pad} x2={width - 8} y1={y} y2={y} stroke="#eceef5" /><text x="0" y={y + 4} className="fill-muted-foreground" fontSize="11">{axis}</text></g>;
     })}
     <path d={area} fill="url(#admin-volume)" /><polyline points={line} fill="none" stroke="#6d4dff" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
-    {coords.map((point, index) => (points.length <= 10 || index % Math.ceil(points.length / 8) === 0) && <text key={points[index].label} x={point[0]} y={height - 8} textAnchor="middle" fontSize="10" className="fill-muted-foreground">{points[index].label}</text>)}
+    {coords.map((point, index) => <text key={points[index].label} x={point[0]} y={height - 8} textAnchor="middle" fontSize="10" className="fill-muted-foreground">{points[index].label}</text>)}
   </svg></div>;
 }
 

@@ -2,3 +2,15 @@ project_id = "xxbjvscwtvfversxccyl"
 
 [functions.stripe-fund-wallet]
 verify_jwt = true
+
+[functions.turnkey-wallet-provisioning]
+verify_jwt = true
+
+[functions.company-treasury-admin]
+verify_jwt = true
+
+[functions.alchemy-ethereum-webhook]
+verify_jwt = false
+
+[functions.crypto-deposit-ingestion]
+verify_jwt = false

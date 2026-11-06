@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "@turnkey/sdk-server": "npm:@turnkey/sdk-server@8.9.0",
+    "@turnkey/sdk-types": "npm:@turnkey/sdk-types@1.12.0",
+    "supabase": "npm:@supabase/supabase-js@2.118.0"
+  }
+}

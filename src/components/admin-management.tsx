@@ -1729,6 +1729,13 @@ export function SettingsManagement() {
   const [draft, setDraft] = useState("");
   const [notice, setNotice] = useState("");
   const [flags, setFlags] = useState<Record<string, boolean>>({ supportEmail: true, supportPhone: true, whatsapp: true, liveChat: true, helpCenter: true, registration: true, otc: true, kyc: true, deposits: true, twoFactor: true, emailNotes: true, referral: true, invest: true, sms: true, maintenance: false, admin2fa: true, loginAlert: true, inApp: true });
+  const [cryptoWithdrawalsEnabled, setCryptoWithdrawalsEnabled] = useState(false);
+  const [withdrawalFeeCaps, setWithdrawalFeeCaps] = useState<Record<string, string>>({
+    cryptoWithdrawalFeeCapBitcoinUSD: "0",
+    cryptoWithdrawalFeeCapEthereumUSD: "0",
+    cryptoWithdrawalFeeCapSolanaUSD: "0",
+    cryptoWithdrawalFeeCapXrplUSD: "0",
+  });
   const [pages, setPages] = useState<Record<PolicyId, string>>({
     privacy: "This preview privacy note says settings stay in the browser. This screen does not collect customer data.",
     terms: "These preview terms say balances, quotes, and rewards are samples. No asset is bought, sold, or held.",
@@ -1758,6 +1765,15 @@ export function SettingsManagement() {
     str(s.support, "supportEmail", setSupportEmail); str(s.support, "phone", setPhone); str(s.support, "whatsapp", setWhatsapp); str(s.support, "helpUrl", setHelpUrl);
     setFlags(current => { const next = { ...current }; for (const [k, v] of Object.entries(s.features)) if (typeof v === "boolean") next[k] = v; return next; });
     setPages(current => { const next = { ...current }; for (const [k, v] of Object.entries(s.policies)) if (typeof v === "string" && v && k in next) next[k as PolicyId] = v; return next; });
+    setCryptoWithdrawalsEnabled(s.policies.cryptoWithdrawalsEnabled === true);
+    setWithdrawalFeeCaps(current => {
+      const next = { ...current };
+      for (const key of Object.keys(next)) {
+        const value = s.policies[key];
+        if (typeof value === "string") next[key] = value;
+      }
+      return next;
+    });
     setAudit(log);
     setLoaded(true);
   }
@@ -1787,6 +1803,32 @@ export function SettingsManagement() {
   function savePolicy(id: PolicyId, text: string) {
     setPages(current => ({ ...current, [id]: text }));
     void persist({ policies: { [id]: text } }, `${POLICY_LABEL[id]} saved.`);
+  }
+
+  function saveCryptoWithdrawalControls(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const caps = Object.fromEntries(
+      Object.entries(withdrawalFeeCaps).map(([key, value]) => [key, value.trim()]),
+    );
+    if (Object.values(caps).some(value => !/^(?:0|[1-9]\d{0,7})(?:\.\d{1,2})?$/.test(value))) {
+      setNotice("Enter valid USD fee caps with up to two decimal places.");
+      return;
+    }
+    if (cryptoWithdrawalsEnabled && Object.values(caps).some(value => Number(value) <= 0)) {
+      setNotice("Set a positive fee cap for every network before enabling withdrawals.");
+      return;
+    }
+    void persist({
+      policies: {
+        cryptoWithdrawalsEnabled,
+        cryptoWithdrawalPerRequestLimitUSD: "5000",
+        cryptoWithdrawalDailyLimitUSD: "5000",
+        cryptoWithdrawalRateLimitPerHour: "5",
+        ...caps,
+      },
+    }, cryptoWithdrawalsEnabled
+      ? "Crypto withdrawal controls saved and audited."
+      : "Crypto withdrawals suspended and the change audited.");
   }
 
   function rememberFile(kind: "logo" | "favicon", file: File | undefined) {
@@ -1889,7 +1931,53 @@ export function SettingsManagement() {
         {tab === "integrations" && <form className="max-w-xl space-y-3 rounded-3xl bg-white p-5 shadow-sm" onSubmit={save}><h2 className="font-bold">Integrations & APIs</h2><SettingInput icon={Zap} label="Payment provider" value="Sample preview" onChange={() => undefined} /><SettingInput icon={Link2} label="Webhook URL" value="https://basecola.demo/hooks/preview" onChange={() => undefined} /><label className="block text-sm font-medium">API key<span className="mt-1 flex h-11 items-center rounded-xl border px-3"><input value={apiDraft} onChange={event => setApiDraft(event.target.value)} placeholder="No key stored" autoComplete="off" className="w-full bg-transparent outline-none" aria-label="API key" /></span></label><Button type="submit" className="h-11 rounded-xl bg-[#6d4dff] hover:bg-[#6d4dff]/90">Save Changes</Button><p className="text-xs text-muted-foreground">No API key is stored and no external service is contacted.</p></form>}
         {tab === "notifications" && <section className="max-w-xl rounded-3xl bg-white p-5 shadow-sm"><h2 className="font-bold">Notifications</h2><FlagRow icon={Mail} label="Email Notifications" value="No email is sent" checked={flags.emailNotes} onChange={value => toggle("emailNotes", value)} /><FlagRow icon={MessageCircle} label="SMS Notifications" value="No SMS is sent" checked={flags.sms} onChange={value => toggle("sms", value)} /><FlagRow icon={Bell} label="In-app alerts" value="Shown in this admin preview" checked={flags.inApp} onChange={value => toggle("inApp", value)} /><Button type="button" className="mt-4 h-11 rounded-xl bg-[#6d4dff] hover:bg-[#6d4dff]/90" onClick={() => save()}>Save Changes</Button></section>}
         {tab === "website" && <section className="rounded-3xl bg-white p-5 shadow-sm"><h2 className="font-bold">Website & Content</h2><p className="mt-1 text-sm text-muted-foreground">Sample pages for this preview. Nothing is published.</p><ul className="mt-4 divide-y text-sm"><li className="flex justify-between py-3"><span className="font-semibold">Home</span><span className="text-muted-foreground">/</span></li><li className="flex justify-between py-3"><span className="font-semibold">Help</span><span className="text-muted-foreground">/help</span></li><li className="flex justify-between py-3"><span className="font-semibold">Referral</span><span className="text-muted-foreground">/referral</span></li></ul><label className="mt-3 block text-sm font-medium">SEO title<Input value={`${name} demo`} readOnly className="mt-1 h-11 bg-white" aria-label="SEO title" /></label></section>}
-        {tab === "system" && <section className="space-y-4 rounded-3xl bg-white p-5 shadow-sm"><h2 className="font-bold">System & Maintenance</h2><FlagRow icon={Wrench} label="Maintenance Mode" value="The customer app stays available" checked={flags.maintenance} onChange={value => toggle("maintenance", value)} /><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" className="h-10 rounded-xl" onClick={() => setNotice("Backups are handled automatically by the database provider.")}>Backup info</Button><Button type="button" className="h-10 rounded-xl bg-[#6d4dff] hover:bg-[#6d4dff]/90" onClick={() => save()}>Save Changes</Button></div><div><h3 className="mb-2 text-sm font-bold">Recent setting changes</h3>{audit.length === 0 ? <p className="text-sm text-muted-foreground">No changes saved yet.</p> : <ul className="space-y-2 text-sm text-muted-foreground">{audit.map(row => <li key={row.id}>{new Date(row.created_at).toLocaleString()} — {row.section}{row.note ? ` · ${row.note}` : ""}</li>)}</ul>}</div></section>}
+        {tab === "system" && <div className="space-y-4">
+          <section className="space-y-4 rounded-3xl bg-white p-5 shadow-sm">
+            <h2 className="font-bold">System & Maintenance</h2>
+            <FlagRow icon={Wrench} label="Maintenance Mode" value="The customer app stays available" checked={flags.maintenance} onChange={value => toggle("maintenance", value)} />
+            <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" className="h-10 rounded-xl" onClick={() => setNotice("Backups are handled automatically by the database provider.")}>Backup info</Button><Button type="button" className="h-10 rounded-xl bg-[#6d4dff] hover:bg-[#6d4dff]/90" onClick={() => save()}>Save Changes</Button></div>
+            <div><h3 className="mb-2 text-sm font-bold">Recent setting changes</h3>{audit.length === 0 ? <p className="text-sm text-muted-foreground">No changes saved yet.</p> : <ul className="space-y-2 text-sm text-muted-foreground">{audit.map(row => <li key={row.id}>{new Date(row.created_at).toLocaleString()} — {row.section}{row.note ? ` · ${row.note}` : ""}</li>)}</ul>}</div>
+          </section>
+          <form onSubmit={saveCryptoWithdrawalControls} className="space-y-4 rounded-3xl bg-white p-5 shadow-sm">
+            <div>
+              <h2 className="font-bold">Custodial crypto withdrawals</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Server-side execution only. Requests remain unavailable until chain providers, monitoring, Turnkey, fee caps, and treasury sponsorship are configured.
+              </p>
+            </div>
+            <FlagRow
+              icon={Shield}
+              label="Enable crypto withdrawals"
+              value="Turn off immediately to suspend new requests and signing."
+              checked={cryptoWithdrawalsEnabled}
+              onChange={setCryptoWithdrawalsEnabled}
+            />
+            <div className="grid gap-3 sm:grid-cols-2">
+              {([
+                ["cryptoWithdrawalFeeCapBitcoinUSD", "Bitcoin fee cap (USD)"],
+                ["cryptoWithdrawalFeeCapEthereumUSD", "Ethereum fee cap (USD; includes ERC-20)"],
+                ["cryptoWithdrawalFeeCapSolanaUSD", "Solana fee cap (USD)"],
+                ["cryptoWithdrawalFeeCapXrplUSD", "XRP Ledger fee cap (USD)"],
+              ] as const).map(([key, label]) => (
+                <label key={key} className="block text-sm font-medium">
+                  {label}
+                  <Input
+                    inputMode="decimal"
+                    value={withdrawalFeeCaps[key]}
+                    onChange={event => setWithdrawalFeeCaps(current => ({ ...current, [key]: event.target.value }))}
+                    className="mt-1 h-11"
+                  />
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              The $5,000 per-request and rolling 24-hour limits include the network fee. Requests are automatically approved; no manual approval is configured. All changes are logged.
+            </p>
+            <Button type="submit" className="h-11 rounded-xl bg-[#6d4dff] hover:bg-[#6d4dff]/90">
+              Save withdrawal controls
+            </Button>
+          </form>
+        </div>}
       </div>
     </div>
     {notice && <p role="status" className="text-sm text-muted-foreground">{notice}</p>}

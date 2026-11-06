@@ -16,6 +16,7 @@ import { Route as AssetsRouteImport } from './routes/assets'
 import { Route as BuyRouteImport } from './routes/buy'
 import { Route as ChangePasswordRouteImport } from './routes/change-password'
 import { Route as ChangePinRouteImport } from './routes/change-pin'
+import { Route as CryptoWithdrawalRouteImport } from './routes/crypto-withdrawal'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -39,7 +40,9 @@ import { Route as VerifyAccountRouteImport } from './routes/verify-account'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as AssetsSymbolRouteImport } from './routes/assets_.$symbol'
 import { Route as TransactionsTransactionIdRouteImport } from './routes/transactions_.$transactionId'
+import { Route as ApiInternalCryptoDepositsRouteImport } from './routes/api/internal/crypto-deposits'
 import { Route as ApiPublicStripeWalletWebhookRouteImport } from './routes/api/public/stripe-wallet-webhook'
+import { Route as ApiWebhooksAlchemyEthereumRouteImport } from './routes/api/webhooks/alchemy-ethereum'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
@@ -75,6 +78,11 @@ const ChangePasswordRoute = ChangePasswordRouteImport.update({
 const ChangePinRoute = ChangePinRouteImport.update({
   id: '/change-pin',
   path: '/change-pin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CryptoWithdrawalRoute = CryptoWithdrawalRouteImport.update({
+  id: '/crypto-withdrawal',
+  path: '/crypto-withdrawal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -193,10 +201,22 @@ const TransactionsTransactionIdRoute =
     path: '/transactions/$transactionId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiInternalCryptoDepositsRoute =
+  ApiInternalCryptoDepositsRouteImport.update({
+    id: '/api/internal/crypto-deposits',
+    path: '/api/internal/crypto-deposits',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicStripeWalletWebhookRoute =
   ApiPublicStripeWalletWebhookRouteImport.update({
     id: '/api/public/stripe-wallet-webhook',
     path: '/api/public/stripe-wallet-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiWebhooksAlchemyEthereumRoute =
+  ApiWebhooksAlchemyEthereumRouteImport.update({
+    id: '/api/webhooks/alchemy-ethereum',
+    path: '/api/webhooks/alchemy-ethereum',
     getParentRoute: () => rootRouteImport,
   } as any)
 const LovableEmailTransactionalPreviewRoute =
@@ -214,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/buy': typeof BuyRoute
   '/change-password': typeof ChangePasswordRoute
   '/change-pin': typeof ChangePinRoute
+  '/crypto-withdrawal': typeof CryptoWithdrawalRoute
   '/dashboard': typeof DashboardRoute
   '/delete-account': typeof DeleteAccountRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -237,7 +258,9 @@ export interface FileRoutesByFullPath {
   '/wallet': typeof WalletRoute
   '/assets/$symbol': typeof AssetsSymbolRoute
   '/transactions/$transactionId': typeof TransactionsTransactionIdRoute
+  '/api/internal/crypto-deposits': typeof ApiInternalCryptoDepositsRoute
   '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
+  '/api/webhooks/alchemy-ethereum': typeof ApiWebhooksAlchemyEthereumRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
@@ -248,6 +271,7 @@ export interface FileRoutesByTo {
   '/buy': typeof BuyRoute
   '/change-password': typeof ChangePasswordRoute
   '/change-pin': typeof ChangePinRoute
+  '/crypto-withdrawal': typeof CryptoWithdrawalRoute
   '/dashboard': typeof DashboardRoute
   '/delete-account': typeof DeleteAccountRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -271,7 +295,9 @@ export interface FileRoutesByTo {
   '/wallet': typeof WalletRoute
   '/assets/$symbol': typeof AssetsSymbolRoute
   '/transactions/$transactionId': typeof TransactionsTransactionIdRoute
+  '/api/internal/crypto-deposits': typeof ApiInternalCryptoDepositsRoute
   '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
+  '/api/webhooks/alchemy-ethereum': typeof ApiWebhooksAlchemyEthereumRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
@@ -283,6 +309,7 @@ export interface FileRoutesById {
   '/buy': typeof BuyRoute
   '/change-password': typeof ChangePasswordRoute
   '/change-pin': typeof ChangePinRoute
+  '/crypto-withdrawal': typeof CryptoWithdrawalRoute
   '/dashboard': typeof DashboardRoute
   '/delete-account': typeof DeleteAccountRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -306,7 +333,9 @@ export interface FileRoutesById {
   '/wallet': typeof WalletRoute
   '/assets_/$symbol': typeof AssetsSymbolRoute
   '/transactions_/$transactionId': typeof TransactionsTransactionIdRoute
+  '/api/internal/crypto-deposits': typeof ApiInternalCryptoDepositsRoute
   '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
+  '/api/webhooks/alchemy-ethereum': typeof ApiWebhooksAlchemyEthereumRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
@@ -319,6 +348,7 @@ export interface FileRouteTypes {
     | '/buy'
     | '/change-password'
     | '/change-pin'
+    | '/crypto-withdrawal'
     | '/dashboard'
     | '/delete-account'
     | '/forgot-password'
@@ -342,7 +372,9 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/assets/$symbol'
     | '/transactions/$transactionId'
+    | '/api/internal/crypto-deposits'
     | '/api/public/stripe-wallet-webhook'
+    | '/api/webhooks/alchemy-ethereum'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -353,6 +385,7 @@ export interface FileRouteTypes {
     | '/buy'
     | '/change-password'
     | '/change-pin'
+    | '/crypto-withdrawal'
     | '/dashboard'
     | '/delete-account'
     | '/forgot-password'
@@ -376,7 +409,9 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/assets/$symbol'
     | '/transactions/$transactionId'
+    | '/api/internal/crypto-deposits'
     | '/api/public/stripe-wallet-webhook'
+    | '/api/webhooks/alchemy-ethereum'
     | '/lovable/email/transactional/preview'
   id:
     | '__root__'
@@ -387,6 +422,7 @@ export interface FileRouteTypes {
     | '/buy'
     | '/change-password'
     | '/change-pin'
+    | '/crypto-withdrawal'
     | '/dashboard'
     | '/delete-account'
     | '/forgot-password'
@@ -410,7 +446,9 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/assets_/$symbol'
     | '/transactions_/$transactionId'
+    | '/api/internal/crypto-deposits'
     | '/api/public/stripe-wallet-webhook'
+    | '/api/webhooks/alchemy-ethereum'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
@@ -422,6 +460,7 @@ export interface RootRouteChildren {
   BuyRoute: typeof BuyRoute
   ChangePasswordRoute: typeof ChangePasswordRoute
   ChangePinRoute: typeof ChangePinRoute
+  CryptoWithdrawalRoute: typeof CryptoWithdrawalRoute
   DashboardRoute: typeof DashboardRoute
   DeleteAccountRoute: typeof DeleteAccountRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -445,7 +484,9 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   AssetsSymbolRoute: typeof AssetsSymbolRoute
   TransactionsTransactionIdRoute: typeof TransactionsTransactionIdRoute
+  ApiInternalCryptoDepositsRoute: typeof ApiInternalCryptoDepositsRoute
   ApiPublicStripeWalletWebhookRoute: typeof ApiPublicStripeWalletWebhookRoute
+  ApiWebhooksAlchemyEthereumRoute: typeof ApiWebhooksAlchemyEthereumRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
@@ -498,6 +539,13 @@ declare module '@tanstack/react-router' {
       path: '/change-pin'
       fullPath: '/change-pin'
       preLoaderRoute: typeof ChangePinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crypto-withdrawal': {
+      id: '/crypto-withdrawal'
+      path: '/crypto-withdrawal'
+      fullPath: '/crypto-withdrawal'
+      preLoaderRoute: typeof CryptoWithdrawalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -661,11 +709,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TransactionsTransactionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/internal/crypto-deposits': {
+      id: '/api/internal/crypto-deposits'
+      path: '/api/internal/crypto-deposits'
+      fullPath: '/api/internal/crypto-deposits'
+      preLoaderRoute: typeof ApiInternalCryptoDepositsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/stripe-wallet-webhook': {
       id: '/api/public/stripe-wallet-webhook'
       path: '/api/public/stripe-wallet-webhook'
       fullPath: '/api/public/stripe-wallet-webhook'
       preLoaderRoute: typeof ApiPublicStripeWalletWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/alchemy-ethereum': {
+      id: '/api/webhooks/alchemy-ethereum'
+      path: '/api/webhooks/alchemy-ethereum'
+      fullPath: '/api/webhooks/alchemy-ethereum'
+      preLoaderRoute: typeof ApiWebhooksAlchemyEthereumRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/transactional/preview': {
@@ -686,6 +748,7 @@ const rootRouteChildren: RootRouteChildren = {
   BuyRoute: BuyRoute,
   ChangePasswordRoute: ChangePasswordRoute,
   ChangePinRoute: ChangePinRoute,
+  CryptoWithdrawalRoute: CryptoWithdrawalRoute,
   DashboardRoute: DashboardRoute,
   DeleteAccountRoute: DeleteAccountRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
@@ -709,7 +772,9 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   AssetsSymbolRoute: AssetsSymbolRoute,
   TransactionsTransactionIdRoute: TransactionsTransactionIdRoute,
+  ApiInternalCryptoDepositsRoute: ApiInternalCryptoDepositsRoute,
   ApiPublicStripeWalletWebhookRoute: ApiPublicStripeWalletWebhookRoute,
+  ApiWebhooksAlchemyEthereumRoute: ApiWebhooksAlchemyEthereumRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport

@@ -21,7 +21,7 @@ describe("admin dashboard metrics", () => {
 
   it("renders the dashboard with its default reporting period", () => {
     render(<AdminDashboard onSection={() => {}} periodId="week" />);
-    expect(screen.getByText("$1,284,560,320")).toBeInTheDocument();
+    expect(screen.getAllByText("$1,284,560,320")).toHaveLength(2);
     expect(screen.getByText("Transaction Volume")).toBeInTheDocument();
   });
 });

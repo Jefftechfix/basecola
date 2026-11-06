@@ -1,6 +1,22 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { parseCryptoWithdrawalInput } from "@/lib/crypto/withdrawals";
+import type { Json } from "@/integrations/supabase/types";
+
+type WithdrawalRpc = {
+  rpc: (
+    functionName: "request_crypto_withdrawal",
+    args: {
+      _asset: string;
+      _network: string;
+      _wallet_id: string;
+      _destination_address: string;
+      _destination_tag: number | null;
+      _amount: number;
+      _idempotency_key: string;
+    },
+  ) => Promise<{ data: Json; error: { message: string } | null }>;
+};
 
 export const requestCryptoWithdrawal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -20,13 +36,13 @@ export const requestCryptoWithdrawal = createServerFn({ method: "POST" })
     if (walletError) throw new Error("Could not verify the withdrawal wallet.");
     if (!wallet) throw new Error("No active wallet is available for this network.");
 
-    const { data: result, error } = await context.supabase.rpc("request_crypto_withdrawal", {
+    const { data: result, error } = await (context.supabase as unknown as WithdrawalRpc).rpc("request_crypto_withdrawal", {
       _asset: data.asset,
       _network: data.network,
       _wallet_id: wallet.id,
       _destination_address: data.destinationAddress,
       _destination_tag: data.destinationTag,
-      _amount: data.amount,
+      _amount: Number(data.amount),
       _idempotency_key: data.idempotencyKey,
     });
     if (error) throw new Error(error.message);

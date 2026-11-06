@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { notifyVerificationDecision } from "@/lib/verification-email";
+import { isSignupRange, summarizeSignups, type SignupRange } from "@/lib/signup-analytics";
 
 type AuthCtx = { supabase: { from: (t: "user_roles") => any }; userId: string };
 
@@ -17,6 +18,20 @@ async function assertAdmin(context: AuthCtx) {
 async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin;
 }
+
+export const listAdminSignupAnalytics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { range: SignupRange }) => {
+    if (!isSignupRange(input.range)) throw new Error("Choose a valid signup reporting range.");
+    return { range: input.range };
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as AuthCtx);
+    const db = await admin();
+    const { data: rows, error } = await db.from("profiles").select("country, created_at");
+    if (error) throw new Error("Could not load signup analytics.");
+    return summarizeSignups(rows ?? [], data.range, new Date());
+  });
 
 export type AdminAssetNetworkRow = {
   asset: string;
@@ -249,6 +264,7 @@ export const listAdminCompanyTreasuryWallets = createServerFn({ method: "GET" })
 
     const balancesByWallet = new Map<string, AdminCompanyTreasuryWalletRow["balances"]>();
     for (const observation of observations ?? []) {
+      if (!observation.wallet_account_id || !observation.asset || !observation.observed_at) continue;
       const current = balancesByWallet.get(observation.wallet_account_id) ?? [];
       current.push({
         asset: observation.asset,
@@ -422,6 +438,7 @@ export const listAdminTreasuryBalances = createServerFn({ method: "GET" })
       );
     const accounts = new Map((wallets ?? []).map((wallet) => [wallet.id, wallet]));
     return (snapshots ?? []).flatMap((snapshot) => {
+      if (!snapshot.wallet_account_id || !snapshot.asset || !snapshot.observed_at) return [];
       const wallet = accounts.get(snapshot.wallet_account_id);
       if (!wallet) return [];
       return [
@@ -656,7 +673,7 @@ export const listAdminTradeOrders = createServerFn({ method: "GET" })
           "Could not load buy/sell orders.",
       );
     const users = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
-    const orders: AdminTradeOrderRow[] = [
+    const orders: Omit<AdminTradeOrderRow, "user">[] = [
       ...(buys ?? []).map((row) => ({
         id: row.id,
         user_id: row.user_id,
@@ -945,8 +962,12 @@ export const listAdminDeposits = createServerFn({ method: "GET" })
         error?.message ?? profileError?.message ?? "Could not load deposit observations.",
       );
     const users = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
-    return (deposits ?? []).map((deposit) => ({
+    const rows = deposits ?? [];
+    if (rows.some((deposit) => !["pending", "confirmed", "failed"].includes(deposit.status)))
+      throw new Error("A deposit record has an unsupported status.");
+    return rows.map((deposit) => ({
       ...deposit,
+      status: deposit.status as AdminDepositRow["status"],
       user: deposit.user_id
         ? {
             full_name: users.get(deposit.user_id)?.full_name ?? null,
@@ -1298,7 +1319,7 @@ export const exportAccountDataForDeletionRequest = createServerFn({ method: "GET
     ] as const;
     const entries = await Promise.all(
       tables.map(async ([key, table, column]) => {
-        const { data: rows, error } = await db.from(table).select("*").eq(column, userId);
+        const { data: rows, error } = await (db as any).from(table).select("*").eq(column, userId);
         if (error) throw new Error(`Could not export ${key}: ${error.message}`);
         return [key, rows ?? []] as const;
       }),

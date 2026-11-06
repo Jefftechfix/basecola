@@ -824,8 +824,15 @@ export function adminOverview() {
 /** True when the signed-in Supabase user has the admin role (checked against user_roles). */
 export async function currentUserIsAdmin(): Promise<boolean> {
   const { supabase } = await import("@/integrations/supabase/client");
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
   if (!auth.user) return false;
-  const { data } = await supabase.from("user_roles").select("role").eq("user_id", auth.user.id).eq("role", "admin").maybeSingle();
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", auth.user.id)
+    .eq("role", "admin")
+    .maybeSingle();
+  if (error) throw error;
   return Boolean(data);
 }

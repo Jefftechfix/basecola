@@ -15,24 +15,50 @@ export const Route = createFileRoute("/admin")({
 function AdminPage() {
   const nav = useNavigate();
   const [ready, setReady] = useState(false);
+  const [verificationFailed, setVerificationFailed] = useState(false);
+  const [verificationAttempt, setVerificationAttempt] = useState(0);
   const [section, setSection] = useState<AdminSection>("dashboard");
   const [periodId, setPeriodId] = useState<(typeof ADMIN_PERIODS)[number]["id"]>("week");
 
   useEffect(() => {
     let active = true;
-    currentUserIsAdmin().then(ok => {
-      if (!active) return;
-      if (ok) setReady(true);
-      else nav({ to: "/admin-login", replace: true });
-    });
+    setVerificationFailed(false);
+    currentUserIsAdmin()
+      .then(async ok => {
+        if (!active) return;
+        if (ok) setReady(true);
+        else await nav({ to: "/admin-login", replace: true });
+      })
+      .catch(error => {
+        console.error("[Admin dashboard] Could not verify admin access.", error);
+        if (active) setVerificationFailed(true);
+      });
     return () => { active = false; };
-  }, [nav]);
+  }, [nav, verificationAttempt]);
 
   async function signOut() {
     await supabase.auth.signOut();
     nav({ to: "/admin-login", replace: true });
   }
 
+  if (verificationFailed)
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="max-w-md text-center">
+          <h1 className="text-xl font-semibold text-foreground">Couldn’t verify admin access</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Check your connection and try again.
+          </p>
+          <button
+            type="button"
+            onClick={() => setVerificationAttempt(attempt => attempt + 1)}
+            className="mt-6 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
   if (!ready) return null;
 
   return <AdminShell section={section} onSection={setSection} onSignOut={signOut} periodId={periodId} onPeriod={setPeriodId}>

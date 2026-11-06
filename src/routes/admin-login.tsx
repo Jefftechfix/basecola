@@ -27,16 +27,44 @@ function AdminLoginPage() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (busy) return;
     setBusy(true);
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (signInError) { setBusy(false); setError("Incorrect email or password."); return; }
-    if (!(await currentUserIsAdmin())) {
-      await supabase.auth.signOut();
+    setError("");
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (signInError) {
+        setError("Incorrect email or password.");
+        return;
+      }
+
+      let isAdmin: boolean;
+      try {
+        isAdmin = await currentUserIsAdmin();
+      } catch (verificationError) {
+        console.error("[Admin login] Could not verify admin access.", verificationError);
+        const { error: signOutError } = await supabase.auth.signOut();
+        if (signOutError)
+          console.error("[Admin login] Could not clear session after verification failure.", signOutError);
+        setError("Could not verify admin access. Check your connection and try again.");
+        return;
+      }
+
+      if (!isAdmin) {
+        await supabase.auth.signOut();
+        setError("This account does not have admin access.");
+        return;
+      }
+
+      await nav({ to: "/admin" });
+    } catch (loginError) {
+      console.error("[Admin login] Sign-in failed unexpectedly.", loginError);
+      setError("Could not sign in right now. Check your connection and try again.");
+    } finally {
       setBusy(false);
-      setError("This account does not have admin access.");
-      return;
     }
-    nav({ to: "/admin" });
   }
 
   return <AuthShell>

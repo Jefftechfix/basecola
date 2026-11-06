@@ -32,8 +32,13 @@ export function clearAdminSession() {
 }
 
 export function adminMoney(value: number | null | undefined, digits = 0) {
-  const amount = Number.isFinite(value) ? value ?? 0 : 0;
-  return amount.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: digits, maximumFractionDigits: digits });
+  const amount = typeof value === "number" && Number.isFinite(value) ? value : 0;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(amount);
 }
 
 export function adminCount(value: number) {

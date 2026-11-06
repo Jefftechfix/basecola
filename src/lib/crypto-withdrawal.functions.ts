@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { parseCryptoWithdrawalInput } from "@/lib/crypto/withdrawals";
+import type { Json } from "@/integrations/supabase/types";
 
 type WithdrawalRpc = {
   rpc: (
@@ -14,7 +15,7 @@ type WithdrawalRpc = {
       _amount: number;
       _idempotency_key: string;
     },
-  ) => Promise<{ data: unknown; error: { message: string } | null }>;
+  ) => Promise<{ data: Json; error: { message: string } | null }>;
 };
 
 export const requestCryptoWithdrawal = createServerFn({ method: "POST" })
@@ -41,7 +42,7 @@ export const requestCryptoWithdrawal = createServerFn({ method: "POST" })
       _wallet_id: wallet.id,
       _destination_address: data.destinationAddress,
       _destination_tag: data.destinationTag,
-      _amount: data.amount,
+      _amount: Number(data.amount),
       _idempotency_key: data.idempotencyKey,
     });
     if (error) throw new Error(error.message);

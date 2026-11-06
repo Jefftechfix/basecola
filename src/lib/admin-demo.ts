@@ -31,8 +31,9 @@ export function clearAdminSession() {
   sessionStorage.removeItem(ADMIN_SESSION_KEY);
 }
 
-export function adminMoney(value: number, digits = 0) {
-  return value.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: digits, maximumFractionDigits: digits });
+export function adminMoney(value: number | null | undefined, digits = 0) {
+  const amount = Number.isFinite(value) ? value ?? 0 : 0;
+  return amount.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 
 export function adminCount(value: number) {
@@ -788,10 +789,54 @@ const weekPoints = [
 ];
 
 export const ADMIN_PERIODS = [
-  { id: "week", label: "Last 7 days", days: 7 },
-  { id: "recent", label: "Last 4 days", days: 4 },
-  { id: "today", label: "Today", days: 1 },
-  { id: "month", label: "Last 30 days", days: 30 },
+  {
+    id: "week",
+    label: "Last 7 days",
+    days: 7,
+    volume: 1_284_560_320,
+    transactions: 24_980_341,
+    volumeChange: 21.7,
+    transactionChange: 18.4,
+    points: weekPoints,
+  },
+  {
+    id: "recent",
+    label: "Last 4 days",
+    days: 4,
+    volume: 482_320_100,
+    transactions: 9_213_100,
+    volumeChange: 8.3,
+    transactionChange: 6.8,
+    points: weekPoints.slice(-4),
+  },
+  {
+    id: "today",
+    label: "Today",
+    days: 1,
+    volume: 128_420_500,
+    transactions: 2_498_034,
+    volumeChange: 3.2,
+    transactionChange: 2.4,
+    points: weekPoints.slice(-1),
+  },
+  {
+    id: "month",
+    label: "Last 30 days",
+    days: 30,
+    volume: 4_982_310_200,
+    transactions: 96_044_120,
+    volumeChange: 24.1,
+    transactionChange: 19.6,
+    points: [
+      { label: "Oct 3", volume: 118, transactions: 2.4 },
+      { label: "Oct 8", volume: 164, transactions: 3.1 },
+      { label: "Oct 13", volume: 142, transactions: 2.8 },
+      { label: "Oct 18", volume: 206, transactions: 3.9 },
+      { label: "Oct 23", volume: 188, transactions: 3.6 },
+      { label: "Oct 28", volume: 236, transactions: 4.4 },
+      { label: "Nov 1", volume: 284, transactions: 4.9 },
+    ],
+  },
 ] as const;
 
 export const ADMIN_NOTICES = [

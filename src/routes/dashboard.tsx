@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Eye, EyeOff, PlusCircle, Download, ArrowUp, ArrowRight, Bitcoin, RefreshCw, BarChart3, Copy, Check } from "lucide-react";
-import { Logo, COINS, CoinIcon, Change } from "@/components/brand";
+import { Logo, COINS, CoinIcon } from "@/components/brand";
 import { NotificationBell } from "@/components/notification-bell";
 import coins from "@/assets/coins.png";
 import { AccountNav } from "@/components/account-shell";
@@ -14,6 +14,7 @@ import { money } from "@/lib/account-demo";
 import { loadWalletBalance } from "@/lib/wallet-balance";
 import { ASSET_NAMES, CRYPTO_ASSETS, CRYPTO_NETWORKS } from "@/lib/crypto/networks";
 import { ensureCustomerCryptoWallets } from "@/lib/crypto-provisioning.functions";
+import { MarketFeedLabel, marketPriceText, useAlchemyMarketPrices } from "@/components/market-prices";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
@@ -41,20 +42,13 @@ function CheckingAccount() {
   return <p className="grid min-h-screen place-items-center text-sm text-muted-foreground">Checking your account</p>;
 }
 
-function Spark({ up, seed }: { up: boolean; seed: number }) {
-  const pts = Array.from({ length: 12 }, (_, i) => {
-    const y = 20 + Math.sin(i * 1.3 + seed) * 6 + (up ? -i * 1.4 : i * 0.6);
-    return `${i * 8},${y}`;
-  }).join(" ");
-  return <svg viewBox="0 0 88 40" className={`h-8 w-24 ${up ? "text-success" : "text-destructive"}`}><polyline points={pts} fill="none" stroke="currentColor" strokeWidth="2" /></svg>;
-}
-
 function Dashboard() {
   const nav = useNavigate();
   const [hide, setHide] = useState(false);
   const [copyStatus, setCopyStatus] = useState<{ asset: string; copied: boolean } | null>(null);
   const { data: profile, isPending, isError, error: profileError } = useQuery({ queryKey: ["account-profile"], queryFn: loadAccountProfile });
   const { data: balance, isPending: balancePending, error: balanceError } = useQuery({ queryKey: ["wallet-balance"], queryFn: loadWalletBalance });
+  const { data: marketQuotes } = useAlchemyMarketPrices();
   const provisionWallets = useServerFn(ensureCustomerCryptoWallets);
   const { data: cryptoWallets, isPending: cryptoWalletsPending, error: cryptoWalletsError } = useQuery({
     queryKey: ["crypto-wallets"],
@@ -180,14 +174,13 @@ function Dashboard() {
           </Button>
         </section>
 
-        <Head t="Market" l="See All" />
+        <div className="mb-3 mt-7 flex items-center justify-between"><h2 className="text-xl font-extrabold">Market</h2><div className="flex items-center gap-2"><MarketFeedLabel quotes={marketQuotes} /><span className="flex items-center gap-1 text-sm font-semibold text-primary">See All<ArrowRight className="h-4 w-4" /></span></div></div>
         <div className="divide-y rounded-2xl border bg-card px-4">
-          {COINS.map((c, i) => (
+          {COINS.map((c) => (
             <div key={c.sym} className="flex items-center gap-3 py-3">
               <CoinIcon coin={c} size="h-11 w-11 text-lg" />
               <div className="w-20"><p className="font-bold">{c.name}</p><p className="text-sm text-muted-foreground">{c.sym}</p></div>
-              <div className="flex flex-1 justify-center"><Spark up={c.change > 0} seed={i} /></div>
-              <div className="text-right"><p className="font-bold">{c.price}</p><p className="text-sm"><Change v={c.change} /></p></div>
+              <div className="flex-1 text-right"><p className="font-bold">{marketPriceText(marketQuotes, c.sym, c.price)}</p><p className="text-xs text-muted-foreground">USD</p></div>
             </div>
           ))}
         </div>

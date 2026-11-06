@@ -4,6 +4,7 @@ import { Logo, COINS, CoinIcon, Change } from "@/components/brand";
 import coins from "@/assets/coins.png";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Gift, LogIn, UserPlus } from "lucide-react";
+import { MarketFeedLabel, marketPriceText, useAlchemyMarketPrices } from "@/components/market-prices";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -32,7 +33,7 @@ const why = [
   { icon: Wallet, t: "Earn & Grow", d: "Earn rewards and grow your holdings with ease." },
 ];
 
-function PhoneMock() {
+function PhoneMock({ quotes }: { quotes: ReturnType<typeof useAlchemyMarketPrices>["data"] }) {
   return (
     <div className="mx-auto w-[300px] rounded-[2.75rem] border-[10px] border-navy bg-card p-4 shadow-phone">
       <div className="flex items-center justify-between"><Logo size="sm" /><Bell className="h-4 w-4" /></div>
@@ -53,7 +54,7 @@ function PhoneMock() {
         <div key={c.sym} className="mt-2 flex items-center gap-2 text-xs">
           <CoinIcon coin={c} size="h-6 w-6 text-xs" />
           <span className="font-semibold">{c.name}</span><span className="text-[10px] text-muted-foreground">{c.sym}</span>
-          <span className="ml-auto text-right font-bold">{c.price}<br /><span className="text-[10px]"><Change v={c.change} /></span></span>
+          <span className="ml-auto text-right font-bold">{marketPriceText(quotes, c.sym, c.price)}<br /><span className="text-[10px] text-muted-foreground">USD</span></span>
         </div>
       ))}
       <div className="mt-3 flex justify-around border-t pt-2 text-[10px] text-muted-foreground">
@@ -92,6 +93,7 @@ function MobileMenu() {
 }
 
 function Index() {
+  const { data: quotes } = useAlchemyMarketPrices();
   return (
     <div className="min-h-screen">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
@@ -115,7 +117,7 @@ function Index() {
             <p className="mt-4 text-lg text-muted-foreground">A secure and easy way to buy, sell, trade, and store cryptocurrency. Join millions of users worldwide on Basecola.</p>
             <Link to="/signup" className="mt-7 inline-flex items-center gap-2 rounded-2xl bg-primary px-10 py-4 font-semibold text-primary-foreground shadow-soft">Get Started <ArrowRight className="h-4 w-4" /></Link>
           </div>
-          <PhoneMock />
+          <PhoneMock quotes={quotes} />
         </div>
       </section>
 
@@ -125,14 +127,13 @@ function Index() {
             <div key={t} className="flex flex-col items-center gap-2 px-2 text-center text-sm font-semibold"><I className="h-8 w-8 text-primary" />{t}</div>
           ))}
         </div>
-        <div id="markets" className="rounded-3xl border bg-card p-2 shadow-soft">
+        <div id="markets" className="mb-3 flex items-center justify-between"><h2 className="text-xl font-extrabold">Crypto market</h2><MarketFeedLabel quotes={quotes} /></div>
+        <div className="rounded-3xl border bg-card p-2 shadow-soft">
           {COINS.map((c) => (
-            <div key={c.sym} className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 px-3 py-3 text-sm sm:grid-cols-[auto_1fr_1fr_1fr_1fr]">
+            <div key={c.sym} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-3 py-3 text-sm">
               <CoinIcon coin={c} size="h-8 w-8" />
               <span className="font-semibold">{c.name}</span>
-              <span className="text-muted-foreground">{c.sym}</span>
-              <span className="text-right font-bold">{c.price}</span>
-              <span className="text-right font-semibold"><Change v={c.change} /></span>
+              <span className="text-right"><span className="block font-bold">{marketPriceText(quotes, c.sym, c.price)}</span><span className="text-xs text-muted-foreground">{c.sym} · USD</span></span>
             </div>
           ))}
         </div>

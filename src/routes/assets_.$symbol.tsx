@@ -2,9 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, Eye, EyeOff, Wallet, History } from "lucide-react";
 import { AccountShell } from "@/components/account-shell";
-import { CoinIcon, Change } from "@/components/brand";
+import { CoinIcon } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { HOLDINGS, money } from "@/lib/account-demo";
+import { findMarketQuote, formatMarketPrice, MarketFeedLabel, useAlchemyMarketPrices } from "@/components/market-prices";
 
 const descriptions: Record<string, string> = {
   BTC: "Bitcoin is a decentralized digital currency. Its network uses proof of work to secure peer-to-peer transactions.",
@@ -29,13 +30,15 @@ function CryptoDetailsPage() {
   const { symbol } = Route.useParams();
   const { hide } = Route.useSearch();
   const [hidden, setHidden] = useState(hide ?? false);
+  const { data: marketQuotes } = useAlchemyMarketPrices();
   const asset = HOLDINGS.find(item => item.sym === symbol.toUpperCase());
   if (!asset) return <AccountShell active="/assets" title="Crypto details"><div className="py-12 text-center"><Wallet className="mx-auto mb-4 h-10 w-10 text-muted-foreground" /><h2 className="text-xl font-bold">Asset not found</h2><p className="mt-2 text-sm text-muted-foreground">This coin is not available.</p><Button asChild className="mt-6"><Link to="/assets"><ArrowLeft />Back to assets</Link></Button></div></AccountShell>;
+  const quote = findMarketQuote(marketQuotes, asset.sym);
   return <AccountShell active="/assets" title={asset.name}>
     <Button asChild variant="link" className="mb-5 h-auto px-0"><Link to="/assets"><ArrowLeft />Back to assets</Link></Button>
     <section aria-label="Market overview" className="border-b pb-6">
-      <div className="flex items-center gap-3"><CoinIcon coin={asset} size="h-14 w-14" /><div><h2 className="text-xl font-bold">{asset.name}</h2><p className="text-sm text-muted-foreground">{asset.sym}</p></div><span className="ml-auto rounded-md border px-2 py-1 text-xs text-muted-foreground">Sample price</span></div>
-      <p className="mt-5 text-4xl font-extrabold">{asset.price}</p><p className="mt-2 flex items-center gap-2 text-sm"><Change v={asset.change} /><span className="text-muted-foreground">24 hours</span></p>
+      <div className="flex items-center gap-3"><CoinIcon coin={asset} size="h-14 w-14" /><div><h2 className="text-xl font-bold">{asset.name}</h2><p className="text-sm text-muted-foreground">{asset.sym}</p></div><span className="ml-auto"><MarketFeedLabel quotes={quote ? marketQuotes : undefined} /></span></div>
+      <p className="mt-5 text-4xl font-extrabold">{quote ? formatMarketPrice(quote.priceUsd) : asset.price}</p><p className="mt-2 text-sm text-muted-foreground">USD per {asset.sym}{quote ? ` · Updated ${new Date(quote.updatedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}` : ""}</p>
     </section>
     <section aria-label="Your crypto balance" className="border-b py-6">
       <div className="flex items-center justify-between"><h2 className="text-lg font-bold">Your balance</h2><Button variant="ghost" size="icon" onClick={() => setHidden(!hidden)} aria-label={hidden ? "Show balance" : "Hide balance"} title={hidden ? "Show balance" : "Hide balance"}>{hidden ? <EyeOff /> : <Eye />}</Button></div>
@@ -43,6 +46,6 @@ function CryptoDetailsPage() {
     </section>
     <section className="border-b py-6"><h2 className="mb-3 text-lg font-bold">About {asset.name}</h2><p className="text-sm leading-7 text-muted-foreground">{descriptions[asset.sym]}</p></section>
     <section className="py-6"><h2 className="text-lg font-bold">Recent activity</h2><div className="py-7 text-center"><History className="mx-auto mb-3 h-7 w-7 text-muted-foreground" /><p className="text-sm text-muted-foreground">No {asset.sym} activity yet</p></div></section>
-    <p className="text-xs leading-relaxed text-muted-foreground">The price shown above is a sample market price. This account does not hold {asset.sym}.</p>
+    <p className="text-xs leading-relaxed text-muted-foreground">{quote ? "Market prices are supplied by Alchemy and may differ from your final trade price." : "A sample price is shown while live market data is unavailable."} This account does not hold {asset.sym}.</p>
   </AccountShell>;
 }

@@ -1,18 +1,6 @@
-# Crypto Basecamp Beacon
+# Basecola
 
-Create a cryptocurrency website using this images features as basecola
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://crypto-basecamp-beacon.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/32cc0930-2e98-4738-80a7-de4dfe6ffeb9).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+Basecola is a cryptocurrency account and market information application built with Vite and TanStack Start.
 
 ## Development
 
@@ -23,6 +11,13 @@ git clone <this-repository-url>
 cd <repository-name>
 npm i
 npm run dev
+```
+
+Build and preview the Vite app with:
+
+```sh
+npm run build
+npm run preview
 ```
 
 ### Supabase server configuration
@@ -41,9 +36,9 @@ Never prefix the secret/service-role key with `VITE_`, place it in browser code,
 
 ### Transaction email notifications
 
-Configure `LOVABLE_API_KEY` as a server-only environment variable for local development and in the app host. Do not use a `VITE_` prefix. The sender uses the verified `notify.netppay.com` sender domain; `LOVABLE_SEND_URL` is only needed when using a non-default Lovable email endpoint.
+Configure `APP_URL`, `RESEND_API_KEY`, and `RESEND_FROM_EMAIL` as server-only environment variables for local development and in the app host. `APP_URL` is the canonical public application origin used in email links and Stripe checkout returns. `RESEND_FROM_EMAIL` must be a sender address verified in your Resend account. Never expose these values with a `VITE_` prefix.
 
-Basecola sends the branded transaction email after Stripe confirms wallet funding, a buy or sell settles, an on-chain deposit reaches its required confirmations, or a crypto withdrawal is broadcast. Unconfirmed deposits and the send/receive demo screens do not send transaction-completion emails. Provider delivery failures are logged; webhook notifications return a retryable error where the originating provider can retry, and stable idempotency keys prevent duplicate messages on retries.
+Basecola sends the branded transaction email after Stripe confirms wallet funding, a buy or sell settles, an on-chain deposit reaches its required confirmations, or a crypto withdrawal is broadcast. Unconfirmed deposits and the send/receive demo screens do not send transaction-completion emails. Provider delivery failures are surfaced to the caller; webhook notifications return a retryable error where the originating provider can retry, and stable idempotency keys prevent duplicate messages on retries.
 
 ### Turnkey-managed crypto wallets
 
@@ -54,6 +49,7 @@ TURNKEY_ORGANIZATION_ID=
 TURNKEY_API_PUBLIC_KEY=
 TURNKEY_API_PRIVATE_KEY=
 ALCHEMY_API_KEY=
+APP_URL=https://YOUR_PUBLIC_APP_ORIGIN
 ALCHEMY_ETHEREUM_WEBHOOK_ID=
 ALCHEMY_ETHEREUM_WEBHOOK_SIGNING_KEY=
 ETHEREUM_USDT_CONTRACT_ADDRESS=
@@ -74,7 +70,7 @@ supabase functions deploy alchemy-ethereum-webhook
 supabase functions deploy crypto-deposit-ingestion
 ```
 
-Supabase provides `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to Edge Functions. Do not copy the service-role key into the secret file. Keep app-host `SUPABASE_URL` and publishable/anon key configured so the app can call Supabase and forward webhook requests. Public market prices are fetched through the `alchemy-market-prices` Edge Function, which reads the `ALCHEMY_API_KEY` secret server-side and caches results for 60 seconds; the browser and app host never receive the Alchemy key. The same secret is used to construct the Ethereum RPC endpoint and as the Alchemy Notify API token for address registration; an explicit `ALCHEMY_ETHEREUM_RPC_URL` can override the constructed endpoint. The webhook ID and signing key are separate Alchemy webhook configuration values: the API key cannot replace signature verification, so webhook processing remains disabled until those values are set. Store the Turnkey private key in the env file with escaped `\n` sequences if it is PEM-formatted. Do not prefix any Turnkey credential or provider secret with `VITE_`, commit it, or send it in chat.
+Supabase provides `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to Edge Functions. Do not copy the service-role key into the secret file. Keep app-host `SUPABASE_URL` and publishable/anon key configured so the app can call Supabase and forward webhook requests. Set `APP_URL` to the canonical public application origin in both the app server environment and Supabase Edge Function secrets; Stripe checkout accepts returns only to that configured origin. Public market prices are fetched through the `alchemy-market-prices` Edge Function, which reads the `ALCHEMY_API_KEY` secret server-side and caches results for 60 seconds; the browser and app host never receive the Alchemy key. The same secret is used to construct the Ethereum RPC endpoint and as the Alchemy Notify API token for address registration; an explicit `ALCHEMY_ETHEREUM_RPC_URL` can override the constructed endpoint. The webhook ID and signing key are separate Alchemy webhook configuration values: the API key cannot replace signature verification, so webhook processing remains disabled until those values are set. Store the Turnkey private key in the env file with escaped `\n` sequences if it is PEM-formatted. Do not prefix any Turnkey credential or provider secret with `VITE_`, commit it, or send it in chat.
 
 The signup database trigger queues idempotent wallet-provisioning jobs. After authentication, the app calls `turnkey-wallet-provisioning`; the Edge Function validates the customer JWT, provisions Bitcoin, Ethereum, Solana, and XRP accounts through Turnkey, registers the Ethereum address with Alchemy, and returns only public wallet information. USDT shares the Ethereum address. The demo Receive screen remains separate.
 
@@ -87,3 +83,5 @@ The admin Treasury section can discover wallet names and IDs in the configured T
 The Crypto Withdrawal page creates an idempotent request for any valid destination address, applies the $5,000 per-request and rolling 24-hour limits using the audited admin sell-price configuration, automatically approves the request under the selected no-manual-approval policy, and reserves confirmed ledger funds. XRP destination tags are supported. This is request/reservation only: there is no chain-specific fee quote, Turnkey transaction construction/signing, broadcast, or execution reconciliation yet; the UI explicitly states that no transfer is sent.
 
 Do not enable `CRYPTO_MAINNET_WALLETS_ENABLED` until webhook address registration and confirmation reconciliation are operational for Ethereum, and private monitor workers are deployed and tested for Bitcoin, Solana, and XRP. Turnkey provisions wallets and offers signing APIs; it does not monitor deposits. This repository contains the observation/ledger database path, an Alchemy Ethereum webhook Edge Function, and a protected ingestion Edge Function, but not the complete all-network watcher or production withdrawal execution, so mainnet wallet provisioning remains disabled by default.
+
+# basecola

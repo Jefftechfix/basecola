@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Copy, ExternalLink, RefreshCw, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CryptoAssetIcon } from "@/components/brand";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,21 @@ function explorerUrl(network: string, address: string): string | null {
 
 function dateTime(value: string): string {
   return new Date(value).toLocaleString();
+}
+
+function networkAssetSymbol(network: string): string {
+  switch (network) {
+    case "bitcoin-mainnet":
+      return "BTC";
+    case "ethereum-mainnet":
+      return "ETH";
+    case "solana-mainnet":
+      return "SOL";
+    case "xrpl-mainnet":
+      return "XRP";
+    default:
+      return network;
+  }
 }
 
 export function AdminCompanyTreasuryWallets() {
@@ -259,7 +275,15 @@ export function AdminCompanyTreasuryWallets() {
               const explorer = explorerUrl(wallet.network, wallet.address);
               return (
                 <tr key={wallet.id} className="border-t align-top">
-                  <td className="p-2 font-semibold">{wallet.label}</td>
+                  <td className="p-2">
+                    <span className="flex items-center gap-2 font-semibold">
+                      <CryptoAssetIcon
+                        symbol={networkAssetSymbol(wallet.network)}
+                        name={wallet.network}
+                      />
+                      {wallet.label}
+                    </span>
+                  </td>
                   <td className="p-2">{wallet.network}</td>
                   <td className="p-2">
                     <span
@@ -276,7 +300,12 @@ export function AdminCompanyTreasuryWallets() {
                   <td className="p-2">
                     {wallet.balances.length
                       ? wallet.balances.map((balance) => (
-                          <div key={balance.asset}>
+                          <div key={balance.asset} className="flex items-center gap-1">
+                            <CryptoAssetIcon
+                              symbol={balance.asset}
+                              name={balance.asset}
+                              size="h-4 w-4"
+                            />
                             {balance.balance.toLocaleString(undefined, {
                               maximumFractionDigits: 18,
                             })}{" "}

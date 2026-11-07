@@ -39,6 +39,12 @@ SUPABASE_SECRET_KEY=YOUR_SERVER_SECRET_KEY
 
 Never prefix the secret/service-role key with `VITE_`, place it in browser code, or commit it. The admin key bypasses row-level security and must remain server-side.
 
+### Transaction email notifications
+
+Configure `LOVABLE_API_KEY` as a server-only environment variable for local development and in the app host. Do not use a `VITE_` prefix. The sender uses the verified `notify.netppay.com` sender domain; `LOVABLE_SEND_URL` is only needed when using a non-default Lovable email endpoint.
+
+Basecola sends the branded transaction email after Stripe confirms wallet funding, a buy or sell settles, an on-chain deposit reaches its required confirmations, or a crypto withdrawal is broadcast. Unconfirmed deposits and the send/receive demo screens do not send transaction-completion emails. Provider delivery failures are logged; webhook notifications return a retryable error where the originating provider can retry, and stable idempotency keys prevent duplicate messages on retries.
+
 ### Turnkey-managed crypto wallets
 
 Turnkey and Alchemy credentials are read only inside Supabase Edge Functions, not the TanStack app server or browser. The Edge Functions use the official `@turnkey/sdk-server` package pinned to `8.9.0`. Link the Supabase project, create an **untracked and gitignored** `.env.supabase-edge` file containing these entries, fill it locally, then upload them:

@@ -99,6 +99,7 @@ Deno.serve(async (request) => {
   }
 
   const admin = createSupabaseClient(supabaseUrl, serviceKey);
+  const observationIds: string[] = [];
   try {
     const observed = await processAlchemyEthereumWebhook(
       payload,
@@ -139,7 +140,7 @@ Deno.serve(async (request) => {
           return data?.address ? { address: data.address } : null;
         },
         recordDeposit: async (event: AlchemyDepositObservation) => {
-          const { error } = await admin.rpc("record_chain_deposit", {
+          const { data: observationId, error } = await admin.rpc("record_chain_deposit", {
             _network: event.network,
             _asset: event.asset,
             _tx_hash: event.txHash,
@@ -158,10 +159,14 @@ Deno.serve(async (request) => {
             _sender_address: event.senderAddress,
           });
           if (error) throw new Error("Could not record crypto deposit observation.");
+          if (typeof observationId !== "string") {
+            throw new Error("Deposit observation did not return an ID.");
+          }
+          observationIds.push(observationId);
         },
       },
     );
-    return json({ received: true, observed });
+    return json({ received: true, observed, observationIds });
   } catch (error) {
     console.error("Alchemy Ethereum webhook processing failed.", error);
     return json({ error: "Could not process Alchemy Ethereum webhook." }, 500);

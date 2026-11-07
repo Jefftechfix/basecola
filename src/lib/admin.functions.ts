@@ -28,6 +28,28 @@ async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin;
 }
 
+export const getAdminProfile = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context as AuthCtx);
+    const { data, error } = await context.supabase
+      .from("profiles")
+      .select("full_name, email, phone, country, created_at")
+      .eq("id", context.userId)
+      .maybeSingle();
+    if (error) throw new Error(`Could not load admin profile: ${error.message}`);
+
+    const claimedEmail = (context.claims as { email?: unknown }).email;
+    return {
+      id: context.userId,
+      name: data?.full_name?.trim() || "Admin",
+      email: data?.email || (typeof claimedEmail === "string" ? claimedEmail : ""),
+      phone: data?.phone,
+      country: data?.country,
+      createdAt: data?.created_at,
+    };
+  });
+
 export const getAdminDashboardSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { periodId: string }) => {

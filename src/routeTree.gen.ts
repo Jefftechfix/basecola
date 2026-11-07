@@ -39,6 +39,9 @@ import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as VerifyAccountRouteImport } from './routes/verify-account'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as AssetsSymbolRouteImport } from './routes/assets_.$symbol'
+import { Route as CompanySlugRouteImport } from './routes/company.$slug'
+import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
+import { Route as SupportSlugRouteImport } from './routes/support.$slug'
 import { Route as TransactionsTransactionIdRouteImport } from './routes/transactions_.$transactionId'
 import { Route as ApiInternalCryptoDepositsRouteImport } from './routes/api/internal/crypto-deposits'
 import { Route as ApiPublicStripeWalletWebhookRouteImport } from './routes/api/public/stripe-wallet-webhook'
@@ -195,6 +198,21 @@ const AssetsSymbolRoute = AssetsSymbolRouteImport.update({
   path: '/assets/$symbol',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompanySlugRoute = CompanySlugRouteImport.update({
+  id: '/company/$slug',
+  path: '/company/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsSlugRoute = ProductsSlugRouteImport.update({
+  id: '/products/$slug',
+  path: '/products/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportSlugRoute = SupportSlugRouteImport.update({
+  id: '/support/$slug',
+  path: '/support/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TransactionsTransactionIdRoute =
   TransactionsTransactionIdRouteImport.update({
     id: '/transactions_/$transactionId',
@@ -257,6 +275,9 @@ export interface FileRoutesByFullPath {
   '/verify-account': typeof VerifyAccountRoute
   '/wallet': typeof WalletRoute
   '/assets/$symbol': typeof AssetsSymbolRoute
+  '/company/$slug': typeof CompanySlugRoute
+  '/products/$slug': typeof ProductsSlugRoute
+  '/support/$slug': typeof SupportSlugRoute
   '/transactions/$transactionId': typeof TransactionsTransactionIdRoute
   '/api/internal/crypto-deposits': typeof ApiInternalCryptoDepositsRoute
   '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
@@ -294,6 +315,9 @@ export interface FileRoutesByTo {
   '/verify-account': typeof VerifyAccountRoute
   '/wallet': typeof WalletRoute
   '/assets/$symbol': typeof AssetsSymbolRoute
+  '/company/$slug': typeof CompanySlugRoute
+  '/products/$slug': typeof ProductsSlugRoute
+  '/support/$slug': typeof SupportSlugRoute
   '/transactions/$transactionId': typeof TransactionsTransactionIdRoute
   '/api/internal/crypto-deposits': typeof ApiInternalCryptoDepositsRoute
   '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
@@ -332,6 +356,9 @@ export interface FileRoutesById {
   '/verify-account': typeof VerifyAccountRoute
   '/wallet': typeof WalletRoute
   '/assets_/$symbol': typeof AssetsSymbolRoute
+  '/company/$slug': typeof CompanySlugRoute
+  '/products/$slug': typeof ProductsSlugRoute
+  '/support/$slug': typeof SupportSlugRoute
   '/transactions_/$transactionId': typeof TransactionsTransactionIdRoute
   '/api/internal/crypto-deposits': typeof ApiInternalCryptoDepositsRoute
   '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
@@ -371,6 +398,9 @@ export interface FileRouteTypes {
     | '/verify-account'
     | '/wallet'
     | '/assets/$symbol'
+    | '/company/$slug'
+    | '/products/$slug'
+    | '/support/$slug'
     | '/transactions/$transactionId'
     | '/api/internal/crypto-deposits'
     | '/api/public/stripe-wallet-webhook'
@@ -408,6 +438,9 @@ export interface FileRouteTypes {
     | '/verify-account'
     | '/wallet'
     | '/assets/$symbol'
+    | '/company/$slug'
+    | '/products/$slug'
+    | '/support/$slug'
     | '/transactions/$transactionId'
     | '/api/internal/crypto-deposits'
     | '/api/public/stripe-wallet-webhook'
@@ -445,6 +478,9 @@ export interface FileRouteTypes {
     | '/verify-account'
     | '/wallet'
     | '/assets_/$symbol'
+    | '/company/$slug'
+    | '/products/$slug'
+    | '/support/$slug'
     | '/transactions_/$transactionId'
     | '/api/internal/crypto-deposits'
     | '/api/public/stripe-wallet-webhook'
@@ -483,6 +519,9 @@ export interface RootRouteChildren {
   VerifyAccountRoute: typeof VerifyAccountRoute
   WalletRoute: typeof WalletRoute
   AssetsSymbolRoute: typeof AssetsSymbolRoute
+  CompanySlugRoute: typeof CompanySlugRoute
+  ProductsSlugRoute: typeof ProductsSlugRoute
+  SupportSlugRoute: typeof SupportSlugRoute
   TransactionsTransactionIdRoute: typeof TransactionsTransactionIdRoute
   ApiInternalCryptoDepositsRoute: typeof ApiInternalCryptoDepositsRoute
   ApiPublicStripeWalletWebhookRoute: typeof ApiPublicStripeWalletWebhookRoute
@@ -702,6 +741,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssetsSymbolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/company/$slug': {
+      id: '/company/$slug'
+      path: '/company/$slug'
+      fullPath: '/company/$slug'
+      preLoaderRoute: typeof CompanySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/$slug': {
+      id: '/products/$slug'
+      path: '/products/$slug'
+      fullPath: '/products/$slug'
+      preLoaderRoute: typeof ProductsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support/$slug': {
+      id: '/support/$slug'
+      path: '/support/$slug'
+      fullPath: '/support/$slug'
+      preLoaderRoute: typeof SupportSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/transactions_/$transactionId': {
       id: '/transactions_/$transactionId'
       path: '/transactions/$transactionId'
@@ -771,6 +831,9 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyAccountRoute: VerifyAccountRoute,
   WalletRoute: WalletRoute,
   AssetsSymbolRoute: AssetsSymbolRoute,
+  CompanySlugRoute: CompanySlugRoute,
+  ProductsSlugRoute: ProductsSlugRoute,
+  SupportSlugRoute: SupportSlugRoute,
   TransactionsTransactionIdRoute: TransactionsTransactionIdRoute,
   ApiInternalCryptoDepositsRoute: ApiInternalCryptoDepositsRoute,
   ApiPublicStripeWalletWebhookRoute: ApiPublicStripeWalletWebhookRoute,

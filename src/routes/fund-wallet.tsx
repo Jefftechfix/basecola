@@ -60,7 +60,13 @@ function FundWalletPage() {
       .then(next => {
         if (!active) return;
         setReceipt(next);
-        if (next.status === "completed") void sendReceiptEmail({ data: { kind: "funding", reference: sessionId } }).catch(() => {});
+        if (next.status === "completed") {
+          void sendReceiptEmail({ data: { kind: "funding", reference: sessionId } }).then((notification) => {
+            if (!notification.sent) console.warn("Wallet funding completed, but its email notification was not sent.");
+          }).catch((notificationError) => {
+            console.error("Wallet funding completed, but its email notification failed.", notificationError);
+          });
+        }
         qc.invalidateQueries({ queryKey: ["wallet-records", "fundings"] });
         qc.invalidateQueries({ queryKey: ["wallet-balance"] });
       })
@@ -73,7 +79,7 @@ function FundWalletPage() {
     return () => {
       active = false;
     };
-  }, [sessionId, qc]);
+  }, [sessionId, qc, sendReceiptEmail]);
 
   async function pay(event: FormEvent) {
     event.preventDefault();

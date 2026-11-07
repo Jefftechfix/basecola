@@ -1,7 +1,7 @@
 import { LiveAccountDeletionManagement, LiveAssetsWalletManagement, LiveDepositsMonitoring, LiveReferralManagement, LiveTradeManagement, LiveTransactionsManagement, LiveTreasuryManagement, LiveUsersManagement, LiveVerificationManagement } from "@/components/admin-live";
 import { useState, type ReactNode } from "react";
-import { ArrowDownToLine, BadgeCheck, BarChart3, Bell, Calendar, ChevronDown, CircleDollarSign, Home, Landmark, Menu, RefreshCw, Settings, SlidersHorizontal, Trash2, UserPlus, Users, Wallet, X, type LucideIcon } from "lucide-react";
-import { COINS, CoinIcon } from "@/components/brand";
+import { ArrowDownToLine, BadgeCheck, BarChart3, Bell, Calendar, CalendarDays, ChevronDown, CircleDollarSign, Home, Landmark, Mail, MapPin, Menu, Phone, RefreshCw, Settings, SlidersHorizontal, Trash2, UserPlus, UserRound, Users, Wallet, X, type LucideIcon } from "lucide-react";
+import { CryptoAssetIcon } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -10,12 +10,12 @@ import { VerificationManagement } from "@/components/admin-verifications";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useAlchemyMarketPrices } from "@/components/market-prices";
-import { getAdminDashboardSummary } from "@/lib/admin.functions";
+import { getAdminDashboardSummary, getAdminProfile } from "@/lib/admin.functions";
 import { ADMIN_PERIODS, type AdminDashboardRecentTransaction } from "@/lib/admin-dashboard-data";
 import { adminCount, adminMoney } from "@/lib/admin-demo";
 import { MARKET_SYMBOLS } from "@/lib/market-prices";
 
-export type AdminSection = "dashboard" | "users" | "verifications" | "deletions" | "transactions" | "deposits" | "assets" | "trade" | "earn" | "pricing" | "treasury" | "reports" | "referrals" | "settings";
+export type AdminSection = "dashboard" | "users" | "verifications" | "deletions" | "transactions" | "deposits" | "assets" | "trade" | "earn" | "pricing" | "treasury" | "reports" | "referrals" | "profile" | "settings";
 
 const NAV: { id: AdminSection; label: string; icon: typeof Home }[] = [
   { id: "dashboard", label: "Dashboard", icon: Home },
@@ -31,12 +31,23 @@ const NAV: { id: AdminSection; label: string; icon: typeof Home }[] = [
   { id: "treasury", label: "Treasury", icon: Landmark },
   { id: "reports", label: "Reports & Analytics", icon: BarChart3 },
   { id: "referrals", label: "Referral Management", icon: UserPlus },
+  { id: "profile", label: "Admin Profile", icon: UserRound },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
 export function AdminShell({ section, onSection, onSignOut, periodId, onPeriod, children }: { section: AdminSection; onSection: (section: AdminSection) => void; onSignOut: () => void; periodId: (typeof ADMIN_PERIODS)[number]["id"]; onPeriod: (id: (typeof ADMIN_PERIODS)[number]["id"]) => void; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(section === "settings");
+  const loadAdminProfile = useServerFn(getAdminProfile);
+  const profileQuery = useQuery({
+    queryKey: ["admin-profile"],
+    queryFn: () => loadAdminProfile(),
+    staleTime: 60_000,
+  });
+  const profile = profileQuery.data;
+  const profileName = profile?.name ?? "Admin";
+  const profileEmail = profile?.email ?? "";
+  const profileInitial = profileName.trim().charAt(0).toUpperCase() || "A";
 
   function choose(next: AdminSection) {
     onSection(next);
@@ -63,13 +74,13 @@ export function AdminShell({ section, onSection, onSignOut, periodId, onPeriod, 
     <aside className="hidden min-h-screen flex-col bg-[#1b1240] text-white lg:flex">
       <div className="flex items-center gap-3 px-5 py-6"><img src="/logo.png" alt="Basecola" className="h-14 w-auto rounded-lg bg-white" /><p className="text-xs text-white/60">Admin Dashboard</p></div>
       {nav}
-      <button type="button" className="m-4 flex items-center gap-3 rounded-2xl bg-white/10 px-3 py-3 text-left" onClick={onSignOut}><span className="relative grid h-9 w-9 place-items-center rounded-full bg-[#6d4dff] text-sm font-bold">B<span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#1b1240] bg-emerald-400" /></span><span className="min-w-0"><span className="block text-sm font-semibold">Basecola Admin</span><span className="block truncate text-xs text-white/60">admin@basecola.com</span></span></button>
+      <button type="button" className="m-4 flex items-center gap-3 rounded-2xl bg-white/10 px-3 py-3 text-left" onClick={() => choose("profile")}><span className="relative grid h-9 w-9 place-items-center rounded-full bg-[#6d4dff] text-sm font-bold">{profileInitial}<span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#1b1240] bg-emerald-400" /></span><span className="min-w-0"><span className="block text-sm font-semibold">{profileName}</span><span className="block truncate text-xs text-white/60">{profileEmail || "Admin account"}</span></span></button>
     </aside>
     {open && <div className="fixed inset-0 z-40 lg:hidden"><button type="button" aria-label="Close menu" className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} /><aside className="relative flex h-full w-72 flex-col bg-[#1b1240] text-white"><div className="flex items-center justify-between px-5 py-5"><img src="/logo.png" alt="Basecola" className="h-12 w-auto rounded-lg bg-white" /><button type="button" aria-label="Close menu" onClick={() => setOpen(false)}><X /></button></div>{nav}</aside></div>}
     <div className="min-w-0">
       <header className="flex flex-wrap items-center gap-3 border-b bg-white/80 px-4 py-4 sm:px-6">
         <button type="button" className="grid h-10 w-10 place-items-center rounded-xl border lg:hidden" aria-label="Open admin menu" onClick={() => setOpen(true)}><Menu className="h-5 w-5" /></button>
-        <div className="mr-auto"><h1 className="text-2xl font-extrabold">{section === "users" ? "Users Management" : section === "transactions" ? "Transactions Management" : section === "assets" ? "Assets / Wallet Management" : section === "trade" ? "Buy & Sell Management" : section === "pricing" ? "Pricing & Rate Management" : section === "treasury" ? "Treasury Management" : section === "reports" ? "Reports & Analytics" : section === "referrals" ? "Referral Management" : section === "settings" ? "Settings Management" : NAV.find(item => item.id === section)?.label}</h1><p className="text-sm text-muted-foreground">{section === "users" ? "View, manage, and monitor all platform users" : section === "transactions" ? "Monitor, search, and manage all platform transactions" : section === "assets" ? "Configure supported networks, view customer wallet addresses, and request treasury operations" : section === "trade" ? "Review settled trades and configure enforced customer rates and limits" : section === "pricing" ? "Configure persisted buy/sell prices, trading availability, and order limits" : section === "treasury" ? "Review trusted balance observations and manage unexecuted operation requests" : section === "reports" ? "Insights, performance, and detailed reports across the platform" : section === "referrals" ? "Manage referrals, commissions, rewards, and promo programs" : section === "deposits" ? "Monitor, verify, and manage all user crypto deposits in real time" : section === "deletions" ? "Review account closure requests and download member data" : section === "verifications" ? "Review and manage user identity verification submissions." : section === "settings" ? "Configure platform policies, support, communications, security, and system features" : "Welcome back, Admin 👋"}</p></div>
+        <div className="mr-auto"><h1 className="text-2xl font-extrabold">{section === "users" ? "Users Management" : section === "transactions" ? "Transactions Management" : section === "assets" ? "Assets / Wallet Management" : section === "trade" ? "Buy & Sell Management" : section === "pricing" ? "Pricing & Rate Management" : section === "treasury" ? "Treasury Management" : section === "reports" ? "Reports & Analytics" : section === "referrals" ? "Referral Management" : section === "profile" ? "Admin Profile" : section === "settings" ? "Settings Management" : NAV.find(item => item.id === section)?.label}</h1><p className="text-sm text-muted-foreground">{section === "users" ? "View, manage, and monitor all platform users" : section === "transactions" ? "Monitor, search, and manage all platform transactions" : section === "assets" ? "Configure supported networks, view customer wallet addresses, and request treasury operations" : section === "trade" ? "Review settled trades and configure enforced customer rates and limits" : section === "pricing" ? "Configure persisted buy/sell prices, trading availability, and order limits" : section === "treasury" ? "Review trusted balance observations and manage unexecuted operation requests" : section === "reports" ? "Insights, performance, and detailed reports across the platform" : section === "referrals" ? "Manage referrals, commissions, rewards, and promo programs" : section === "deposits" ? "Monitor, verify, and manage all user crypto deposits in real time" : section === "deletions" ? "Review account closure requests and download member data" : section === "verifications" ? "Review and manage user identity verification submissions." : section === "profile" ? "View your administrator account details" : section === "settings" ? "Configure platform policies, support, communications, security, and system features" : "Welcome back, Admin 👋"}</p></div>
         {(section === "dashboard" || section === "transactions" || section === "assets" || section === "trade" || section === "pricing" || section === "treasury" || section === "reports" || section === "referrals" || section === "deposits" || section === "settings") && <label className="flex h-10 items-center gap-2 rounded-xl border bg-white px-3 text-sm"><Calendar className="h-4 w-4 text-muted-foreground" /><span className="sr-only">Reporting dates</span><select aria-label="Reporting dates" value={periodId} onChange={event => onPeriod(event.target.value as (typeof ADMIN_PERIODS)[number]["id"])} className="bg-transparent outline-none">{ADMIN_PERIODS.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>}
         <Popover>
           <PopoverTrigger asChild><Button variant="ghost" size="icon" className="rounded-full bg-white" aria-label="Admin notifications"><Bell /></Button></PopoverTrigger>
@@ -79,8 +90,8 @@ export function AdminShell({ section, onSection, onSignOut, periodId, onPeriod, 
           </PopoverContent>
         </Popover>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild><button type="button" className="flex items-center gap-2 rounded-full bg-white py-1 pl-1 pr-3"><span className="grid h-9 w-9 place-items-center rounded-full bg-[#6d4dff] text-sm font-bold text-white">B</span><span className="text-left text-sm leading-tight"><span className="block font-bold">Admin</span><span className="text-xs text-muted-foreground">Super Admin</span></span><ChevronDown className="h-4 w-4 text-muted-foreground" /></button></DropdownMenuTrigger>
-          <DropdownMenuContent align="end"><DropdownMenuItem onClick={onSignOut}>Sign out</DropdownMenuItem></DropdownMenuContent>
+          <DropdownMenuTrigger asChild><button type="button" className="flex items-center gap-2 rounded-full bg-white py-1 pl-1 pr-3"><span className="grid h-9 w-9 place-items-center rounded-full bg-[#6d4dff] text-sm font-bold text-white">{profileInitial}</span><span className="text-left text-sm leading-tight"><span className="block font-bold">{profileName}</span><span className="text-xs text-muted-foreground">Administrator</span></span><ChevronDown className="h-4 w-4 text-muted-foreground" /></button></DropdownMenuTrigger>
+          <DropdownMenuContent align="end"><DropdownMenuItem onClick={() => choose("profile")}>Admin Profile</DropdownMenuItem><DropdownMenuItem onClick={onSignOut}>Sign out</DropdownMenuItem></DropdownMenuContent>
         </DropdownMenu>
       </header>
       <div className="px-4 py-5 sm:px-6">{children}</div>
@@ -212,6 +223,7 @@ export function AdminDashboard({ onSection, periodId }: { onSection: (section: A
 }
 
 export function AdminPanel({ section }: { section: Exclude<AdminSection, "dashboard"> }) {
+  if (section === "profile") return <AdminProfile />;
   if (section === "users") return <LiveUsersManagement />;
   if (section === "transactions") return <LiveTransactionsManagement />;
   if (section === "assets") return <LiveAssetsWalletManagement />;
@@ -233,6 +245,67 @@ function Panel({ title, text, children }: { title: string; text: string; childre
   return <section><h2 className="text-xl font-extrabold">{title}</h2><p className="mb-4 mt-1 text-sm text-muted-foreground">{text}</p>{children}</section>;
 }
 
+function AdminProfile() {
+  const loadAdminProfile = useServerFn(getAdminProfile);
+  const profileQuery = useQuery({
+    queryKey: ["admin-profile"],
+    queryFn: () => loadAdminProfile(),
+    staleTime: 60_000,
+  });
+  const profile = profileQuery.data;
+
+  if (profileQuery.isPending) {
+    return <p className="rounded-2xl bg-white p-5 text-sm text-muted-foreground">Loading your profile…</p>;
+  }
+  if (profileQuery.error) {
+    return <p role="alert" className="rounded-2xl bg-white p-5 text-sm text-destructive">{profileQuery.error.message}</p>;
+  }
+  if (!profile) {
+    return <p role="alert" className="rounded-2xl bg-white p-5 text-sm text-destructive">Your admin profile is unavailable.</p>;
+  }
+
+  const joined = profile.createdAt
+    ? new Date(profile.createdAt).toLocaleDateString(undefined, { dateStyle: "long" })
+    : "—";
+  const details = [
+    { label: "Full name", value: profile.name || "Not provided", icon: UserRound },
+    { label: "Email address", value: profile.email || "Not provided", icon: Mail },
+    { label: "Phone number", value: profile.phone?.trim() || "Not provided", icon: Phone },
+    { label: "Country", value: profile.country?.trim() || "Not provided", icon: MapPin },
+    { label: "Member since", value: joined, icon: CalendarDays },
+    { label: "Admin user ID", value: profile.id, icon: BadgeCheck },
+  ];
+
+  return (
+    <section className="max-w-3xl space-y-5">
+      <header className="flex items-center gap-4 rounded-3xl bg-gradient-to-br from-[#1b1240] to-[#6d4dff] p-6 text-white shadow-sm">
+        <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-white/15 text-2xl font-extrabold">
+          {profile.name.trim().charAt(0).toUpperCase() || "A"}
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm text-white/70">Administrator profile</p>
+          <h2 className="truncate text-2xl font-extrabold">{profile.name}</h2>
+          <p className="truncate text-sm text-white/80">{profile.email || "No email address"}</p>
+        </div>
+      </header>
+      <dl className="grid gap-3 sm:grid-cols-2">
+        {details.map(({ label, value, icon: Icon }) => (
+          <div key={label} className="min-w-0 rounded-2xl bg-white p-4 shadow-sm">
+            <dt className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <Icon className="h-4 w-4 text-[#6d4dff]" />
+              {label}
+            </dt>
+            <dd className={`mt-2 break-all text-sm font-semibold ${label === "Admin user ID" ? "font-mono text-xs" : ""}`}>
+              {value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="text-xs text-muted-foreground">Profile details are read from your signed-in administrator account.</p>
+    </section>
+  );
+}
+
 function StatCard({ label, value, change, note, tone }: { label: string; value: string; change: number | null; note: string; tone: string }) {
   const toneClass = tone === "users" ? "bg-gradient-to-br from-[#6d4dff] to-[#8b5cff] text-white" : tone === "transactions" ? "bg-[#eef0fb]" : tone === "volume" ? "bg-[#e7f8ef]" : "bg-[#f3eefe]";
   const trend = change === null
@@ -251,9 +324,7 @@ function Row({ label, value, mark = "text-foreground" }: { label: string; value:
 }
 
 function AssetMark({ symbol }: { symbol: string }) {
-  const coin = COINS.find(item => item.sym === symbol);
-  if (!coin) return <span className="grid h-6 w-6 place-items-center rounded-full bg-sky-500 text-[10px] font-bold text-white">$</span>;
-  return <CoinIcon coin={coin} size="h-6 w-6" />;
+  return <CryptoAssetIcon symbol={symbol} />;
 }
 
 function ActivityTable({ rows }: { rows: readonly AdminDashboardRecentTransaction[] }) {

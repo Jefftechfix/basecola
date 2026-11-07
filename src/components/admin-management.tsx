@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getPlatformSettings, updatePlatformSettings, type SettingsAuditRow, type SettingsSection } from "@/lib/admin-settings.functions";
 import { Activity, ArrowDownLeft, ArrowDownToLine, ArrowLeftRight, ArrowUpRight, Ban, BadgeCheck, BarChart3, Bell, Calendar, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Code, Coins, Copy, Download, Eye, FileText, Flame, Gift, Globe, Headphones, Landmark, Layers, Link2, Lock, Mail, Megaphone, MessageCircle, Monitor, Moon, Pencil, Percent, Phone, PieChart, Plus, QrCode, RefreshCw, Scale, Search, Settings, Share2, Shield, ShoppingCart, Sun, Trophy, Upload, UserPlus, Users, Wallet, Wrench, X, Zap } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import { COINS, CoinIcon } from "@/components/brand";
+import { CryptoAssetIcon } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -669,9 +669,7 @@ function Info({ label, value }: { label: string; value: string }) {
 }
 
 function AssetMark({ symbol }: { symbol: string }) {
-  const coin = COINS.find(item => item.sym === symbol);
-  if (!coin) return <span className="grid h-6 w-6 place-items-center rounded-full bg-sky-500 text-[10px] font-bold text-white">$</span>;
-  return <CoinIcon coin={coin} size="h-6 w-6" />;
+  return <CryptoAssetIcon symbol={symbol} />;
 }
 
 function initials(name: string) {

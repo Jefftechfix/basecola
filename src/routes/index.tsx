@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Bell, Menu, ShieldCheck, Zap, Globe, Layers, BarChart3, Wallet, Eye, Plus, Minus, Send, Download, Home, Repeat, User, Coins } from "lucide-react";
+import { ArrowRight, ArrowLeftRight, BarChart3, Bell, ChartNoAxesCombined, CircleHelp, Coins, Download, Eye, Gift, Home, Layers, Menu, Minus, Plus, Repeat, Send, ShieldCheck, User, Wallet, WalletCards } from "lucide-react";
 import { Logo, COINS, CoinIcon, Change } from "@/components/brand";
 import coins from "@/assets/coins.png";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Gift, LogIn, UserPlus } from "lucide-react";
+import { LogIn, UserPlus } from "lucide-react";
 import { MarketFeedLabel, marketPriceText, useAlchemyMarketPrices } from "@/components/market-prices";
+import { MARKETING_NAV, marketingPagePath } from "@/lib/marketing-pages";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,16 +22,21 @@ export const Route = createFileRoute("/")({
 });
 
 const features = [
-  { icon: ShieldCheck, t: "Secure & Regulated" },
-  { icon: Zap, t: "Fast Transactions" },
-  { icon: Globe, t: "Global Access" },
-  { icon: Layers, t: "Multiple Assets" },
+  { icon: ShieldCheck, t: "Account security tools" },
+  { icon: ChartNoAxesCombined, t: "Market information" },
+  { icon: WalletCards, t: "Wallet overview" },
+  { icon: Layers, t: "Crypto asset discovery" },
 ];
-const why = [
-  { icon: ShieldCheck, t: "Powerful & Secure", d: "Industry-leading security to keep your assets safe." },
-  { icon: BarChart3, t: "Low Fees", d: "Trade, buy, and sell crypto with competitive fees." },
-  { icon: Layers, t: "Multiple Assets", d: "Access a wide range of cryptocurrencies." },
-  { icon: Wallet, t: "Earn & Grow", d: "Earn rewards and grow your holdings with ease." },
+const services = [
+  { icon: ArrowLeftRight, title: "Buy & sell", description: "Explore a guided flow for choosing an asset, entering an amount, and reviewing the order details.", label: "Explore Buy & Sell", href: "/products/buy-sell", status: "Preview flow" },
+  { icon: ChartNoAxesCombined, title: "Markets & assets", description: "Browse supported assets and market information. Prices can change and are not guaranteed execution quotes.", label: "View assets", href: "/assets", status: "Market information" },
+  { icon: WalletCards, title: "Wallet overview", description: "See how balances and activity come together in a wallet dashboard. Preview balances are not real funds.", label: "Explore wallet", href: "/wallet", status: "Account tools" },
+  { icon: Download, title: "Fund your wallet", description: "Review the wallet-funding experience and its available options before taking action.", label: "Funding options", href: "/fund-wallet", status: "Review details" },
+  { icon: Send, title: "Send & receive", description: "Learn the steps for transfer flows. Always verify the asset, network, and destination; demo identifiers are not deposit addresses.", label: "Transfer guidance", href: "/receive", status: "Check network" },
+  { icon: ShieldCheck, title: "Account security", description: "Review available password, PIN, and two-factor authentication settings for your account.", label: "Security options", href: "/security", status: "Protect your account" },
+  { icon: Coins, title: "Earn information", description: "Understand how crypto reward products can work and the risks to review. No yield or return is promised here.", label: "Learn about Earn", href: "/products/earn", status: "Learn first" },
+  { icon: Gift, title: "Referral rewards", description: "See how the referral experience works in this environment; preview rewards are not paid out.", label: "Referral details", href: "/referral", status: "Preview feature" },
+  { icon: CircleHelp, title: "Help & support", description: "Find answers about accounts, assets, and the demonstration experience, or review support options.", label: "Visit Help Center", href: "/help", status: "We're here to help" },
 ];
 
 function PhoneMock({ quotes }: { quotes: ReturnType<typeof useAlchemyMarketPrices>["data"] }) {
@@ -66,13 +72,14 @@ function PhoneMock({ quotes }: { quotes: ReturnType<typeof useAlchemyMarketPrice
 
 const MENU = [
   { href: "#markets", label: "Markets", icon: BarChart3 },
+  { href: "#services", label: "Services", icon: Wallet },
   { href: "#why", label: "Why Basecola", icon: ShieldCheck },
 ] as const;
 const FEATURE_LINKS = [
-  { label: "Buy & sell crypto", icon: Repeat },
-  { label: "Send & receive", icon: Send },
-  { label: "Fund your wallet", icon: Wallet },
-  { label: "Referral rewards", icon: Gift },
+  { label: "Buy & sell crypto", icon: ArrowLeftRight, href: "/buy" },
+  { label: "Send & receive", icon: Send, href: "/receive" },
+  { label: "Fund your wallet", icon: Wallet, href: "/fund-wallet" },
+  { label: "Referral rewards", icon: Gift, href: "/referral" },
 ] as const;
 
 function MobileMenu() {
@@ -83,7 +90,7 @@ function MobileMenu() {
       <Logo />
       <nav className="space-y-1">{MENU.map(m => <a key={m.href} href={m.href} className="flex items-center gap-3 rounded-xl px-3 py-3 font-semibold hover:bg-accent"><m.icon className="h-5 w-5 text-primary" />{m.label}</a>)}</nav>
       <div><p className="px-3 text-xs font-bold uppercase tracking-wide text-muted-foreground">Features</p>
-        <ul className="mt-2 space-y-1">{FEATURE_LINKS.map(f => <li key={f.label}><Link to="/signup" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-accent"><f.icon className="h-4 w-4 text-primary" />{f.label}</Link></li>)}</ul></div>
+        <ul className="mt-2 space-y-1">{FEATURE_LINKS.map(f => <li key={f.label}><Link to={f.href} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-accent"><f.icon className="h-4 w-4 text-primary" />{f.label}</Link></li>)}</ul></div>
       <div className="mt-auto space-y-3">
         <Link to="/login" className="flex w-full items-center justify-center gap-2 rounded-2xl border border-primary py-3 font-semibold text-primary"><LogIn className="h-4 w-4" />Log In</Link>
         <Link to="/signup" className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 font-semibold text-primary-foreground"><UserPlus className="h-4 w-4" />Sign Up</Link>
@@ -99,7 +106,7 @@ function Index() {
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
         <Logo />
         <nav className="hidden gap-8 text-sm font-medium text-muted-foreground md:flex">
-          <a href="#markets">Markets</a><a href="#why">Why Basecola</a>
+          <a href="#markets">Markets</a><a href="#services">Services</a><a href="#why">Why Basecola</a>
         </nav>
         <div className="flex items-center gap-4">
           <Link to="/login" className="hidden text-sm font-semibold text-primary md:block">Log In</Link>
@@ -112,9 +119,9 @@ function Index() {
         <div className="pointer-events-none absolute -right-60 top-[520px] md:top-40 h-[600px] w-[900px] -rotate-12 rounded-[50%] bg-gradient-wave" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 pb-16 pt-4 md:grid-cols-2">
           <div className="text-center md:text-left">
-            <span className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold"><ShieldCheck className="h-4 w-4 text-primary" />Trusted Crypto Platform</span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold"><ShieldCheck className="h-4 w-4 text-primary" />Crypto tools, with clarity</span>
             <h1 className="mt-4 text-4xl font-extrabold leading-tight md:text-6xl">Buy, sell, and manage crypto with <span className="text-primary">Basecola</span></h1>
-            <p className="mt-4 text-lg text-muted-foreground">A secure and easy way to buy, sell, trade, and store cryptocurrency. Join millions of users worldwide on Basecola.</p>
+            <p className="mt-4 text-lg text-muted-foreground">Explore crypto markets, account tools, and guided buy and sell experiences—all in one place. Clear information helps you understand each step.</p>
             <Link to="/signup" className="mt-7 inline-flex items-center gap-2 rounded-2xl bg-primary px-10 py-4 font-semibold text-primary-foreground shadow-soft">Get Started <ArrowRight className="h-4 w-4" /></Link>
           </div>
           <PhoneMock quotes={quotes} />
@@ -139,13 +146,39 @@ function Index() {
         </div>
       </section>
 
+      <section id="services" className="mx-auto max-w-6xl scroll-mt-8 px-5 py-16">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-sm font-bold uppercase tracking-wider text-primary">Explore Basecola</p>
+          <h2 className="mt-2 text-3xl font-extrabold md:text-4xl">Tools for your crypto journey</h2>
+          <p className="mt-3 leading-relaxed text-muted-foreground">Explore the services available in the Basecola experience. Some actions use demonstration data or are not connected to a live financial service.</p>
+        </div>
+        <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {services.map(({ icon: Icon, title, description, label, href, status }) => (
+            <a key={title} href={href} className="group flex h-full flex-col rounded-3xl border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <div className="flex items-center justify-between gap-3">
+                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-accent text-primary"><Icon className="h-6 w-6" aria-hidden="true" /></span>
+                <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">{status}</span>
+              </div>
+              <h3 className="mt-4 text-lg font-bold">{title}</h3>
+              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{description}</p>
+              <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-primary">{label}<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
+            </a>
+          ))}
+        </div>
+      </section>
+
       <section id="why" className="mx-auto max-w-6xl px-5 py-16 text-center">
         <h2 className="text-3xl font-extrabold md:text-4xl">Why choose <span className="text-primary">Basecola</span>?</h2>
-        <p className="mt-2 text-muted-foreground">A trusted, secure, and user-friendly platform for all your crypto needs.</p>
+        <p className="mt-2 text-muted-foreground">A clear starting point for exploring crypto and account tools.</p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          {why.map(({ icon: I, t, d }) => (
-            <div key={t} className="flex items-start gap-4 rounded-2xl border bg-card p-5 text-left">
-              <I className="h-8 w-8 shrink-0 text-primary" /><div><h3 className="font-bold">{t}</h3><p className="text-sm text-muted-foreground">{d}</p></div>
+          {[
+            { icon: ShieldCheck, title: "Security controls", description: "Find account protection settings and guidance in one place." },
+            { icon: BarChart3, title: "Market context", description: "Review asset and price information while remembering that quotes can change." },
+            { icon: Layers, title: "Connected experiences", description: "Move between assets, wallet tools, and support from a consistent interface." },
+            { icon: CircleHelp, title: "Helpful guidance", description: "Get clear explanations of preview features, transaction steps, and important risks." },
+          ].map(({ icon: I, title, description }) => (
+            <div key={title} className="flex items-start gap-4 rounded-2xl border bg-card p-5 text-left">
+              <I className="h-8 w-8 shrink-0 text-primary" /><div><h3 className="font-bold">{title}</h3><p className="text-sm text-muted-foreground">{description}</p></div>
             </div>
           ))}
         </div>
@@ -161,8 +194,15 @@ function Index() {
       <footer className="bg-navy text-navy-foreground">
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 md:grid-cols-4">
           <div><Logo tone="light" /><p className="mt-3 text-sm opacity-70">A secure and easy way to buy, sell, trade, and store cryptocurrency worldwide.</p></div>
-          {[["Company", ["About Us", "Careers", "Blog", "Press", "Contact"]], ["Products", ["Buy & Sell", "Trade", "Assets", "Earn", "Security"]], ["Support", ["Help Center", "FAQs", "Fees", "Status", "Report an Issue"]]].map(([h, ls]: any) => (
-            <div key={h}><p className="font-bold">{h}</p><ul className="mt-3 space-y-2 text-sm opacity-70">{ls.map((l: string) => <li key={l}>{l}</li>)}</ul></div>
+          {MARKETING_NAV.map((group) => (
+            <div key={group.category}>
+              <p className="font-bold">{group.category}</p>
+              <ul className="mt-3 space-y-2 text-sm opacity-70">
+                {group.items.map((item) => (
+                  <li key={item.slug}><a className="transition hover:opacity-100" href={marketingPagePath(group.category, item.slug)}>{item.label}</a></li>
+                ))}
+              </ul>
+            </div>
           ))}
         </div>
         <div className="mx-auto flex max-w-6xl justify-between border-t border-navy-foreground/15 px-5 py-5 text-xs opacity-70"><span>© 2026 Basecola. All rights reserved.</span><span>Privacy Policy | Terms of Service</span></div>

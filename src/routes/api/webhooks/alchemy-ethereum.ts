@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { sendConfirmedDepositEmail } from "@/lib/confirmed-deposit-email.server";
 
 async function readBodyWithinLimit(request: Request, limit: number): Promise<ArrayBuffer | null> {
   const reader = request.body?.getReader();
@@ -62,7 +63,29 @@ export const Route = createFileRoute("/api/webhooks/alchemy-ethereum")({
           return new Response("Could not forward the Alchemy webhook.", { status: 502 });
         }
 
-        return new Response(response.body, {
+        const responseBody = await response.text();
+        if (response.ok) {
+          try {
+            const result: unknown = JSON.parse(responseBody);
+            if (
+              !result ||
+              typeof result !== "object" ||
+              !("observationIds" in result) ||
+              !Array.isArray(result.observationIds) ||
+              !result.observationIds.every((id) => typeof id === "string")
+            ) {
+              throw new Error("Alchemy webhook returned invalid deposit observation IDs.");
+            }
+            await Promise.all(result.observationIds.map(sendConfirmedDepositEmail));
+          } catch (error) {
+            console.error("Confirmed Ethereum deposit email notification failed.", error);
+            return new Response("Deposit was recorded, but its email notification could not be completed. Retry this webhook.", {
+              status: 503,
+            });
+          }
+        }
+
+        return new Response(responseBody, {
           status: response.status,
           headers: { "content-type": response.headers.get("content-type") ?? "application/json" },
         });

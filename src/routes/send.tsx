@@ -1,5 +1,3 @@
-import { useServerFn } from "@tanstack/react-start";
-import { emailReceipt } from "@/lib/receipt.functions";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowUpRight, CheckCircle2 } from "lucide-react";
@@ -30,7 +28,6 @@ function SendPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const qc = useQueryClient();
-  const sendReceiptEmail = useServerFn(emailReceipt);
   const asset = WALLET_ASSETS.find(item => item.sym === symbol);
   if (!asset) return null;
   const usd = Number(amount) * Number(asset.price.replace(/[$,]/g, ""));
@@ -38,7 +35,7 @@ function SendPage() {
   async function submitSend() {
     if (!asset) return;
     setSaving(true); setSaveError("");
-    try { const recordId = await saveSend({ coin: symbol, network: asset.network, amount: Number(amount), fee, to_address: recipient.trim() }); void sendReceiptEmail({ data: { kind: "send", id: recordId } }).catch(() => {}); }
+    try { await saveSend({ coin: symbol, network: asset.network, amount: Number(amount), fee, to_address: recipient.trim() }); }
     catch (e) { setSaveError((e as Error).message); setSaving(false); return; }
     setSaving(false);
     qc.invalidateQueries({ queryKey: ["wallet-records", "sends"] });

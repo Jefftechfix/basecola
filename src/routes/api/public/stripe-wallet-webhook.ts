@@ -41,7 +41,7 @@ export const Route = createFileRoute("/api/public/stripe-wallet-webhook")({
         const header = request.headers.get("stripe-signature") ?? "";
         if (!(await verifySignature(payload, header, secret))) return new Response("Invalid signature", { status: 400 });
 
-        let event: { type?: string; data?: { object?: Record<string, any> } };
+        let event: { type?: string; data?: { object?: Record<string, unknown> } };
         try {
           event = JSON.parse(payload);
         } catch {
@@ -49,47 +49,76 @@ export const Route = createFileRoute("/api/public/stripe-wallet-webhook")({
         }
         const session = event.data?.object;
         if (!session || session.object !== "checkout.session" || typeof session.id !== "string") return ok();
+        const sessionId = session.id;
 
-        const isBank = session.metadata?.method === "bank";
+        const metadata =
+          session.metadata && typeof session.metadata === "object" && !Array.isArray(session.metadata)
+            ? session.metadata as Record<string, unknown>
+            : {};
+        const isBank = metadata.method === "bank";
         let status: string | null = null;
         if (event.type === "checkout.session.async_payment_succeeded") status = "completed";
         else if (event.type === "checkout.session.async_payment_failed") status = "failed";
         else if (event.type === "checkout.session.completed" && session.payment_status === "paid") status = "completed";
         if (!status) return ok();
 
-        const userId = session.metadata?.user_id || session.client_reference_id;
+        const userId = metadata.user_id || session.client_reference_id;
         if (typeof userId !== "string") return ok();
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const paymentMethod = isBank ? "Stripe bank account" : "Stripe · card";
         const { data: existing, error } = await supabaseAdmin.from("wallet_fundings")
-          .select("id, payment_method, status").eq("user_id", userId).eq("reference", session.id).maybeSingle();
+          .select("id, payment_method, status").eq("user_id", userId).eq("reference", sessionId).maybeSingle();
         if (error) return new Response("Database error", { status: 500 });
 
         // Write the activity history first: if a later step fails, Stripe retries the
         // event and this step is skipped as already done instead of being lost.
         await syncStripeFundingTransaction(supabaseAdmin, {
           userId,
-          sessionId: session.id,
+          sessionId,
           amountUsd: Number(session.amount_total) / 100,
           status,
           paymentMethod,
         });
 
-        const emailReceipt = async () => {
-          if (status !== "completed") return;
+        const emailReceipt = async (): Promise<boolean> => {
+          if (status !== "completed") return true;
           try {
-            const { data: f } = await supabaseAdmin.from("wallet_fundings").select("*").eq("user_id", userId).eq("reference", session.id).maybeSingle();
-            const { data: p } = await supabaseAdmin.from("profiles").select("email, full_name").eq("id", userId).maybeSingle();
-            if (f && p?.email) {
-              const { sendReceipt } = await import("@/lib/receipt-email");
-              await sendReceipt("funding", p.email, p.full_name, { ...f, status: "completed" });
-            }
-          } catch (e) { console.error("funding receipt email failed", e); }
+            const { data: funding, error: fundingError } = await supabaseAdmin
+              .from("wallet_fundings")
+              .select("*")
+              .eq("user_id", userId)
+              .eq("reference", sessionId)
+              .maybeSingle();
+            if (fundingError) throw fundingError;
+            if (!funding) throw new Error("Completed wallet funding record was not found.");
+
+            const { data: profile, error: profileError } = await supabaseAdmin
+              .from("profiles")
+              .select("email, full_name")
+              .eq("id", userId)
+              .maybeSingle();
+            if (profileError) throw profileError;
+            if (!profile?.email) throw new Error("Funding recipient has no email address.");
+
+            const { sendReceipt } = await import("@/lib/receipt-email");
+            await sendReceipt("funding", profile.email, profile.full_name, {
+              ...funding,
+              status: "completed",
+            });
+            return true;
+          } catch (error) {
+            console.error("Wallet funding was recorded, but its email notification failed.", error);
+            return false;
+          }
         };
 
         if (existing) {
-          if (existing.status === "completed") { await emailReceipt(); return ok(); }
+          if (existing.status === "completed") {
+            return (await emailReceipt())
+              ? ok()
+              : new Response("Funding was recorded, but its email notification failed.", { status: 500 });
+          }
           const { error: updateError } = await supabaseAdmin.from("wallet_fundings")
             .update({ status, payment_method: existing.payment_method.replace(/ · awaiting bank verification$/, "") })
             .eq("id", existing.id);
@@ -100,13 +129,14 @@ export const Route = createFileRoute("/api/public/stripe-wallet-webhook")({
             amount: Number(session.amount_total) / 100,
             currency: String(session.currency || "usd").toUpperCase(),
             payment_method: paymentMethod,
-            reference: session.id,
+            reference: sessionId,
             status,
           });
           if (insertError) return new Response("Database error", { status: 500 });
         }
-        await emailReceipt();
-        return ok();
+        return (await emailReceipt())
+          ? ok()
+          : new Response("Funding was recorded, but its email notification failed.", { status: 500 });
       },
     },
   },

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { sendConfirmedDepositEmail } from "@/lib/confirmed-deposit-email.server";
 
 async function readBodyWithinLimit(request: Request, limit: number): Promise<ArrayBuffer | null> {
   const reader = request.body?.getReader();
@@ -63,7 +64,29 @@ export const Route = createFileRoute("/api/internal/crypto-deposits")({
           return new Response("Could not forward the deposit observation.", { status: 502 });
         }
 
-        return new Response(response.body, {
+        const responseBody = await response.text();
+        if (response.ok) {
+          try {
+            const result: unknown = JSON.parse(responseBody);
+            if (
+              result &&
+              typeof result === "object" &&
+              "observationId" in result &&
+              typeof result.observationId === "string"
+            ) {
+              await sendConfirmedDepositEmail(result.observationId);
+            } else {
+              throw new Error("Deposit ingestion returned no observation ID.");
+            }
+          } catch (error) {
+            console.error("Confirmed deposit email notification failed.", error);
+            return new Response("Deposit was recorded, but its email notification could not be completed. Retry this observation.", {
+              status: 503,
+            });
+          }
+        }
+
+        return new Response(responseBody, {
           status: response.status,
           headers: { "content-type": response.headers.get("content-type") ?? "application/json" },
         });

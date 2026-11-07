@@ -6,6 +6,7 @@ import ethereumLogo from "@/assets/crypto/eth.svg.asset.json";
 import tetherLogo from "@/assets/crypto/usdt.svg.asset.json";
 import solanaLogo from "@/assets/crypto/sol.svg.asset.json";
 import xrpLogo from "@/assets/crypto/xrp.svg.asset.json";
+import usdCoinLogo from "@/assets/crypto/usdc.svg";
 
 export function Logo({ size = "md", tone = "default" }: { size?: "sm" | "md" | "lg"; tone?: "default" | "light" }) {
   const height = size === "lg" ? "h-24" : size === "sm" ? "h-14" : "h-16";
@@ -29,14 +30,37 @@ const coinLogos: Record<string, string> = {
   BTC: bitcoinLogo.url,
   ETH: ethereumLogo.url,
   USDT: tetherLogo.url,
+  USDC: usdCoinLogo,
   SOL: solanaLogo.url,
   XRP: xrpLogo.url,
 };
 
 export function CoinIcon({ coin, size = "h-9 w-9" }: { coin: Coin; size?: string }) {
+  return <CryptoAssetIcon symbol={coin.sym} name={coin.name} size={size} />;
+}
+
+export function CryptoAssetIcon({
+  symbol,
+  name = symbol,
+  size = "h-6 w-6",
+}: {
+  symbol: string;
+  name?: string;
+  size?: string;
+}) {
+  const logo = coinLogos[symbol.toUpperCase()];
   return (
     <span className={`${size} grid shrink-0 place-items-center overflow-hidden rounded-full`}>
-      <img src={coinLogos[coin.sym]} alt={`${coin.name} logo`} width={32} height={32} className="h-full w-full object-contain" />
+      {logo ? (
+        <img src={logo} alt={`${name} logo`} width={32} height={32} className="h-full w-full object-contain" />
+      ) : (
+        <span
+          aria-label={`${name} logo`}
+          className="grid h-full w-full place-items-center bg-sky-600 text-[10px] font-bold text-white"
+        >
+          {symbol.slice(0, 3).toUpperCase()}
+        </span>
+      )}
     </span>
   );
 }

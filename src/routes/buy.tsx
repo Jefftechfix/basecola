@@ -49,13 +49,17 @@ function BuyPage() {
     if (!asset) return;
     setBusy(true);
     const { data, error: rpcError } = await supabase.rpc("buy_crypto_with_balance", { _coin: symbol, _network: asset.network, _usd_amount: usd, _price_usd: unit });
-    setBusy(false);
-    if (rpcError) { setError(rpcError.message); setStep("form"); return; }
+    if (rpcError) { setBusy(false); setError(rpcError.message); setStep("form"); return; }
     const out = data as { reference: string; balance: number; transaction_id: string; crypto_amount: number; price_usd: number; fee: number; total: number };
-    void sendReceiptEmail({ data: { kind: "buy", id: out.transaction_id } }).catch(() => {});
     setResult(out);
     setStep("success");
+    setBusy(false);
     for (const key of [["wallet-balance"], ["transactions"], ["wallet-records"]]) qc.invalidateQueries({ queryKey: key });
+    void sendReceiptEmail({ data: { kind: "buy", id: out.transaction_id } }).then((notification) => {
+      if (!notification.sent) console.warn("Purchase completed, but its email notification was not sent.");
+    }).catch((notificationError) => {
+      console.error("Purchase completed, but its email notification failed.", notificationError);
+    });
   }
 
   function reset() {

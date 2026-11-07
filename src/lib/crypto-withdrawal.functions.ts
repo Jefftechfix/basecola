@@ -109,6 +109,44 @@ export const requestCryptoWithdrawal = createServerFn({ method: "POST" })
       );
     }
 
+    if (
+      execution.status === "broadcast" ||
+      execution.status === "confirmed"
+    ) {
+      const email = (context.claims as { email?: unknown }).email;
+      if (typeof email !== "string" || !email) {
+        console.error("Crypto withdrawal was broadcast, but no email recipient is available.", {
+          withdrawalId,
+        });
+      } else {
+        try {
+          const { sendReceipt } = await import("@/lib/receipt-email");
+          const sent = await sendReceipt("send", email, null, {
+            id: withdrawalId,
+            asset: data.asset,
+            network: data.network,
+            amount: data.amount,
+            destination_address: data.destinationAddress,
+            network_fee: execution.network_fee ?? 0,
+            network_fee_usd: execution.network_fee_usd ?? 0,
+            transaction_hash: execution.transaction_hash,
+            status: execution.status,
+            created_at: new Date().toISOString(),
+          });
+          if (!sent) {
+            console.warn("Crypto withdrawal was broadcast, but its email notification was suppressed.", {
+              withdrawalId,
+            });
+          }
+        } catch (notificationError) {
+          console.error("Crypto withdrawal was broadcast, but its email notification failed.", {
+            withdrawalId,
+            error: notificationError,
+          });
+        }
+      }
+    }
+
     return {
       withdrawalId,
       status: execution.status,

@@ -58,13 +58,17 @@ function SellPage() {
     if (!asset || busy) return;
     setBusy(true);
     const { data, error: e } = await supabase.rpc("sell_crypto_to_balance", { _coin: symbol, _network: asset.network, _crypto_amount: crypto, _price_usd: unit });
-    setBusy(false);
-    if (e) { setError(e.message); setStep("form"); return; }
+    if (e) { setBusy(false); setError(e.message); setStep("form"); return; }
     const out = data as { reference: string; transaction_id: string; payout: number; fee: number; price_usd: number };
     setResult(out);
-    void sendReceiptEmail({ data: { kind: "sell", id: out.transaction_id } }).catch(() => {});
-    for (const key of [["wallet-balance"], ["transactions"], ["holdings"]]) qc.invalidateQueries({ queryKey: key });
     setStep("success");
+    setBusy(false);
+    for (const key of [["wallet-balance"], ["transactions"], ["holdings"]]) qc.invalidateQueries({ queryKey: key });
+    void sendReceiptEmail({ data: { kind: "sell", id: out.transaction_id } }).then((notification) => {
+      if (!notification.sent) console.warn("Sale completed, but its email notification was not sent.");
+    }).catch((notificationError) => {
+      console.error("Sale completed, but its email notification failed.", notificationError);
+    });
   }
 
   function reset() {

@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { ArrowLeft, CircleHelp, Mail, Phone, Search } from "lucide-react";
-import { AccountShell } from "@/components/account-shell";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Logo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,8 +35,12 @@ function HelpPage() {
     setNotice(`Your ${topic} note stays in this preview. It was not sent to a support team.`);
   }
 
-  return <AccountShell active="/profile" title="Help & Support">
-    <Button asChild variant="link" className="mb-4 h-auto px-0"><Link to="/profile"><ArrowLeft />Back to profile</Link></Button>
+  return <main className="mx-auto min-h-screen max-w-3xl space-y-4 px-5 py-5">
+    <header className="mb-7 flex items-center justify-between">
+      <Link to="/" aria-label="Basecola home"><Logo /></Link>
+      <Button asChild variant="outline"><Link to="/"><ArrowLeft />Back to home</Link></Button>
+    </header>
+    <h1 className="text-3xl font-extrabold">Help & Support</h1>
     <section className="rounded-3xl bg-gradient-primary p-6 text-primary-foreground shadow-soft">
       <p className="flex items-center gap-2 text-sm text-primary-foreground/80"><CircleHelp className="h-4 w-4" />Help & Support</p>
       <p className="mt-2 text-2xl font-extrabold">How can we help?</p>
@@ -81,5 +85,5 @@ function HelpPage() {
       {notice && <p role="status" className="text-sm text-muted-foreground">{notice}</p>}
       <p className="text-xs leading-relaxed text-muted-foreground">This form does not email anyone or open a support ticket.</p>
     </form>
-  </AccountShell>;
+  </main>;
 }

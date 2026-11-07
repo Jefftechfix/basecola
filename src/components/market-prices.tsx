@@ -1,16 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { getAlchemyMarketPrices } from "@/lib/market-prices.functions";
 import type { MarketQuote } from "@/lib/market-prices";
 
 const MARKET_QUERY_KEY = ["alchemy-market-prices"] as const;
 const MARKET_CACHE_MS = 60_000;
 
 export function useAlchemyMarketPrices() {
-  const loadPrices = useServerFn(getAlchemyMarketPrices);
   return useQuery({
     queryKey: MARKET_QUERY_KEY,
-    queryFn: () => loadPrices(),
+    queryFn: async () => {
+      const response = await fetch("/api/public/market-prices");
+      if (!response.ok) {
+        throw new Error("Live market prices are temporarily unavailable.");
+      }
+      return (await response.json()) as MarketQuote[];
+    },
     staleTime: MARKET_CACHE_MS,
     gcTime: 5 * MARKET_CACHE_MS,
     refetchInterval: MARKET_CACHE_MS,

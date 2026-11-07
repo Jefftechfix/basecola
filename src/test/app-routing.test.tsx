@@ -22,7 +22,7 @@ describe("App routing", () => {
     expect(matches.some(match => match.routeId === "/transactions")).toBe(false);
   });
 
-  it.each(["/assets", "/transactions", "/profile", "/fund-wallet", "/receive", "/send", "/buy", "/sell", "/referral", "/statements", "/help", "/security", "/change-pin", "/change-password", "/two-factor", "/verify-account", "/delete-account", "/login", "/forgot-password", "/reset-password", "/reset-password-success", "/admin-login", "/admin"])("matches the account page at %s", (path) => {
+  it.each(["/assets", "/transactions", "/profile", "/fund-wallet", "/receive", "/send", "/buy", "/sell", "/referral", "/statements", "/help", "/security", "/change-pin", "/change-password", "/two-factor", "/verify-account", "/delete-account", "/login", "/forgot-password", "/reset-password", "/reset-password-success", "/admin-login", "/admin", "/privacy-policy", "/terms-of-service"])("matches the account page at %s", (path) => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
     expect(router.matchRoutes(path).at(-1)?.routeId).toBe(path);
   });

@@ -1,11 +1,6 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
-import bitcoinLogo from "@/assets/crypto/btc.svg.asset.json";
-import ethereumLogo from "@/assets/crypto/eth.svg.asset.json";
-import tetherLogo from "@/assets/crypto/usdt.svg.asset.json";
-import solanaLogo from "@/assets/crypto/sol.svg.asset.json";
-import xrpLogo from "@/assets/crypto/xrp.svg.asset.json";
 import usdCoinLogo from "@/assets/crypto/usdc.svg";
 
 export function Logo({ size = "md", tone = "default" }: { size?: "sm" | "md" | "lg"; tone?: "default" | "light" }) {
@@ -27,12 +22,12 @@ export const COINS: Coin[] = [
 ];
 
 const coinLogos: Record<string, string> = {
-  BTC: bitcoinLogo.url,
-  ETH: ethereumLogo.url,
-  USDT: tetherLogo.url,
+  BTC: "/crypto/btc.svg",
+  ETH: "/crypto/eth.svg",
+  USDT: "/crypto/usdt.svg",
   USDC: usdCoinLogo,
-  SOL: solanaLogo.url,
-  XRP: xrpLogo.url,
+  SOL: "/crypto/sol.svg",
+  XRP: "/crypto/xrp.svg",
 };
 
 export function CoinIcon({ coin, size = "h-9 w-9" }: { coin: Coin; size?: string }) {

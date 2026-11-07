@@ -23,6 +23,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FundWalletRouteImport } from './routes/fund-wallet'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ReceiveRouteImport } from './routes/receive'
 import { Route as ReferralRouteImport } from './routes/referral'
@@ -33,6 +34,7 @@ import { Route as SellRouteImport } from './routes/sell'
 import { Route as SendRouteImport } from './routes/send'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as StatementsRouteImport } from './routes/statements'
+import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as TwoFactorRouteImport } from './routes/two-factor'
 import { Route as VerifyRouteImport } from './routes/verify'
@@ -44,9 +46,9 @@ import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
 import { Route as SupportSlugRouteImport } from './routes/support.$slug'
 import { Route as TransactionsTransactionIdRouteImport } from './routes/transactions_.$transactionId'
 import { Route as ApiInternalCryptoDepositsRouteImport } from './routes/api/internal/crypto-deposits'
+import { Route as ApiPublicMarketPricesRouteImport } from './routes/api/public/market-prices'
 import { Route as ApiPublicStripeWalletWebhookRouteImport } from './routes/api/public/stripe-wallet-webhook'
 import { Route as ApiWebhooksAlchemyEthereumRouteImport } from './routes/api/webhooks/alchemy-ethereum'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -118,6 +120,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -166,6 +173,11 @@ const SignupRoute = SignupRouteImport.update({
 const StatementsRoute = StatementsRouteImport.update({
   id: '/statements',
   path: '/statements',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
+  id: '/terms-of-service',
+  path: '/terms-of-service',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TransactionsRoute = TransactionsRouteImport.update({
@@ -225,6 +237,11 @@ const ApiInternalCryptoDepositsRoute =
     path: '/api/internal/crypto-deposits',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicMarketPricesRoute = ApiPublicMarketPricesRouteImport.update({
+  id: '/api/public/market-prices',
+  path: '/api/public/market-prices',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicStripeWalletWebhookRoute =
   ApiPublicStripeWalletWebhookRouteImport.update({
     id: '/api/public/stripe-wallet-webhook',
@@ -235,12 +252,6 @@ const ApiWebhooksAlchemyEthereumRoute =
   ApiWebhooksAlchemyEthereumRouteImport.update({
     id: '/api/webhooks/alchemy-ethereum',
     path: '/api/webhooks/alchemy-ethereum',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -259,6 +270,7 @@ export interface FileRoutesByFullPath {
   '/fund-wallet': typeof FundWalletRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/receive': typeof ReceiveRoute
   '/referral': typeof ReferralRoute
@@ -269,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/send': typeof SendRoute
   '/signup': typeof SignupRoute
   '/statements': typeof StatementsRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/transactions': typeof TransactionsRoute
   '/two-factor': typeof TwoFactorRoute
   '/verify': typeof VerifyRoute
@@ -280,9 +293,9 @@ export interface FileRoutesByFullPath {
   '/support/$slug': typeof SupportSlugRoute
   '/transactions/$transactionId': typeof TransactionsTransactionIdRoute
   '/api/internal/crypto-deposits': typeof ApiInternalCryptoDepositsRoute
+  '/api/public/market-prices': typeof ApiPublicMarketPricesRoute
   '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
   '/api/webhooks/alchemy-ethereum': typeof ApiWebhooksAlchemyEthereumRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -299,6 +312,7 @@ export interface FileRoutesByTo {
   '/fund-wallet': typeof FundWalletRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/receive': typeof ReceiveRoute
   '/referral': typeof ReferralRoute
@@ -309,6 +323,7 @@ export interface FileRoutesByTo {
   '/send': typeof SendRoute
   '/signup': typeof SignupRoute
   '/statements': typeof StatementsRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/transactions': typeof TransactionsRoute
   '/two-factor': typeof TwoFactorRoute
   '/verify': typeof VerifyRoute
@@ -320,9 +335,9 @@ export interface FileRoutesByTo {
   '/support/$slug': typeof SupportSlugRoute
   '/transactions/$transactionId': typeof TransactionsTransactionIdRoute
   '/api/internal/crypto-deposits': typeof ApiInternalCryptoDepositsRoute
+  '/api/public/market-prices': typeof ApiPublicMarketPricesRoute
   '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
   '/api/webhooks/alchemy-ethereum': typeof ApiWebhooksAlchemyEthereumRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -340,6 +355,7 @@ export interface FileRoutesById {
   '/fund-wallet': typeof FundWalletRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/receive': typeof ReceiveRoute
   '/referral': typeof ReferralRoute
@@ -350,6 +366,7 @@ export interface FileRoutesById {
   '/send': typeof SendRoute
   '/signup': typeof SignupRoute
   '/statements': typeof StatementsRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/transactions': typeof TransactionsRoute
   '/two-factor': typeof TwoFactorRoute
   '/verify': typeof VerifyRoute
@@ -361,9 +378,9 @@ export interface FileRoutesById {
   '/support/$slug': typeof SupportSlugRoute
   '/transactions_/$transactionId': typeof TransactionsTransactionIdRoute
   '/api/internal/crypto-deposits': typeof ApiInternalCryptoDepositsRoute
+  '/api/public/market-prices': typeof ApiPublicMarketPricesRoute
   '/api/public/stripe-wallet-webhook': typeof ApiPublicStripeWalletWebhookRoute
   '/api/webhooks/alchemy-ethereum': typeof ApiWebhooksAlchemyEthereumRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -382,6 +399,7 @@ export interface FileRouteTypes {
     | '/fund-wallet'
     | '/help'
     | '/login'
+    | '/privacy-policy'
     | '/profile'
     | '/receive'
     | '/referral'
@@ -392,6 +410,7 @@ export interface FileRouteTypes {
     | '/send'
     | '/signup'
     | '/statements'
+    | '/terms-of-service'
     | '/transactions'
     | '/two-factor'
     | '/verify'
@@ -403,9 +422,9 @@ export interface FileRouteTypes {
     | '/support/$slug'
     | '/transactions/$transactionId'
     | '/api/internal/crypto-deposits'
+    | '/api/public/market-prices'
     | '/api/public/stripe-wallet-webhook'
     | '/api/webhooks/alchemy-ethereum'
-    | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -422,6 +441,7 @@ export interface FileRouteTypes {
     | '/fund-wallet'
     | '/help'
     | '/login'
+    | '/privacy-policy'
     | '/profile'
     | '/receive'
     | '/referral'
@@ -432,6 +452,7 @@ export interface FileRouteTypes {
     | '/send'
     | '/signup'
     | '/statements'
+    | '/terms-of-service'
     | '/transactions'
     | '/two-factor'
     | '/verify'
@@ -443,9 +464,9 @@ export interface FileRouteTypes {
     | '/support/$slug'
     | '/transactions/$transactionId'
     | '/api/internal/crypto-deposits'
+    | '/api/public/market-prices'
     | '/api/public/stripe-wallet-webhook'
     | '/api/webhooks/alchemy-ethereum'
-    | '/lovable/email/transactional/preview'
   id:
     | '__root__'
     | '/'
@@ -462,6 +483,7 @@ export interface FileRouteTypes {
     | '/fund-wallet'
     | '/help'
     | '/login'
+    | '/privacy-policy'
     | '/profile'
     | '/receive'
     | '/referral'
@@ -472,6 +494,7 @@ export interface FileRouteTypes {
     | '/send'
     | '/signup'
     | '/statements'
+    | '/terms-of-service'
     | '/transactions'
     | '/two-factor'
     | '/verify'
@@ -483,9 +506,9 @@ export interface FileRouteTypes {
     | '/support/$slug'
     | '/transactions_/$transactionId'
     | '/api/internal/crypto-deposits'
+    | '/api/public/market-prices'
     | '/api/public/stripe-wallet-webhook'
     | '/api/webhooks/alchemy-ethereum'
-    | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -503,6 +526,7 @@ export interface RootRouteChildren {
   FundWalletRoute: typeof FundWalletRoute
   HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ProfileRoute: typeof ProfileRoute
   ReceiveRoute: typeof ReceiveRoute
   ReferralRoute: typeof ReferralRoute
@@ -513,6 +537,7 @@ export interface RootRouteChildren {
   SendRoute: typeof SendRoute
   SignupRoute: typeof SignupRoute
   StatementsRoute: typeof StatementsRoute
+  TermsOfServiceRoute: typeof TermsOfServiceRoute
   TransactionsRoute: typeof TransactionsRoute
   TwoFactorRoute: typeof TwoFactorRoute
   VerifyRoute: typeof VerifyRoute
@@ -524,9 +549,9 @@ export interface RootRouteChildren {
   SupportSlugRoute: typeof SupportSlugRoute
   TransactionsTransactionIdRoute: typeof TransactionsTransactionIdRoute
   ApiInternalCryptoDepositsRoute: typeof ApiInternalCryptoDepositsRoute
+  ApiPublicMarketPricesRoute: typeof ApiPublicMarketPricesRoute
   ApiPublicStripeWalletWebhookRoute: typeof ApiPublicStripeWalletWebhookRoute
   ApiWebhooksAlchemyEthereumRoute: typeof ApiWebhooksAlchemyEthereumRoute
-  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -629,6 +654,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -697,6 +729,13 @@ declare module '@tanstack/react-router' {
       path: '/statements'
       fullPath: '/statements'
       preLoaderRoute: typeof StatementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms-of-service': {
+      id: '/terms-of-service'
+      path: '/terms-of-service'
+      fullPath: '/terms-of-service'
+      preLoaderRoute: typeof TermsOfServiceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/transactions': {
@@ -776,6 +815,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiInternalCryptoDepositsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/market-prices': {
+      id: '/api/public/market-prices'
+      path: '/api/public/market-prices'
+      fullPath: '/api/public/market-prices'
+      preLoaderRoute: typeof ApiPublicMarketPricesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/stripe-wallet-webhook': {
       id: '/api/public/stripe-wallet-webhook'
       path: '/api/public/stripe-wallet-webhook'
@@ -788,13 +834,6 @@ declare module '@tanstack/react-router' {
       path: '/api/webhooks/alchemy-ethereum'
       fullPath: '/api/webhooks/alchemy-ethereum'
       preLoaderRoute: typeof ApiWebhooksAlchemyEthereumRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -815,6 +854,7 @@ const rootRouteChildren: RootRouteChildren = {
   FundWalletRoute: FundWalletRoute,
   HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
   ProfileRoute: ProfileRoute,
   ReceiveRoute: ReceiveRoute,
   ReferralRoute: ReferralRoute,
@@ -825,6 +865,7 @@ const rootRouteChildren: RootRouteChildren = {
   SendRoute: SendRoute,
   SignupRoute: SignupRoute,
   StatementsRoute: StatementsRoute,
+  TermsOfServiceRoute: TermsOfServiceRoute,
   TransactionsRoute: TransactionsRoute,
   TwoFactorRoute: TwoFactorRoute,
   VerifyRoute: VerifyRoute,
@@ -836,9 +877,9 @@ const rootRouteChildren: RootRouteChildren = {
   SupportSlugRoute: SupportSlugRoute,
   TransactionsTransactionIdRoute: TransactionsTransactionIdRoute,
   ApiInternalCryptoDepositsRoute: ApiInternalCryptoDepositsRoute,
+  ApiPublicMarketPricesRoute: ApiPublicMarketPricesRoute,
   ApiPublicStripeWalletWebhookRoute: ApiPublicStripeWalletWebhookRoute,
   ApiWebhooksAlchemyEthereumRoute: ApiWebhooksAlchemyEthereumRoute,
-  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

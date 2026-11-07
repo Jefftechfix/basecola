@@ -28,7 +28,6 @@ export const MARKETING_NAV: {
       { label: "About Us", slug: "about-us" },
       { label: "Careers", slug: "careers" },
       { label: "Blog", slug: "blog" },
-      { label: "Press", slug: "press" },
       { label: "Contact", slug: "contact" },
     ],
   },
@@ -38,7 +37,6 @@ export const MARKETING_NAV: {
       { label: "Buy & Sell", slug: "buy-sell" },
       { label: "Trade", slug: "trade" },
       { label: "Assets", slug: "assets" },
-      { label: "Earn", slug: "earn" },
       { label: "Security", slug: "security" },
     ],
   },
@@ -47,9 +45,6 @@ export const MARKETING_NAV: {
     items: [
       { label: "Help Center", slug: "help-center" },
       { label: "FAQs", slug: "faqs" },
-      { label: "Fees", slug: "fees" },
-      { label: "Status", slug: "status" },
-      { label: "Report an Issue", slug: "report-an-issue" },
     ],
   },
 ];
@@ -66,9 +61,9 @@ export const MARKETING_PAGES: MarketingPage[] = [
     slug: "about-us",
     label: "About Us",
     eyebrow: "Company",
-    title: "Crypto should feel easier to understand.",
+    title: "Meet Basecola: a clearer way to explore digital assets.",
     description:
-      "Basecola is designed to make exploring digital assets more approachable, with clear flows for viewing, buying, selling, and managing crypto.",
+      "We are building connected crypto tools around clarity, thoughtful design, and transparency—so people can better understand the assets and actions in front of them.",
     sections: [
       {
         title: "A simpler starting point",
@@ -106,9 +101,9 @@ export const MARKETING_PAGES: MarketingPage[] = [
     slug: "careers",
     label: "Careers",
     eyebrow: "Company",
-    title: "Build clearer experiences for digital assets.",
+    title: "Build the services behind a clearer crypto experience.",
     description:
-      "We care about thoughtful product design, responsible engineering, and making complex tools easier to use.",
+      "Explore Basecola engineering role profiles, including full-time backend engineering, and learn about the systems these roles could help build.",
     sections: [
       {
         title: "How we work",
@@ -145,9 +140,9 @@ export const MARKETING_PAGES: MarketingPage[] = [
     slug: "blog",
     label: "Blog",
     eyebrow: "Company",
-    title: "Learn the essentials, one clear step at a time.",
+    title: "Crypto news, ideas, and conversations from around the world.",
     description:
-      "A practical reading list for understanding crypto basics, account safety, and the details behind a transaction.",
+      "Explore sample editorial stories about global crypto markets, digital payments, blockchain ecosystems, and policy. These examples are not live news.",
     sections: [
       {
         title: "Start with the fundamentals",
@@ -178,46 +173,7 @@ export const MARKETING_PAGES: MarketingPage[] = [
       },
     ],
     action: { label: "Read common questions", href: "/support/faqs" },
-    related: ["fees", "security"],
-  },
-  {
-    category: "Company",
-    slug: "press",
-    label: "Press",
-    eyebrow: "Company",
-    title: "A clear introduction to Basecola.",
-    description:
-      "A concise overview for writers and partners researching the Basecola product and this website.",
-    sections: [
-      {
-        title: "About Basecola",
-        body: "Basecola is a crypto platform experience focused on helping people explore digital assets and understand common account actions through a straightforward interface.",
-        points: [
-          "Product areas include assets, buying and selling, account security, and support",
-          "The current website includes demonstration and preview experiences",
-          "Availability and functionality may vary by environment",
-        ],
-      },
-      {
-        title: "Using product information",
-        body: "Please describe the product accurately and distinguish preview screens from any live financial service. Do not treat sample balances, sample prices, or demo transactions as real.",
-        points: [
-          "Avoid implying guaranteed returns or prices",
-          "Do not describe a preview transaction as executed",
-          "Verify product availability before publication",
-        ],
-      },
-      {
-        title: "Press inquiries",
-        body: "For questions about the product or a potential interview, use the contact page. This preview does not provide a dedicated press inbox or media asset download.",
-        points: [
-          "Include your publication and deadline",
-          "Describe the information you need",
-          "Do not include account credentials or private keys",
-        ],
-      },
-    ],
-    action: { label: "Send an inquiry", href: "/company/contact" },
+    related: ["security"],
   },
   {
     category: "Company",
@@ -300,7 +256,7 @@ export const MARKETING_PAGES: MarketingPage[] = [
       { label: "Buy crypto", href: "/buy" },
       { label: "Sell crypto", href: "/sell" },
     ],
-    related: ["trade", "fees"],
+    related: ["trade"],
   },
   {
     category: "Products",
@@ -384,46 +340,6 @@ export const MARKETING_PAGES: MarketingPage[] = [
   },
   {
     category: "Products",
-    slug: "earn",
-    label: "Earn",
-    eyebrow: "Products",
-    title: "Learn about earning products before committing funds.",
-    description:
-      "Crypto reward and yield products can carry market, protocol, and access risks. Understand the terms before considering any product.",
-    sections: [
-      {
-        title: "How earning products can work",
-        body: "Some services offer rewards through staking, lending, or other mechanisms. The source of a reward, eligibility, lock-up period, and risks vary by product.",
-        points: [
-          "Read how rewards are generated",
-          "Check lock-up and withdrawal conditions",
-          "Understand counterparty and network risks",
-        ],
-      },
-      {
-        title: "No live earn product in this preview",
-        body: "This website does not currently connect to a live earning or staking service. Any illustrative rates or artwork elsewhere should not be read as an offer or guaranteed return.",
-        points: [
-          "No funds are enrolled from this page",
-          "No return is promised",
-          "Availability requires a separately configured service",
-        ],
-      },
-      {
-        title: "Stay informed",
-        body: "Before using any future product, read its official terms and understand that digital asset values and rewards can change.",
-        points: [
-          "Review product-specific disclosures",
-          "Consider whether you can tolerate loss",
-          "Ask support when terms are unclear",
-        ],
-      },
-    ],
-    action: { label: "Review available assets", href: "/assets" },
-    related: ["security", "fees"],
-  },
-  {
-    category: "Products",
     slug: "security",
     label: "Security",
     eyebrow: "Products",
@@ -500,7 +416,7 @@ export const MARKETING_PAGES: MarketingPage[] = [
       },
     ],
     action: { label: "Open Help Center", href: "/help" },
-    related: ["faqs", "report-an-issue"],
+    related: ["faqs"],
   },
   {
     category: "Support",
@@ -531,7 +447,7 @@ export const MARKETING_PAGES: MarketingPage[] = [
       },
       {
         title: "Where can I get more help?",
-        body: "Use the Help Center to search answers and review available support options. Use Report an Issue to describe a problem with this website.",
+        body: "Use the Help Center to search answers and review available support options. Contact support if you still need help with this website.",
         points: [
           "Search for the relevant feature",
           "Share only non-sensitive troubleshooting details",
@@ -558,126 +474,13 @@ export const MARKETING_PAGES: MarketingPage[] = [
     ],
     action: { label: "Go to Help Center", href: "/help" },
   },
-  {
-    category: "Support",
-    slug: "fees",
-    label: "Fees",
-    eyebrow: "Support",
-    title: "Understand the costs before you confirm.",
-    description:
-      "Fees depend on the service, asset, and network. Review the complete transaction breakdown presented for your specific action.",
-    sections: [
-      {
-        title: "What can affect the total",
-        body: "Depending on the service, a transaction may include a service charge, a spread in the quoted price, or a network fee. Not every cost applies to every action.",
-        points: [
-          "Service fees depend on product terms",
-          "Network fees can change with network demand",
-          "The quoted rate may differ from a market reference price",
-        ],
-      },
-      {
-        title: "Review the transaction summary",
-        body: "Before confirming, check the amount, rate, fees, and total or receive amount. If a cost is missing or unclear, do not continue until you understand it.",
-        points: [
-          "Look for a fee breakdown on the review screen",
-          "Check whether a fee is fixed or variable",
-          "Save the final receipt for your records",
-        ],
-      },
-      {
-        title: "No fixed schedule shown here",
-        body: "This page does not publish a numerical fee schedule because fees can depend on live service configuration. Preview flows may display sample values that are not actual charges.",
-        points: [
-          "Do not rely on a sample quote",
-          "Check current terms for a live service",
-          "Ask support if the displayed amount is unclear",
-        ],
-      },
-    ],
-    action: { label: "Read FAQs", href: "/support/faqs" },
-    related: ["buy-sell", "trade"],
-  },
-  {
-    category: "Support",
-    slug: "status",
-    label: "Status",
-    eyebrow: "Support",
-    title: "Service status information.",
-    description:
-      "This page explains how to interpret the current preview; a live service-monitoring feed is not connected here.",
-    sections: [
-      {
-        title: "Preview availability",
-        body: "This website is available as a demonstration experience, but individual integrations may be disabled, sample-only, or unavailable in a given environment.",
-        points: [
-          "Market data may be delayed or unavailable",
-          "Preview actions do not confirm a live transaction",
-          "Availability may differ between environments",
-        ],
-      },
-      {
-        title: "No live incident feed",
-        body: "There is no live status API or incident history connected to this page. It cannot confirm whether a production service is operational.",
-        points: [
-          "Do not use this page as a production uptime indicator",
-          "Check the relevant provider for its own status",
-          "Contact support for account-specific questions",
-        ],
-      },
-      {
-        title: "Troubleshooting",
-        body: "If an app screen does not load, try again later and note the time and page. Do not repeatedly submit a transaction if you are unsure whether it completed.",
-        points: [
-          "Capture a non-sensitive error message",
-          "Check the transaction history before retrying",
-          "Report the issue with relevant context",
-        ],
-      },
-    ],
-    action: { label: "Report a website issue", href: "/support/report-an-issue" },
-  },
-  {
-    category: "Support",
-    slug: "report-an-issue",
-    label: "Report an Issue",
-    eyebrow: "Support",
-    title: "Tell us what went wrong.",
-    description:
-      "A useful report describes what you expected, what happened, and the page where the issue occurred—without exposing sensitive account information.",
-    sections: [
-      {
-        title: "Include helpful details",
-        body: "A concise description helps someone reproduce a website problem. Share the steps leading up to it and any visible error text.",
-        points: [
-          "Page or feature where it happened",
-          "Steps to reproduce the issue",
-          "Browser/device and approximate time",
-        ],
-      },
-      {
-        title: "Keep your account safe",
-        body: "Never include passwords, PINs, one-time codes, recovery phrases, private keys, or full payment card details in an issue report.",
-        points: [
-          "Redact personal data from screenshots",
-          "Do not share wallet secrets",
-          "Use a verified support channel",
-        ],
-      },
-      {
-        title: "How this preview handles reports",
-        body: "Submitting below prepares a message in your email application; this website does not upload or store the report. If no email application opens, use the Help Center contact options.",
-        points: [
-          "Review the message before sending",
-          "Only send information you are comfortable sharing",
-          "Include no credentials or secrets",
-        ],
-      },
-    ],
-    action: { label: "Open Help Center", href: "/help" },
-  },
 ];
 
 export function getMarketingPage(category: MarketingCategory, slug: string) {
+  const isListedPage = MARKETING_NAV.some(
+    (group) => group.category === category && group.items.some((item) => item.slug === slug),
+  );
+  if (!isListedPage) return undefined;
+
   return MARKETING_PAGES.find((page) => page.category === category && page.slug === slug);
 }

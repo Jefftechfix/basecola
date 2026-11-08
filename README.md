@@ -38,7 +38,7 @@ Never prefix the secret/service-role key with `VITE_`, place it in browser code,
 
 ### Transaction email notifications
 
-Configure `APP_URL`, `RESEND_API_KEY`, and `RESEND_FROM_EMAIL` as server-only environment variables for local development and in the app host. `APP_URL` is the canonical public application origin used in email links and Stripe checkout returns. `RESEND_FROM_EMAIL` must be a sender address verified in your Resend account. Never expose these values with a `VITE_` prefix.
+Admin dashboard email notifications are sent by the `admin-notification-email` Supabase Edge Function, which reads `RESEND_API_KEY` and `RESEND_FROM_EMAIL` from Supabase Edge Function secrets. Deploy it with `supabase functions deploy admin-notification-email` after setting those secrets. The app server still needs `APP_URL` for email rendering and Stripe checkout returns. For transaction receipts and verification decision emails, also configure `RESEND_API_KEY` and `RESEND_FROM_EMAIL` as server-only environment variables in the app host; those email flows are sent by the app server. `RESEND_FROM_EMAIL` must be a sender address verified in your Resend account. Never expose any of these values with a `VITE_` prefix.
 
 Basecola sends the branded transaction email after Stripe confirms wallet funding, a buy or sell settles, an on-chain deposit reaches its required confirmations, or a crypto withdrawal is broadcast. Unconfirmed deposits and the send/receive demo screens do not send transaction-completion emails. Provider delivery failures are surfaced to the caller; webhook notifications return a retryable error where the originating provider can retry, and stable idempotency keys prevent duplicate messages on retries.
 
@@ -70,6 +70,7 @@ supabase functions deploy company-treasury-admin --import-map supabase/functions
 supabase functions deploy alchemy-market-prices
 supabase functions deploy alchemy-ethereum-webhook
 supabase functions deploy crypto-deposit-ingestion
+supabase functions deploy admin-notification-email
 ```
 
 Supabase provides `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to Edge Functions. Do not copy the service-role key into the secret file. Keep app-host `SUPABASE_URL` and publishable/anon key configured so the app can call Supabase and forward webhook requests. Set `APP_URL` to the canonical public application origin in both the app server environment and Supabase Edge Function secrets; Stripe checkout accepts returns only to that configured origin. Public market prices are fetched through the `alchemy-market-prices` Edge Function, which reads the `ALCHEMY_API_KEY` secret server-side and caches results for 60 seconds; the browser and app host never receive the Alchemy key. The same secret is used to construct the Ethereum RPC endpoint and as the Alchemy Notify API token for address registration; an explicit `ALCHEMY_ETHEREUM_RPC_URL` can override the constructed endpoint. The webhook ID and signing key are separate Alchemy webhook configuration values: the API key cannot replace signature verification, so webhook processing remains disabled until those values are set. Store the Turnkey private key in the env file with escaped `\n` sequences if it is PEM-formatted. Do not prefix any Turnkey credential or provider secret with `VITE_`, commit it, or send it in chat.

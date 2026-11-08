@@ -3,14 +3,20 @@ import { render } from "@react-email/render";
 import { TEMPLATES } from "./registry";
 
 export type SendTemplateEmailResult =
-  | { sent: true }
-  | { sent: false; reason: "recipient_suppressed" };
+  { sent: true } | { sent: false; reason: "recipient_suppressed" };
 
 export interface SendTemplateEmailOptions {
   templateData?: Record<string, unknown>;
   /** Dedupes retries of the same logical send; defaults to a random UUID (no dedupe). */
   idempotencyKey?: string;
   replyTo?: string;
+}
+
+export interface RenderedTemplateEmail {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
 }
 
 function getAppOrigin(): string {
@@ -24,8 +30,7 @@ function getAppOrigin(): string {
     throw new Error("APP_URL must be an absolute http(s) URL");
   }
 
-  const isLocalHttp =
-    url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname);
+  const isLocalHttp = url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname);
   if (url.protocol !== "https:" && !isLocalHttp) {
     throw new Error("APP_URL must use HTTPS except for localhost development");
   }
@@ -33,22 +38,11 @@ function getAppOrigin(): string {
   return url.origin;
 }
 
-export function assertEmailSenderConfigured(): void {
-  if (!process.env.RESEND_API_KEY?.trim()) throw new Error("RESEND_API_KEY is not configured");
-  if (!process.env.RESEND_FROM_EMAIL?.trim()) throw new Error("RESEND_FROM_EMAIL is not configured");
-  getAppOrigin();
-}
-
-export async function sendTemplateEmail(
+export async function renderTemplateEmail(
   templateName: string,
   to: string,
   options: SendTemplateEmailOptions = {},
-): Promise<SendTemplateEmailResult> {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  const fromEmail = process.env.RESEND_FROM_EMAIL?.trim();
-  if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
-  if (!fromEmail) throw new Error("RESEND_FROM_EMAIL is not configured");
-
+): Promise<RenderedTemplateEmail> {
   const template = TEMPLATES[templateName];
   if (!template) {
     throw new Error(
@@ -66,9 +60,22 @@ export async function sendTemplateEmail(
   const html = await render(element);
   const text = await render(element, { plainText: true });
   const subject =
-    typeof template.subject === "function"
-      ? template.subject(templateData)
-      : template.subject;
+    typeof template.subject === "function" ? template.subject(templateData) : template.subject;
+
+  return { to: recipient, subject, html, text };
+}
+
+export async function sendTemplateEmail(
+  templateName: string,
+  to: string,
+  options: SendTemplateEmailOptions = {},
+): Promise<SendTemplateEmailResult> {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const fromEmail = process.env.RESEND_FROM_EMAIL?.trim();
+  if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
+  if (!fromEmail) throw new Error("RESEND_FROM_EMAIL is not configured");
+
+  const email = await renderTemplateEmail(templateName, to, options);
   const idempotencyKey = options.idempotencyKey || crypto.randomUUID();
 
   const response = await fetch("https://api.resend.com/emails", {
@@ -80,10 +87,10 @@ export async function sendTemplateEmail(
     },
     body: JSON.stringify({
       from: `Basecola <${fromEmail}>`,
-      to: [recipient],
-      subject,
-      html,
-      text,
+      to: [email.to],
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
       tags: [{ name: "template", value: templateName }],
       ...(options.replyTo ? { reply_to: options.replyTo } : {}),
     }),

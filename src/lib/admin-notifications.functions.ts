@@ -1,8 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
-import { assertEmailSenderConfigured, sendTemplateEmail } from "@/lib/email-templates/send-email";
+import { renderTemplateEmail } from "@/lib/email-templates/send-email";
 
 type AuthCtx = { supabase: SupabaseClient<Database>; userId: string };
 type AdminNotificationRecipient = { id: string; email: string; name: string };
@@ -19,6 +20,55 @@ async function assertAdmin(context: AuthCtx) {
 
 async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+}
+
+async function sendAdminNotificationEmail(
+  recipient: AdminNotificationRecipient,
+  input: { subject: string; message: string; idempotencyKey: string },
+): Promise<void> {
+  const request = getRequest();
+  const authorization = request?.headers.get("authorization");
+  if (!authorization?.startsWith("Bearer ")) {
+    throw new Error("Could not authenticate email delivery with Supabase.");
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
+  const publishableKey =
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    import.meta.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !publishableKey) {
+    throw new Error("Supabase URL and publishable key are required for email delivery.");
+  }
+
+  const email = await renderTemplateEmail("admin-notification", recipient.email, {
+    templateData: {
+      subject: input.subject,
+      message: input.message,
+      name: recipient.name,
+    },
+  });
+  const endpoint = new URL("/functions/v1/admin-notification-email", supabaseUrl);
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: authorization,
+      apikey: publishableKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      ...email,
+      userId: recipient.id,
+      idempotencyKey: input.idempotencyKey,
+    }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    const error = body && typeof body.error === "string" ? body.error : null;
+    throw new Error(error ?? `Supabase email delivery failed with status ${response.status}.`);
+  }
 }
 
 async function activeEmailRecipients(userIds?: string[]): Promise<AdminNotificationRecipient[]> {
@@ -251,7 +301,6 @@ export const sendAdminEmailNotification = createServerFn({ method: "POST" })
     }> => {
       const ctx = context as AuthCtx;
       await assertAdmin(ctx);
-      assertEmailSenderConfigured();
       const db = await admin();
       const recipients =
         data.audience === "all_active"
@@ -290,20 +339,17 @@ export const sendAdminEmailNotification = createServerFn({ method: "POST" })
         const results = await Promise.all(
           batch.map(async (recipient) => {
             try {
-              const result = await sendTemplateEmail("admin-notification", recipient.email, {
-                templateData: {
-                  subject: data.subject,
-                  message: data.message,
-                  name: recipient.name,
-                },
+              await sendAdminNotificationEmail(recipient, {
+                subject: data.subject,
+                message: data.message,
                 idempotencyKey: `admin-notification-${notification.id}-${recipient.id}`,
               });
               return {
                 notification_id: notification.id,
                 user_id: recipient.id,
-                status: result.sent ? ("sent" as const) : ("failed" as const),
-                error_message: result.sent ? null : "Email was suppressed.",
-                sent_at: result.sent ? new Date().toISOString() : null,
+                status: "sent" as const,
+                error_message: null,
+                sent_at: new Date().toISOString(),
               };
             } catch (error) {
               return {

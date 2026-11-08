@@ -10,6 +10,7 @@ export interface SendTemplateEmailOptions {
   /** Dedupes retries of the same logical send; defaults to a random UUID (no dedupe). */
   idempotencyKey?: string;
   replyTo?: string;
+  includeAppUrl?: boolean;
 }
 
 export interface RenderedTemplateEmail {
@@ -55,7 +56,10 @@ export async function renderTemplateEmail(
     throw new Error("Recipient is required (the template defines no fixed recipient)");
   }
 
-  const templateData = { ...options.templateData, appUrl: getAppOrigin() };
+  const templateData = {
+    ...options.templateData,
+    ...(options.includeAppUrl === false ? {} : { appUrl: getAppOrigin() }),
+  };
   const element = React.createElement(template.component, templateData);
   const html = await render(element);
   const text = await render(element, { plainText: true });

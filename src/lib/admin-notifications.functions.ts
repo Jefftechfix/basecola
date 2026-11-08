@@ -48,6 +48,7 @@ async function sendAdminNotificationEmail(
       message: input.message,
       name: recipient.name,
     },
+    includeAppUrl: false,
   });
   const endpoint = new URL("/functions/v1/admin-notification-email", supabaseUrl);
   const response = await fetch(endpoint, {

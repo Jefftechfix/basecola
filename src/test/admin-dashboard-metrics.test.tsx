@@ -61,6 +61,14 @@ describe("admin dashboard metrics", () => {
     expect(summary.volumeChange).toBe(20);
     expect(summary.feeChange).toBe(100);
     expect(summary.points).toHaveLength(7);
+    expect(summary.byAsset).toEqual([
+      { asset: "BTC", transactions: 1, volume: 120, fees: 2 },
+      { asset: "USD", transactions: 1, volume: 0, fees: 0 },
+    ]);
+    expect(summary.byStatus).toEqual([
+      { status: "completed", transactions: 1 },
+      { status: "pending", transactions: 1 },
+    ]);
     expect(summary.recentTransactions[0].user).toBe("Admin User");
     expect(summary.recentTransactions[0].id).toBe("current-completed");
   });

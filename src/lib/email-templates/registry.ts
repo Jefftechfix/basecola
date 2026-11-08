@@ -19,10 +19,16 @@ export interface TemplateEntry {
  */
 import { template as verificationDecision } from './verification-decision'
 import { template as transactionReceipt } from './transaction-receipt'
+import AdminNotificationEmail from './admin-notification'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'verification-decision': verificationDecision,
   'transaction-receipt': transactionReceipt,
+  'admin-notification': {
+    component: AdminNotificationEmail,
+    subject: (data) => String(data.subject ?? ""),
+    displayName: "Admin account notice",
+  },
   // Add templates here as they are created, e.g.:
   // 'welcome': welcomeTemplate,
 }

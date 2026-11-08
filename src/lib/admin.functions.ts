@@ -172,6 +172,8 @@ export const getAdminDashboardSummary = createServerFn({ method: "GET" })
         volumeChange: periodSummary.volumeChange,
         feeChange: periodSummary.feeChange,
         points: periodSummary.points,
+        byAsset: periodSummary.byAsset,
+        byStatus: periodSummary.byStatus,
       },
       revenue,
       users: summarizeAdminUsers(

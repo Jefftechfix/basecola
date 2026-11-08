@@ -6,12 +6,12 @@ interface Props {
   name?: string
   decision?: 'approved' | 'rejected'
   note?: string | null
-  appUrl?: string
+  appUrl: string
 }
 
 const BLUE = '#1f5cff'
 
-const Email = ({ name, decision = 'approved', note, appUrl = 'https://crypto-basecamp-beacon.lovable.app' }: Props) => {
+const Email = ({ name, decision = 'approved', note, appUrl }: Props) => {
   const ok = decision === 'approved'
   return (
     <Html lang="en" dir="ltr">

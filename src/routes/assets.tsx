@@ -4,6 +4,7 @@ import { Eye, EyeOff, Wallet } from "lucide-react";
 import { AccountShell } from "@/components/account-shell";
 import { Button } from "@/components/ui/button";
 import { money } from "@/lib/account-demo";
+import { getImageSource } from "@/lib/image-source";
 import coins from "@/assets/coins.png";
 
 export const Route = createFileRoute("/assets")({
@@ -20,7 +21,7 @@ function AssetsPage() {
   const [hidden, setHidden] = useState(false);
   return <AccountShell active="/assets" title="My Assets">
     <section aria-label="Portfolio balance" className="relative overflow-hidden rounded-2xl bg-gradient-primary px-5 py-6 text-primary-foreground shadow-soft sm:px-7">
-      <img src={coins} alt="" className="pointer-events-none absolute right-3 top-4 hidden w-32 rounded-lg sm:block" />
+      <img src={getImageSource(coins)} alt="" className="pointer-events-none absolute right-3 top-4 hidden w-32 rounded-lg sm:block" />
       <div className="relative sm:pr-36">
         <div className="flex items-center gap-2 text-sm">Total Asset Balance<Button variant="ghost" size="icon" className="h-7 w-7 text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground" aria-label={hidden ? "Show balances" : "Hide balances"} onClick={() => setHidden(!hidden)}>{hidden ? <EyeOff /> : <Eye />}</Button></div>
         <p className="mt-2 text-4xl font-extrabold">{hidden ? "••••••" : money(0)}</p>

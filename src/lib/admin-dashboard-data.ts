@@ -43,6 +43,18 @@ export type AdminDashboardPoint = {
   transactions: number;
 };
 
+export type AdminDashboardAssetBreakdown = {
+  asset: string;
+  transactions: number;
+  volume: number;
+  fees: number;
+};
+
+export type AdminDashboardStatusBreakdown = {
+  status: string;
+  transactions: number;
+};
+
 export type AdminDashboardRecentTransaction = {
   id: string;
   user: string;
@@ -63,6 +75,8 @@ export type AdminDashboardSummary = {
     volumeChange: number | null;
     feeChange: number | null;
     points: AdminDashboardPoint[];
+    byAsset: AdminDashboardAssetBreakdown[];
+    byStatus: AdminDashboardStatusBreakdown[];
   };
   revenue: AdminPlatformRevenue;
   users: {
@@ -194,6 +208,8 @@ export function summarizeAdminDashboard(
   const current = metricTotals(currentRows);
   const previous = metricTotals(previousRows);
   const pointByDay = new Map<string, AdminDashboardPoint>();
+  const assetTotals = new Map<string, AdminDashboardAssetBreakdown>();
+  const statusTotals = new Map<string, number>();
 
   for (let offset = 0; offset < period.days; offset += 1) {
     const date = new Date(currentStart + offset * 24 * 60 * 60 * 1000)
@@ -204,9 +220,23 @@ export function summarizeAdminDashboard(
 
   for (const row of currentRows) {
     const point = pointByDay.get(dayKey(row.created_at));
-    if (!point) continue;
-    point.transactions += 1;
-    if (row.status.toLowerCase() === "completed") {
+    if (point) point.transactions += 1;
+    const status = row.status.trim().toLowerCase() || "unknown";
+    statusTotals.set(status, (statusTotals.get(status) ?? 0) + 1);
+    const asset = row.coin?.trim().toUpperCase() || "USD";
+    const assetTotal = assetTotals.get(asset) ?? {
+      asset,
+      transactions: 0,
+      volume: 0,
+      fees: 0,
+    };
+    assetTotal.transactions += 1;
+    if (status === "completed") {
+      assetTotal.volume += amount(row.usd_amount);
+      assetTotal.fees += amount(row.fee_usd);
+    }
+    assetTotals.set(asset, assetTotal);
+    if (point && status === "completed") {
       point.volume += amount(row.usd_amount);
     }
   }
@@ -236,6 +266,10 @@ export function summarizeAdminDashboard(
     volumeChange: percentChange(current.volume, previous.volume),
     feeChange: percentChange(current.fees, previous.fees),
     points: [...pointByDay.values()],
+    byAsset: [...assetTotals.values()].sort((left, right) => right.volume - left.volume),
+    byStatus: [...statusTotals.entries()]
+      .map(([status, transactions]) => ({ status, transactions }))
+      .sort((left, right) => right.transactions - left.transactions),
     recentTransactions,
   };
 }

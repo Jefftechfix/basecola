@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { accountFirstName, accountInitials, loadAccountProfile } from "@/lib/account-profile";
 import { money } from "@/lib/account-demo";
+import { getImageSource } from "@/lib/image-source";
 import { loadWalletBalance } from "@/lib/wallet-balance";
 import { MarketFeedLabel, marketPriceText, useAlchemyMarketPrices } from "@/components/market-prices";
 
@@ -76,7 +77,7 @@ function Dashboard() {
         </div>
 
         <div className="relative mt-5 overflow-hidden rounded-3xl bg-gradient-primary p-6 text-primary-foreground shadow-soft">
-          <img src={coins} alt="" width={1024} height={768} className="absolute -right-6 -top-6 w-28 opacity-90 sm:w-48" />
+          <img src={getImageSource(coins)} alt="" width={1024} height={768} className="absolute -right-6 -top-6 w-28 opacity-90 sm:w-48" />
           <p className="flex items-center gap-2 text-sm opacity-90">Wallet balance <button onClick={() => setHide(!hide)} aria-label="Toggle balance">{hide ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></p>
           <p className="mt-1 text-4xl font-extrabold">{hide ? "••••••" : balancePending ? "…" : money(balance?.total ?? 0)}</p>
           <p className={`mt-1 font-semibold ${dayChange < 0 ? "text-destructive" : "text-success"}`}>{balanceError ? balanceError.message : balancePending || balance == null ? "Loading balance" : `${dayChange > 0 ? "▲" : dayChange < 0 ? "▼" : ""} ${money(Math.abs(dayChange))} (24h)`}</p>

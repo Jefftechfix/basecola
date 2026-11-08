@@ -295,7 +295,7 @@ function CareersOverview() {
 
   return (
     <section className="mx-auto max-w-6xl px-5 py-10 sm:py-14">
-      <div className="rounded-3xl bg-gradient-to-br from-[#1b1240] via-[#30216b] to-[#6d4dff] p-6 text-white shadow-sm sm:p-10">
+      <div className="rounded-3xl bg-linear-to-br from-[#1b1240] via-[#30216b] to-[#6d4dff] p-6 text-white shadow-sm sm:p-10">
         <p className="text-sm font-bold uppercase tracking-wider text-white/70">
           Careers at Basecola
         </p>
@@ -687,7 +687,7 @@ function AboutCompanyStory({
             </p>
           </div>
 
-          <div className="rounded-3xl border border-primary/10 bg-gradient-to-br from-primary/5 via-white to-sky-50 p-6 sm:p-8">
+          <div className="rounded-3xl border border-primary/10 bg-linear-to-br from-primary/5 via-white to-sky-50 p-6 sm:p-8">
             <div className="flex items-center gap-3">
               <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary">
                 <Compass className="h-5 w-5" aria-hidden="true" />
@@ -739,7 +739,7 @@ function AboutCompanyStory({
         </aside>
       </div>
 
-      <div className="mt-14 overflow-hidden rounded-[2rem] border border-violet-100 bg-gradient-to-br from-violet-50 via-white to-sky-50 p-5 shadow-sm sm:p-8 lg:p-10">
+      <div className="mt-14 overflow-hidden rounded-[2rem] border border-violet-100 bg-linear-to-br from-violet-50 via-white to-sky-50 p-5 shadow-sm sm:p-8 lg:p-10">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-sm font-bold uppercase tracking-wider text-primary">How we work</p>
           <h2 className="mt-2 text-2xl font-extrabold sm:text-3xl">

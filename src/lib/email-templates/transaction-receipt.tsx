@@ -10,10 +10,10 @@ interface Props {
   headline?: string
   status?: string
   rows?: { label: string; value: string }[]
-  appUrl?: string
+  appUrl: string
 }
 
-const Email = ({ name, title = 'Transaction receipt', headline = '', status = 'Completed', rows = [], appUrl = 'https://crypto-basecamp-beacon.lovable.app' }: Props) => {
+const Email = ({ name, title = 'Transaction receipt', headline = '', status = 'Completed', rows = [], appUrl }: Props) => {
   const ok = /complete|paid|success|confirmed|broadcast/i.test(status)
   return (
     <Html lang="en" dir="ltr">

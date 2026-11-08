@@ -62,6 +62,6 @@ function AdminPage() {
   if (!ready) return null;
 
   return <AdminShell section={section} onSection={setSection} onSignOut={signOut} periodId={periodId} onPeriod={setPeriodId}>
-    {section === "dashboard" ? <AdminDashboard onSection={setSection} periodId={periodId} /> : <AdminPanel section={section} />}
+    {section === "dashboard" ? <AdminDashboard onSection={setSection} periodId={periodId} /> : <AdminPanel section={section} periodId={periodId} />}
   </AdminShell>;
 }

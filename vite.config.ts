@@ -1,19 +1,22 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - TanStack devtools (dev-only, first), tanstackStart, viteReact, tailwindcss, tsConfigPaths,
-//     nitro (build-only using cloudflare as a default target), VITE_* env injection, @ path alias,
-//     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
-import { loadEnv } from "vite";
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import { nitro } from "nitro/vite";
+import { loadEnv, defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
-// Server-only env (no VITE_ prefix) for server routes; never added to client define.
-Object.assign(process.env, loadEnv(process.env.NODE_ENV === "production" ? "production" : "development", process.cwd(), ""));
+export default defineConfig(({ command, mode }) => {
+  Object.assign(process.env, loadEnv(mode, process.cwd(), ""));
 
-export default defineConfig({
-  tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
-    server: { entry: "server" },
-  },
+  return {
+    plugins: [
+      tailwindcss(),
+      tsconfigPaths({ projects: ["./tsconfig.json"] }),
+      tanstackStart({
+        server: { entry: "server" },
+      }),
+      ...(command === "build" ? [nitro({ defaultPreset: "cloudflare-module" })] : []),
+      react(),
+    ],
+  };
 });

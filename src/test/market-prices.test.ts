@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createTtlCache, parseAlchemyPriceResponse } from "@/lib/market-prices";
+import {
+  createTtlCache,
+  parseAlchemyPriceResponse,
+  priceWithMarketMargin,
+} from "@/lib/market-prices";
 import { loadAlchemyMarketPrices } from "@/lib/market-prices.server";
 
 describe("Alchemy market prices", () => {
@@ -38,6 +42,20 @@ describe("Alchemy market prices", () => {
     expect(await cache(load, 60_999)).toBe(1);
     expect(await cache(load, 61_000)).toBe(2);
     expect(requests).toBe(2);
+  });
+
+  it("calculates positive customer rates from Alchemy market prices and margins", () => {
+    expect(priceWithMarketMargin(100, 2.5)).toBeCloseTo(102.5);
+    expect(priceWithMarketMargin(100, -1.5)).toBeCloseTo(98.5);
+    expect(() => priceWithMarketMargin(100, -100)).toThrow(
+      "Market price and margin must produce a positive rate.",
+    );
+    expect(() => priceWithMarketMargin(Number.NaN, 1)).toThrow(
+      "Market price and margin must produce a positive rate.",
+    );
+    expect(() => priceWithMarketMargin(1_000, Number.MAX_VALUE)).toThrow(
+      "Market price and margin must produce a positive rate.",
+    );
   });
 
   it("loads quotes through Supabase without requiring the Alchemy key on the app server", async () => {

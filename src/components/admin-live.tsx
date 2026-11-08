@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { CryptoAssetIcon } from "@/components/brand";
 import { adjustAdminUserBalance, cancelAdminTreasuryOperation, deleteAdminUser, exportAccountDataForDeletionRequest, getAdminUserDetails, listAccountDeletionRequests, listAdminAssetNetworks, listAdminDeposits, listAdminReferrals, listAdminTradeOrders, listAdminTradeSettings, listAdminTradeSettingsAudit, listAdminTransactions, listAdminTreasuryBalances, listAdminUsers, listAdminVerifications, listAdminWalletAccounts, listAdminTreasuryOperationRequests, requestAdminTreasuryOperation, reviewVerification, setAdminUserStatus, updateAdminAssetNetwork, updateAdminReferral, updateAdminTradeSettings, type AdminAssetNetworkRow, type AdminDepositRow, type AdminTradeOrderRow, type AdminTradeSettingRow, type AdminTradeSettingsAuditRow, type AdminTransactionRow, type AdminTreasuryBalanceRow, type AdminVerificationRow } from "@/lib/admin.functions";
 import { AdminCompanyTreasuryWallets } from "@/components/admin-company-treasury";
+import { formatMarketPrice, useAlchemyMarketPrices } from "@/components/market-prices";
+import { priceWithMarketMargin, type MarketQuote } from "@/lib/market-prices";
 
 const pill: Record<string, string> = {
   active: "bg-emerald-100 text-emerald-700", approved: "bg-emerald-100 text-emerald-700",
@@ -451,6 +454,7 @@ export function LiveTradeManagement({ initialTab = "orders" }: { initialTab?: "o
   const fetchSettingsAudit = useServerFn(listAdminTradeSettingsAudit);
   const saveSettings = useServerFn(updateAdminTradeSettings);
   const qc = useQueryClient();
+  const marketPricesQuery = useAlchemyMarketPrices();
   const [tab, setTab] = useState<"orders" | "settings" | "history">(initialTab);
   const [query, setQuery] = useState("");
   const [type, setType] = useState("all");
@@ -497,23 +501,6 @@ export function LiveTradeManagement({ initialTab = "orders" }: { initialTab?: "o
     URL.revokeObjectURL(url);
   }
 
-  function submitSettings(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!editing) return;
-    const form = new FormData(event.currentTarget);
-    updateMutation.mutate({
-      coin: editing.coin,
-      network: editing.network,
-      buyPrice: Number(form.get("buyPrice")),
-      sellPrice: Number(form.get("sellPrice")),
-      minimumCrypto: Number(form.get("minimumCrypto")),
-      maximumCrypto: Number(form.get("maximumCrypto")),
-      buyEnabled: form.get("buyEnabled") === "on",
-      sellEnabled: form.get("sellEnabled") === "on",
-      note: String(form.get("note") ?? ""),
-    });
-  }
-
   const orderStatusClass = (orderStatus: string) => {
     const normalized = orderStatus.toLowerCase();
     if (["completed", "success", "succeeded", "paid"].includes(normalized)) return "confirmed";
@@ -530,7 +517,7 @@ export function LiveTradeManagement({ initialTab = "orders" }: { initialTab?: "o
     </div>
     <div className="flex flex-wrap gap-2" role="tablist" aria-label="Buy and sell management tabs">
       {([["orders", "Trade Orders"], ["settings", "Rates & Limits"], ["history", "Rate History"]] as const).map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={tab === id} className={`rounded-lg px-3 py-2 text-sm font-semibold ${tab === id ? "bg-primary text-primary-foreground" : "bg-white text-muted-foreground"}`} onClick={() => setTab(id)}>{label}</button>)}
-      <Button type="button" variant="outline" className="ml-auto" onClick={() => { void qc.invalidateQueries({ queryKey: ["admin-trade-orders"] }); void qc.invalidateQueries({ queryKey: ["admin-trade-settings"] }); void qc.invalidateQueries({ queryKey: ["admin-trade-settings-audit"] }); }}><RefreshCw className="h-4 w-4" />Refresh</Button>
+      <Button type="button" variant="outline" className="ml-auto" onClick={() => { void qc.invalidateQueries({ queryKey: ["admin-trade-orders"] }); void qc.invalidateQueries({ queryKey: ["admin-trade-settings"] }); void qc.invalidateQueries({ queryKey: ["admin-trade-settings-audit"] }); void marketPricesQuery.refetch(); }}><RefreshCw className="h-4 w-4" />Refresh</Button>
     </div>
     {message && <p role="status" className="text-sm text-muted-foreground">{message}</p>}
     {tab === "orders" && <section className="space-y-4 rounded-2xl bg-white p-5 shadow-sm">
@@ -540,12 +527,152 @@ export function LiveTradeManagement({ initialTab = "orders" }: { initialTab?: "o
       <div className="overflow-x-auto"><table className="w-full min-w-[1050px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="p-2">Order</th><th className="p-2">Member</th><th className="p-2">Type</th><th className="p-2">Asset/network</th><th className="p-2">Crypto</th><th className="p-2">USD value</th><th className="p-2">Fee</th><th className="p-2">Settlement</th><th className="p-2">Status</th><th className="p-2">Created</th><th className="p-2" /></tr></thead><tbody>{rows.map(order => <tr key={`${order.type}-${order.id}`} className="border-t"><td className="p-2 font-mono text-xs">{order.id.slice(0, 8)}</td><td className="p-2"><p className="font-semibold">{order.user.full_name || "—"}</p><p className="text-xs text-muted-foreground">{order.user.email}</p></td><td className="p-2"><Pill value={order.type === "Buy" ? "confirmed" : "pending"}>{order.type}</Pill></td><td className="p-2">{order.coin}<span className="block text-xs text-muted-foreground">{order.network}</span></td><td className="p-2">{Number(order.crypto_amount).toLocaleString(undefined, { maximumFractionDigits: 10 })}</td><td className="p-2">${Number(order.usd_amount).toFixed(2)}</td><td className="p-2">${Number(order.fee_usd).toFixed(2)}</td><td className="p-2">${Number(order.settlement_usd).toFixed(2)}</td><td className="p-2"><Pill value={orderStatusClass(order.status)}>{order.status}</Pill></td><td className="p-2">{date(order.created_at)}</td><td className="p-2 text-right"><Button size="sm" variant="outline" onClick={() => setDetail(order)}><Eye className="h-4 w-4" />Details</Button></td></tr>)}</tbody></table></div>
       {ordersQuery.isPending && <p className="text-sm text-muted-foreground">Loading trade orders…</p>}{!ordersQuery.isPending && !rows.length && <p className="text-sm text-muted-foreground">No persisted buy or sell orders match these filters.</p>}<p className="text-xs text-muted-foreground">Showing up to 2,000 most recent buy/sell records.</p>
     </section>}
-    {tab === "settings" && <section className="space-y-4 rounded-2xl bg-white p-5 shadow-sm"><div><h2 className="text-lg font-bold">Trade rates and limits</h2><p className="text-sm text-muted-foreground">Changes apply to new customer settlements. Prices sent by clients are ignored by the database.</p></div>{settingsQuery.error && <p role="alert" className="text-sm text-destructive">{(settingsQuery.error as Error).message}</p>}<div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="p-2">Asset/network</th><th className="p-2">Buy rate</th><th className="p-2">Sell rate</th><th className="p-2">Min crypto</th><th className="p-2">Max crypto</th><th className="p-2">Buy</th><th className="p-2">Sell</th><th className="p-2" /></tr></thead><tbody>{settings.map(setting => <tr key={`${setting.coin}-${setting.network}`} className="border-t"><td className="p-2 font-semibold">{setting.coin}<span className="block text-xs font-normal text-muted-foreground">{setting.network}</span></td><td className="p-2">${Number(setting.buy_price_usd).toLocaleString()}</td><td className="p-2">${Number(setting.sell_price_usd).toLocaleString()}</td><td className="p-2">{setting.minimum_crypto_amount}</td><td className="p-2">{setting.maximum_crypto_amount}</td><td className="p-2"><Pill value={setting.buy_enabled ? "confirmed" : "failed"}>{setting.buy_enabled ? "On" : "Off"}</Pill></td><td className="p-2"><Pill value={setting.sell_enabled ? "confirmed" : "failed"}>{setting.sell_enabled ? "On" : "Off"}</Pill></td><td className="p-2 text-right"><Button size="sm" variant="outline" onClick={() => { setMessage(""); setEditing(setting); }}>Edit</Button></td></tr>)}</tbody></table></div>{settingsQuery.isPending && <p className="text-sm text-muted-foreground">Loading trade settings…</p>}
+    {tab === "settings" && <section className="space-y-4 rounded-2xl bg-white p-5 shadow-sm">
+      <div>
+        <h2 className="text-lg font-bold">Trade rates and limits</h2>
+        <p className="text-sm text-muted-foreground">Alchemy quotes are a reference. Enter buy and sell margins, review the calculated rates, and save to apply them to new customer settlements. Saved rates do not change automatically when the market moves.</p>
+      </div>
+      {settingsQuery.error && <p role="alert" className="text-sm text-destructive">{(settingsQuery.error as Error).message}</p>}
+      {marketPricesQuery.error && <p role="alert" className="text-sm text-destructive">Alchemy market prices are unavailable. You can still enter rates manually.</p>}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1050px] text-left text-sm">
+          <thead className="text-xs text-muted-foreground"><tr><th className="p-2">Asset/network</th><th className="p-2">Alchemy market (USD)</th><th className="p-2">Buy rate</th><th className="p-2">Sell rate</th><th className="p-2">Min crypto</th><th className="p-2">Max crypto</th><th className="p-2">Buy</th><th className="p-2">Sell</th><th className="p-2" /></tr></thead>
+          <tbody>{settings.map(setting => {
+            const quote = marketPricesQuery.data?.find(item => item.symbol === setting.coin);
+            return <tr key={`${setting.coin}-${setting.network}`} className="border-t">
+              <td className="p-2"><span className="flex items-center gap-2 font-semibold"><CryptoAssetIcon symbol={setting.coin} size="h-8 w-8" /><span>{setting.coin}<span className="block text-xs font-normal text-muted-foreground">{setting.network}</span></span></span></td>
+              <td className="p-2">{quote ? <><span className="font-semibold">{formatMarketPrice(quote.priceUsd)}</span><span className="block text-xs text-muted-foreground">Alchemy · {new Date(quote.updatedAt).toLocaleTimeString()}</span></> : <span className="text-muted-foreground">{marketPricesQuery.isPending ? "Loading…" : "Unavailable"}</span>}</td>
+              <td className="p-2">{formatMarketPrice(Number(setting.buy_price_usd))}</td>
+              <td className="p-2">{formatMarketPrice(Number(setting.sell_price_usd))}</td>
+              <td className="p-2">{setting.minimum_crypto_amount}</td>
+              <td className="p-2">{setting.maximum_crypto_amount}</td>
+              <td className="p-2"><Pill value={setting.buy_enabled ? "confirmed" : "failed"}>{setting.buy_enabled ? "On" : "Off"}</Pill></td>
+              <td className="p-2"><Pill value={setting.sell_enabled ? "confirmed" : "failed"}>{setting.sell_enabled ? "On" : "Off"}</Pill></td>
+              <td className="p-2 text-right"><Button size="sm" variant="outline" onClick={() => { setMessage(""); setEditing(setting); }}>Edit</Button></td>
+            </tr>;
+          })}</tbody>
+        </table>
+      </div>
+      {settingsQuery.isPending && <p className="text-sm text-muted-foreground">Loading trade settings…</p>}
     </section>}
     {tab === "history" && <section className="space-y-4 rounded-2xl bg-white p-5 shadow-sm"><div><h2 className="text-lg font-bold">Rate and limit change history</h2><p className="text-sm text-muted-foreground">Audited updates to customer-facing buy/sell settings.</p></div>{auditQuery.error && <p role="alert" className="text-sm text-destructive">{(auditQuery.error as Error).message}</p>}<div className="overflow-x-auto"><table className="w-full min-w-[1050px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="p-2">Changed</th><th className="p-2">Asset/network</th><th className="p-2">Buy rate</th><th className="p-2">Sell rate</th><th className="p-2">Order limits</th><th className="p-2">Availability</th><th className="p-2">Admin</th><th className="p-2">Reason</th></tr></thead><tbody>{(auditQuery.data ?? []).map((row: AdminTradeSettingsAuditRow) => <tr key={row.id} className="border-t"><td className="p-2">{new Date(row.created_at).toLocaleString()}</td><td className="p-2">{row.coin}<span className="block text-xs text-muted-foreground">{row.network}</span></td><td className="p-2">${row.previous_buy_price_usd} → ${row.next_buy_price_usd}</td><td className="p-2">${row.previous_sell_price_usd} → ${row.next_sell_price_usd}</td><td className="p-2">{row.previous_minimum_crypto_amount}–{row.previous_maximum_crypto_amount} → {row.next_minimum_crypto_amount}–{row.next_maximum_crypto_amount} {row.coin}</td><td className="p-2">Buy {row.previous_buy_enabled ? "on" : "off"} → {row.next_buy_enabled ? "on" : "off"}; Sell {row.previous_sell_enabled ? "on" : "off"} → {row.next_sell_enabled ? "on" : "off"}</td><td className="p-2">{row.admin_name || "Admin account unavailable"}</td><td className="max-w-56 whitespace-normal p-2">{row.note}</td></tr>)}</tbody></table></div>{auditQuery.isPending && <p className="text-sm text-muted-foreground">Loading rate history…</p>}{!auditQuery.isPending && !auditQuery.data?.length && <p className="text-sm text-muted-foreground">No pricing changes have been recorded.</p>}</section>}
     <Dialog open={!!detail} onOpenChange={open => { if (!open) setDetail(null); }}><DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">{detail && <><DialogHeader><DialogTitle>{detail.type} order details</DialogTitle><DialogDescription>{detail.id}</DialogDescription></DialogHeader><dl className="grid gap-3 sm:grid-cols-2">{([["Member", detail.user.full_name || "—"], ["Email", detail.user.email || "—"], ["Type", detail.type], ["Asset", detail.coin], ["Network", detail.network], ["Crypto amount", String(detail.crypto_amount)], ["USD value", `$${Number(detail.usd_amount).toFixed(2)}`], ["Fee", `$${Number(detail.fee_usd).toFixed(2)}`], [detail.type === "Buy" ? "Total charged" : "Payout", `$${Number(detail.settlement_usd).toFixed(2)}`], ["Execution price", `$${Number(detail.price_usd).toLocaleString()}`], ["Status", detail.status], ["Transaction hash", detail.tx_hash || "Not recorded"], ["Created", new Date(detail.created_at).toLocaleString()]] as const).map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 break-all text-sm font-semibold">{label === "Status" ? <Pill value={orderStatusClass(detail.status)}>{value}</Pill> : value}</dd></div>)}</dl></>}</DialogContent></Dialog>
-    <Dialog open={!!editing} onOpenChange={open => { if (!open) setEditing(null); }}><DialogContent className="max-w-md"><form className="space-y-4" onSubmit={submitSettings}>{editing && <><DialogHeader><DialogTitle>{editing.coin} · {editing.network}</DialogTitle><DialogDescription>Settings are audited and affect new settlements immediately after save.</DialogDescription></DialogHeader><label className="block text-sm">Buy rate (USD)<Input name="buyPrice" type="number" min="0.0000000001" step="any" required defaultValue={editing.buy_price_usd} className="mt-1" /></label><label className="block text-sm">Sell rate (USD)<Input name="sellPrice" type="number" min="0.0000000001" step="any" required defaultValue={editing.sell_price_usd} className="mt-1" /></label><label className="block text-sm">Minimum amount ({editing.coin})<Input name="minimumCrypto" type="number" min="0.0000000001" step="any" required defaultValue={editing.minimum_crypto_amount} className="mt-1" /></label><label className="block text-sm">Maximum amount ({editing.coin})<Input name="maximumCrypto" type="number" min="0.0000000001" step="any" required defaultValue={editing.maximum_crypto_amount} className="mt-1" /></label><label className="flex items-center gap-2 text-sm"><input name="buyEnabled" type="checkbox" defaultChecked={editing.buy_enabled} />Enable buying</label><label className="flex items-center gap-2 text-sm"><input name="sellEnabled" type="checkbox" defaultChecked={editing.sell_enabled} />Enable selling</label><label className="block text-sm">Reason for change<textarea name="note" required maxLength={500} rows={3} className="mt-1 w-full rounded-md border p-3" /></label><Button type="submit" disabled={updateMutation.isPending} className="w-full">Save audited settings</Button></>}</form></DialogContent></Dialog>
+    <Dialog open={!!editing} onOpenChange={open => { if (!open) setEditing(null); }}>
+      <DialogContent className="max-w-md">
+        {editing && <TradeSettingsEditor
+          setting={editing}
+          marketQuote={marketPricesQuery.data?.find(item => item.symbol === editing.coin)}
+          isSaving={updateMutation.isPending}
+          onSave={input => updateMutation.mutate(input)}
+        />}
+      </DialogContent>
+    </Dialog>
   </section>;
+}
+
+type TradeSettingsEditorProps = {
+  setting: AdminTradeSettingRow;
+  marketQuote?: MarketQuote;
+  isSaving: boolean;
+  onSave: (input: {
+    coin: string;
+    network: string;
+    buyPrice: number;
+    sellPrice: number;
+    minimumCrypto: number;
+    maximumCrypto: number;
+    buyEnabled: boolean;
+    sellEnabled: boolean;
+    note: string;
+  }) => void;
+};
+
+function TradeSettingsEditor({ setting, marketQuote, isSaving, onSave }: TradeSettingsEditorProps) {
+  const [buyMarginInput, setBuyMarginInput] = useState<string | undefined>();
+  const [sellMarginInput, setSellMarginInput] = useState<string | undefined>();
+  const [useMarketPricing, setUseMarketPricing] = useState(Boolean(marketQuote));
+  const [formError, setFormError] = useState("");
+  const usingMarketPricing = Boolean(marketQuote && useMarketPricing);
+  const defaultMargin = (price: number) =>
+    marketQuote ? String(((price / marketQuote.priceUsd) - 1) * 100) : "";
+  const buyMargin = buyMarginInput ?? defaultMargin(Number(setting.buy_price_usd));
+  const sellMargin = sellMarginInput ?? defaultMargin(Number(setting.sell_price_usd));
+  const validMargin = (value: string) => {
+    if (!marketQuote || value.trim() === "" || !Number.isFinite(Number(value)) || Number(value) <= -100) return false;
+    const rate = marketQuote.priceUsd * (1 + Number(value) / 100);
+    return Number.isFinite(rate) && rate > 0 && rate <= 1_000_000_000;
+  };
+  const proposedBuyPrice =
+    marketQuote && validMargin(buyMargin)
+      ? priceWithMarketMargin(marketQuote.priceUsd, Number(buyMargin))
+      : undefined;
+  const proposedSellPrice =
+    marketQuote && validMargin(sellMargin)
+      ? priceWithMarketMargin(marketQuote.priceUsd, Number(sellMargin))
+      : undefined;
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    if (usingMarketPricing && (!validMargin(buyMargin) || !validMargin(sellMargin))) {
+      setFormError("Enter margins that produce positive rates no greater than $1 billion.");
+      return;
+    }
+
+    setFormError("");
+    onSave({
+      coin: setting.coin,
+      network: setting.network,
+      buyPrice: usingMarketPricing && marketQuote
+        ? priceWithMarketMargin(marketQuote.priceUsd, Number(buyMargin))
+        : Number(form.get("buyPrice")),
+      sellPrice: usingMarketPricing && marketQuote
+        ? priceWithMarketMargin(marketQuote.priceUsd, Number(sellMargin))
+        : Number(form.get("sellPrice")),
+      minimumCrypto: Number(form.get("minimumCrypto")),
+      maximumCrypto: Number(form.get("maximumCrypto")),
+      buyEnabled: form.get("buyEnabled") === "on",
+      sellEnabled: form.get("sellEnabled") === "on",
+      note: String(form.get("note") ?? ""),
+    });
+  }
+
+  return <form className="space-y-4" onSubmit={submit}>
+    <DialogHeader>
+      <DialogTitle>{setting.coin} · {setting.network}</DialogTitle>
+      <DialogDescription>Review market-based rates and save explicitly. Saved settings are audited and affect new settlements.</DialogDescription>
+    </DialogHeader>
+    {marketQuote && <div className="space-y-2 rounded-xl bg-muted/50 p-3">
+      <p className="text-xs font-semibold text-muted-foreground">Alchemy market price</p>
+      <p className="text-lg font-bold">{formatMarketPrice(marketQuote.priceUsd)}</p>
+      <p className="text-xs text-muted-foreground">Quote updated {new Date(marketQuote.updatedAt).toLocaleString()}</p>
+      <Button type="button" variant="outline" size="sm" onClick={() => { setUseMarketPricing(!usingMarketPricing); setFormError(""); }}>
+        {usingMarketPricing ? "Enter rates manually" : "Calculate rates from Alchemy"}
+      </Button>
+    </div>}
+    {usingMarketPricing ? <>
+      <p className="text-xs text-muted-foreground">Enter signed margins as percentages. For example, 1 adds 1% and -1 reduces the market rate by 1%. Rates are calculated from this quote and will not update until you save again.</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="block text-sm">Buy margin (%)<Input aria-label="Buy margin percent" type="number" min="-99.999999" step="any" required value={buyMargin} onChange={event => { setBuyMarginInput(event.target.value); setFormError(""); }} className="mt-1" /></label>
+        <label className="block text-sm">Sell margin (%)<Input aria-label="Sell margin percent" type="number" min="-99.999999" step="any" required value={sellMargin} onChange={event => { setSellMarginInput(event.target.value); setFormError(""); }} className="mt-1" /></label>
+      </div>
+      <div className="grid gap-3 rounded-xl border p-3 sm:grid-cols-2">
+        <p className="text-sm">Calculated buy rate<span className="mt-1 block font-bold">{proposedBuyPrice === undefined ? "Enter a valid margin" : formatMarketPrice(proposedBuyPrice)}</span></p>
+        <p className="text-sm">Calculated sell rate<span className="mt-1 block font-bold">{proposedSellPrice === undefined ? "Enter a valid margin" : formatMarketPrice(proposedSellPrice)}</span></p>
+      </div>
+    </> : <>
+      {!marketQuote && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">No Alchemy quote is available for {setting.coin}; enter the rates manually.</p>}
+      <label className="block text-sm">Buy rate (USD)<Input name="buyPrice" type="number" min="0.0000000001" step="any" required defaultValue={setting.buy_price_usd} className="mt-1" /></label>
+      <label className="block text-sm">Sell rate (USD)<Input name="sellPrice" type="number" min="0.0000000001" step="any" required defaultValue={setting.sell_price_usd} className="mt-1" /></label>
+    </>}
+    <label className="block text-sm">Minimum amount ({setting.coin})<Input name="minimumCrypto" type="number" min="0.0000000001" step="any" required defaultValue={setting.minimum_crypto_amount} className="mt-1" /></label>
+    <label className="block text-sm">Maximum amount ({setting.coin})<Input name="maximumCrypto" type="number" min="0.0000000001" step="any" required defaultValue={setting.maximum_crypto_amount} className="mt-1" /></label>
+    <label className="flex items-center gap-2 text-sm"><input name="buyEnabled" type="checkbox" defaultChecked={setting.buy_enabled} />Enable buying</label>
+    <label className="flex items-center gap-2 text-sm"><input name="sellEnabled" type="checkbox" defaultChecked={setting.sell_enabled} />Enable selling</label>
+    <label className="block text-sm">Reason for change<textarea name="note" required maxLength={500} rows={3} className="mt-1 w-full rounded-md border p-3" /></label>
+    {formError && <p role="alert" className="text-sm text-destructive">{formError}</p>}
+    <Button type="submit" disabled={isSaving || (usingMarketPricing && (proposedBuyPrice === undefined || proposedSellPrice === undefined))} className="w-full">{isSaving ? "Saving…" : "Save audited settings"}</Button>
+  </form>;
 }
 
 export function LiveDepositsMonitoring() {

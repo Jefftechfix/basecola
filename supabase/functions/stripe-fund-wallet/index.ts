@@ -23,21 +23,17 @@ function fundingCents(value: unknown) {
   return cents;
 }
 
-function returnOrigin(value: unknown) {
-  if (typeof value !== "string") return "https://crypto-basecamp-beacon.lovable.app";
+function returnOrigin(value: unknown, configuredUrl: string) {
+  if (typeof value !== "string") return null;
   try {
-    const url = new URL(value);
-    const local = url.protocol === "http:" && (url.hostname === "localhost" || url.hostname === "127.0.0.1");
-    const hosted = url.protocol === "https:" && (
-      url.hostname === "crypto-basecamp-beacon.lovable.app" ||
-      url.hostname.endsWith(".lovableproject.com") ||
-      url.hostname.endsWith(".lovableproject-dev.com")
-    );
-    if (local || hosted) return url.origin;
+    const appUrl = new URL(configuredUrl);
+    const requestedUrl = new URL(value);
+    const local = appUrl.protocol === "http:" && ["localhost", "127.0.0.1"].includes(appUrl.hostname);
+    if ((appUrl.protocol !== "https:" && !local) || requestedUrl.origin !== appUrl.origin) return null;
+    return appUrl.origin;
   } catch {
-    return "https://crypto-basecamp-beacon.lovable.app";
+    return null;
   }
-  return "https://crypto-basecamp-beacon.lovable.app";
 }
 
 // One Stripe payment = one row in the unified activity history. This mirrors
@@ -138,7 +134,10 @@ Deno.serve(async (req) => {
     if (body.action === "checkout") {
       const cents = fundingCents(body.amount);
       if (!cents) return json({ error: "Enter a USD amount from $1.00 to $10,000.00." }, 400);
-      const origin = returnOrigin(body.origin);
+      const configuredUrl = Deno.env.get("APP_URL");
+      if (!configuredUrl) return json({ error: "Stripe funding is missing the APP_URL setting." }, 500);
+      const origin = returnOrigin(body.origin, configuredUrl);
+      if (!origin) return json({ error: "Checkout must start from the configured app URL." }, 400);
       const form = new URLSearchParams();
       form.set("mode", "payment");
       form.set("client_reference_id", auth.user.id);

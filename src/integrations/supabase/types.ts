@@ -148,6 +148,93 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_email_notification_deliveries: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          notification_id: string
+          sent_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notification_id: string
+          sent_at?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notification_id?: string
+          sent_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_email_notification_deliveries_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "admin_email_notifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_email_notification_deliveries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_email_notifications: {
+        Row: {
+          audience: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          failed_count: number
+          id: string
+          message: string
+          recipient_count: number
+          sent_count: number
+          status: string
+          subject: string
+        }
+        Insert: {
+          audience?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number
+          id?: string
+          message: string
+          recipient_count?: number
+          sent_count?: number
+          status?: string
+          subject: string
+        }
+        Update: {
+          audience?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number
+          id?: string
+          message?: string
+          recipient_count?: number
+          sent_count?: number
+          status?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       admin_balance_adjustments: {
         Row: {
           admin_id: string | null

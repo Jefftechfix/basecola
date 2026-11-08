@@ -5,7 +5,9 @@ import { CryptoAssetIcon } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ReportsManagement, SettingsManagement, UsersManagement } from "@/components/admin-management";
+import { SettingsManagement, UsersManagement } from "@/components/admin-management";
+import { AdminReportsManagement } from "@/components/admin-reports";
+import { AdminNotificationsManagement } from "@/components/admin-notifications";
 import { VerificationManagement } from "@/components/admin-verifications";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -15,7 +17,7 @@ import { ADMIN_PERIODS, type AdminDashboardRecentTransaction } from "@/lib/admin
 import { adminCount, adminMoney } from "@/lib/admin-demo";
 import { MARKET_SYMBOLS } from "@/lib/market-prices";
 
-export type AdminSection = "dashboard" | "users" | "verifications" | "deletions" | "transactions" | "deposits" | "assets" | "trade" | "earn" | "pricing" | "treasury" | "reports" | "referrals" | "profile" | "settings";
+export type AdminSection = "dashboard" | "users" | "verifications" | "deletions" | "transactions" | "deposits" | "assets" | "trade" | "earn" | "pricing" | "treasury" | "reports" | "notifications" | "referrals" | "profile" | "settings";
 
 const NAV: { id: AdminSection; label: string; icon: typeof Home }[] = [
   { id: "dashboard", label: "Dashboard", icon: Home },
@@ -30,6 +32,7 @@ const NAV: { id: AdminSection; label: string; icon: typeof Home }[] = [
   { id: "pricing", label: "Pricing & Rates", icon: SlidersHorizontal },
   { id: "treasury", label: "Treasury", icon: Landmark },
   { id: "reports", label: "Reports & Analytics", icon: BarChart3 },
+  { id: "notifications", label: "Email Notifications", icon: Mail },
   { id: "referrals", label: "Referral Management", icon: UserPlus },
   { id: "profile", label: "Admin Profile", icon: UserRound },
   { id: "settings", label: "Settings", icon: Settings },
@@ -80,7 +83,7 @@ export function AdminShell({ section, onSection, onSignOut, periodId, onPeriod, 
     <div className="min-w-0">
       <header className="flex flex-wrap items-center gap-3 border-b bg-white/80 px-4 py-4 sm:px-6">
         <button type="button" className="grid h-10 w-10 place-items-center rounded-xl border lg:hidden" aria-label="Open admin menu" onClick={() => setOpen(true)}><Menu className="h-5 w-5" /></button>
-        <div className="mr-auto"><h1 className="text-2xl font-extrabold">{section === "users" ? "Users Management" : section === "transactions" ? "Transactions Management" : section === "assets" ? "Assets / Wallet Management" : section === "trade" ? "Buy & Sell Management" : section === "pricing" ? "Pricing & Rate Management" : section === "treasury" ? "Treasury Management" : section === "reports" ? "Reports & Analytics" : section === "referrals" ? "Referral Management" : section === "profile" ? "Admin Profile" : section === "settings" ? "Settings Management" : NAV.find(item => item.id === section)?.label}</h1><p className="text-sm text-muted-foreground">{section === "users" ? "View, manage, and monitor all platform users" : section === "transactions" ? "Monitor, search, and manage all platform transactions" : section === "assets" ? "Configure supported networks, view customer wallet addresses, and request treasury operations" : section === "trade" ? "Review settled trades and configure enforced customer rates and limits" : section === "pricing" ? "Configure persisted buy/sell prices, trading availability, and order limits" : section === "treasury" ? "Review trusted balance observations and manage unexecuted operation requests" : section === "reports" ? "Insights, performance, and detailed reports across the platform" : section === "referrals" ? "Manage referrals, commissions, rewards, and promo programs" : section === "deposits" ? "Monitor, verify, and manage all user crypto deposits in real time" : section === "deletions" ? "Review account closure requests and download member data" : section === "verifications" ? "Review and manage user identity verification submissions." : section === "profile" ? "View your administrator account details" : section === "settings" ? "Configure platform policies, support, communications, security, and system features" : "Welcome back, Admin 👋"}</p></div>
+        <div className="mr-auto"><h1 className="text-2xl font-extrabold">{section === "users" ? "Users Management" : section === "transactions" ? "Transactions Management" : section === "assets" ? "Assets / Wallet Management" : section === "trade" ? "Buy & Sell Management" : section === "pricing" ? "Pricing & Rate Management" : section === "treasury" ? "Treasury Management" : section === "reports" ? "Reports & Analytics" : section === "notifications" ? "Email Notifications" : section === "referrals" ? "Referral Management" : section === "profile" ? "Admin Profile" : section === "settings" ? "Settings Management" : NAV.find(item => item.id === section)?.label}</h1><p className="text-sm text-muted-foreground">{section === "users" ? "View, manage, and monitor all platform users" : section === "transactions" ? "Monitor, search, and manage all platform transactions" : section === "assets" ? "Configure supported networks, view customer wallet addresses, and request treasury operations" : section === "trade" ? "Review settled trades and configure enforced customer rates and limits" : section === "pricing" ? "Set buy and sell margins from Alchemy market quotes, then save audited rates, availability, and order limits" : section === "treasury" ? "Review trusted balance observations and manage unexecuted operation requests" : section === "reports" ? "Insights, performance, and detailed reports across the platform" : section === "notifications" ? "Compose and send operational email notices to active users" : section === "referrals" ? "Manage referrals, commissions, rewards, and promo programs" : section === "deposits" ? "Monitor, verify, and manage all user crypto deposits in real time" : section === "deletions" ? "Review account closure requests and download member data" : section === "verifications" ? "Review and manage user identity verification submissions." : section === "profile" ? "View your administrator account details" : section === "settings" ? "Configure platform policies, support, communications, security, and system features" : "Welcome back, Admin 👋"}</p></div>
         {(section === "dashboard" || section === "transactions" || section === "assets" || section === "trade" || section === "pricing" || section === "treasury" || section === "reports" || section === "referrals" || section === "deposits" || section === "settings") && <label className="flex h-10 items-center gap-2 rounded-xl border bg-white px-3 text-sm"><Calendar className="h-4 w-4 text-muted-foreground" /><span className="sr-only">Reporting dates</span><select aria-label="Reporting dates" value={periodId} onChange={event => onPeriod(event.target.value as (typeof ADMIN_PERIODS)[number]["id"])} className="bg-transparent outline-none">{ADMIN_PERIODS.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>}
         <Popover>
           <PopoverTrigger asChild><Button variant="ghost" size="icon" className="rounded-full bg-white" aria-label="Admin notifications"><Bell /></Button></PopoverTrigger>
@@ -222,7 +225,7 @@ export function AdminDashboard({ onSection, periodId }: { onSection: (section: A
   </>;
 }
 
-export function AdminPanel({ section }: { section: Exclude<AdminSection, "dashboard"> }) {
+export function AdminPanel({ section, periodId }: { section: Exclude<AdminSection, "dashboard">; periodId: (typeof ADMIN_PERIODS)[number]["id"] }) {
   if (section === "profile") return <AdminProfile />;
   if (section === "users") return <LiveUsersManagement />;
   if (section === "transactions") return <LiveTransactionsManagement />;
@@ -233,7 +236,8 @@ export function AdminPanel({ section }: { section: Exclude<AdminSection, "dashbo
   </Panel>;
   if (section === "pricing") return <LiveTradeManagement initialTab="settings" />;
   if (section === "treasury") return <LiveTreasuryManagement />;
-  if (section === "reports") return <ReportsManagement />;
+  if (section === "reports") return <AdminReportsManagement periodId={periodId} />;
+  if (section === "notifications") return <AdminNotificationsManagement />;
   if (section === "referrals") return <LiveReferralManagement />;
   if (section === "deposits") return <LiveDepositsMonitoring />;
   if (section === "verifications") return <LiveVerificationManagement />;

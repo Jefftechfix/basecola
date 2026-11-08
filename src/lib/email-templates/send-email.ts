@@ -1,92 +1,98 @@
-import * as React from 'react'
-import { render } from '@react-email/render'
-import { EmailAPIError, sendLovableEmail } from '@lovable.dev/email-js'
-import { TEMPLATES } from './registry'
-
-// Server-only: reads LOVABLE_API_KEY. Never import from client components.
-
-// Configuration baked in at scaffold time
-const SITE_NAME = "Basecola"
-// SENDER_DOMAIN is the verified sender FQDN: a delegated subdomain (e.g., "notify.example.com"),
-// or the root itself when the domain is registered through Lovable. It MUST match the sender verified in Lovable's email setup.
-const SENDER_DOMAIN = "notify.netppay.com"
-// FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
-// Can be the root domain when display_from_root is enabled — this is cosmetic only.
-const FROM_DOMAIN = "netppay.com"
+import * as React from "react";
+import { render } from "@react-email/render";
+import { TEMPLATES } from "./registry";
 
 export type SendTemplateEmailResult =
   | { sent: true }
-  | { sent: false; reason: 'recipient_suppressed' }
+  | { sent: false; reason: "recipient_suppressed" };
 
 export interface SendTemplateEmailOptions {
-  templateData?: Record<string, any>
+  templateData?: Record<string, unknown>;
   /** Dedupes retries of the same logical send; defaults to a random UUID (no dedupe). */
-  idempotencyKey?: string
-  replyTo?: string
+  idempotencyKey?: string;
+  replyTo?: string;
 }
 
-/**
- * Renders a registered template and sends it through Lovable's managed email
- * API. Suppression, retries, and rate limits are enforced by Lovable
- * server-side. A suppressed recipient is an expected outcome
- * ({ sent: false }); any other failure throws — EmailAPIError exposes
- * .code and .status for branching.
- */
+function getAppOrigin(): string {
+  const configuredUrl = process.env.APP_URL?.trim();
+  if (!configuredUrl) throw new Error("APP_URL is not configured");
+
+  let url: URL;
+  try {
+    url = new URL(configuredUrl);
+  } catch {
+    throw new Error("APP_URL must be an absolute http(s) URL");
+  }
+
+  const isLocalHttp =
+    url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname);
+  if (url.protocol !== "https:" && !isLocalHttp) {
+    throw new Error("APP_URL must use HTTPS except for localhost development");
+  }
+
+  return url.origin;
+}
+
+export function assertEmailSenderConfigured(): void {
+  if (!process.env.RESEND_API_KEY?.trim()) throw new Error("RESEND_API_KEY is not configured");
+  if (!process.env.RESEND_FROM_EMAIL?.trim()) throw new Error("RESEND_FROM_EMAIL is not configured");
+  getAppOrigin();
+}
+
 export async function sendTemplateEmail(
   templateName: string,
   to: string,
-  options: SendTemplateEmailOptions = {}
+  options: SendTemplateEmailOptions = {},
 ): Promise<SendTemplateEmailResult> {
-  const apiKey = process.env['LOVABLE_API_KEY']
-  if (!apiKey) {
-    throw new Error('LOVABLE_API_KEY is not configured')
-  }
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const fromEmail = process.env.RESEND_FROM_EMAIL?.trim();
+  if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
+  if (!fromEmail) throw new Error("RESEND_FROM_EMAIL is not configured");
 
-  const template = TEMPLATES[templateName]
+  const template = TEMPLATES[templateName];
   if (!template) {
     throw new Error(
-      `Template '${templateName}' not found. Available: ${Object.keys(TEMPLATES).join(', ')}`
-    )
+      `Template '${templateName}' not found. Available: ${Object.keys(TEMPLATES).join(", ")}`,
+    );
   }
 
-  // Template-level `to` takes precedence — notification templates always
-  // send to their fixed address.
-  const recipient = template.to || to
+  const recipient = template.to || to;
   if (!recipient) {
-    throw new Error('Recipient is required (the template defines no fixed recipient)')
+    throw new Error("Recipient is required (the template defines no fixed recipient)");
   }
 
-  const templateData = options.templateData ?? {}
-  const element = React.createElement(template.component, templateData)
-  const html = await render(element)
-  const text = await render(element, { plainText: true })
+  const templateData = { ...options.templateData, appUrl: getAppOrigin() };
+  const element = React.createElement(template.component, templateData);
+  const html = await render(element);
+  const text = await render(element, { plainText: true });
   const subject =
-    typeof template.subject === 'function'
+    typeof template.subject === "function"
       ? template.subject(templateData)
-      : template.subject
+      : template.subject;
+  const idempotencyKey = options.idempotencyKey || crypto.randomUUID();
 
-  try {
-    await sendLovableEmail(
-      {
-        to: recipient,
-        from: { name: SITE_NAME, address: `noreply@${FROM_DOMAIN}` },
-        sender_domain: SENDER_DOMAIN,
-        subject,
-        html,
-        text,
-        purpose: 'transactional',
-        label: templateName,
-        idempotency_key: options.idempotencyKey || crypto.randomUUID(),
-        ...(options.replyTo ? { reply_to: options.replyTo } : {}),
-      },
-      { apiKey, sendUrl: process.env['LOVABLE_SEND_URL'] }
-    )
-  } catch (error) {
-    if (error instanceof EmailAPIError && error.code === 'recipient_suppressed') {
-      return { sent: false, reason: 'recipient_suppressed' }
-    }
-    throw error
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
+    },
+    body: JSON.stringify({
+      from: `Basecola <${fromEmail}>`,
+      to: [recipient],
+      subject,
+      html,
+      text,
+      tags: [{ name: "template", value: templateName }],
+      ...(options.replyTo ? { reply_to: options.replyTo } : {}),
+    }),
+    signal: AbortSignal.timeout(10_000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Resend email request failed with status ${response.status}`);
   }
 
-  return { sent: true }
+  return { sent: true };
 }

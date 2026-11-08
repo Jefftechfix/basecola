@@ -8,6 +8,22 @@ export type MarketQuote = {
   updatedAt: string;
 };
 
+export function priceWithMarketMargin(marketPriceUsd: number, marginPercent: number): number {
+  if (
+    !Number.isFinite(marketPriceUsd) ||
+    marketPriceUsd <= 0 ||
+    !Number.isFinite(marginPercent) ||
+    marginPercent <= -100
+  ) {
+    throw new Error("Market price and margin must produce a positive rate.");
+  }
+  const rate = marketPriceUsd * (1 + marginPercent / 100);
+  if (!Number.isFinite(rate) || rate <= 0) {
+    throw new Error("Market price and margin must produce a positive rate.");
+  }
+  return rate;
+}
+
 export function parseAlchemyPriceResponse(
   payload: unknown,
   requestedSymbols: readonly string[],

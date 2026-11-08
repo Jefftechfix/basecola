@@ -30,6 +30,8 @@ SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
 SUPABASE_SECRET_KEY=YOUR_SERVER_SECRET_KEY
 ```
 
+The server auth middleware can also use `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` for the public URL and publishable key. This does not replace `SUPABASE_SECRET_KEY` (or `SUPABASE_SERVICE_ROLE_KEY`), which admin user-management operations require and which must remain server-only.
+
 `SUPABASE_SECRET_KEY` is the current Supabase secret-key format. `SUPABASE_SERVICE_ROLE_KEY` is also accepted for projects still using the legacy service-role key. Set the same values as server environment variables in the deployment platform. Restart the dev server after changing environment variables.
 
 Never prefix the secret/service-role key with `VITE_`, place it in browser code, or commit it. The admin key bypasses row-level security and must remain server-side.
